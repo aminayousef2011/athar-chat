@@ -18,6 +18,7 @@ dependencies = [
 
 [project.scripts]
 athar-data = "athar.data.cli:main"
+athar-train = "athar.intent.train:main"
 
 [project.optional-dependencies]
 ui = ["streamlit>=1.36"]
