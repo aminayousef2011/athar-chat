@@ -1,0 +1,45 @@
+[project]
+name = "athar-chat"
+version = "0.1.0"
+description = "ATHAR Chat: safe tool routing (ACT / CLARIFY / ABSTAIN) for Egyptian Arabic reminder and alarm requests."
+readme = "README.md"
+authors = [{ name = "Amina Yousef" }]
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "scikit-learn>=1.5",
+    "joblib>=1.3",
+    "pydantic>=2.7",
+    "tzdata>=2024.1",   # IANA zones for zoneinfo on Windows (Africa/Cairo incl. 2023+ DST)
+    "pyyaml>=6.0",
+    "psutil>=5.9",      # peak-RSS measurement for the CPU resource log
+]
+
+[project.optional-dependencies]
+ui = ["streamlit>=1.36"]
+# Exploratory only (Phase 7). Not part of the proposal's core comparison.
+jais = ["transformers>=4.44", "torch>=2.3", "accelerate>=0.33"]
+
+[dependency-groups]
+dev = ["pytest>=8.2", "ruff>=0.5"]
+
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/athar"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]  # long Arabic lexicon lines are clearer unwrapped

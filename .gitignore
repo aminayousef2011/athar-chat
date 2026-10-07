@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# experiment outputs are regenerated; frozen models are kept under models/ on purpose
+runs/
+.streamlit/secrets.toml
+
+# raw contributor data stays local until permission to share is confirmed
+data/raw/private/

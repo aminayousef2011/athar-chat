@@ -1,0 +1,307 @@
+<title>ATHAR Chat Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column, the diagram breaks out to full width and scrolls on its own */
+:root {
+  --bg: #f4f6f7; --surface: #ffffff; --lane: #eaeff2; --ink: #16222b; --muted: #586774;
+  --line: #b5c2cc; --arrow: #3d4c58; --accent: #0b7570; --accent-soft: #dcefed;
+  --sans: "IBM Plex Sans", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --arabic: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1418; --surface: #151e24; --lane: #111a1f; --ink: #e2e9ed; --muted: #94a2ad;
+    --line: #3a4a55; --arrow: #a9b6bf; --accent: #4cc3b9; --accent-soft: #12332f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1418; --surface: #151e24; --lane: #111a1f; --ink: #e2e9ed; --muted: #94a2ad;
+  --line: #3a4a55; --arrow: #a9b6bf; --accent: #4cc3b9; --accent-soft: #12332f; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--sans); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 64px; }
+.col { max-width: 760px; }
+.eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+h1 { font-size: clamp(26px, 4vw, 36px); line-height: 1.15; margin: 0 0 12px; text-wrap: balance; font-weight: 600; }
+h2 { font-size: 19px; margin: 44px 0 12px; text-wrap: balance; font-weight: 600; }
+p { margin: 0 0 12px; }
+.lead { color: var(--muted); font-size: 16px; }
+code, .mono { font-family: var(--mono); font-size: .9em; }
+.ar { font-family: var(--arabic); direction: rtl; unicode-bidi: isolate; }
+
+figure { margin: 28px 0 0; }
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.scroll svg { display: block; width: 100%; min-width: 980px; height: auto; color: var(--ink); }
+figcaption { color: var(--muted); font-size: 13.5px; margin-top: 10px; max-width: 760px; }
+
+/* SVG classes (styled from the page so both themes work) */
+.lane { fill: var(--lane); stroke: none; }
+.lane-t { fill: var(--muted); font: 500 12px var(--mono); letter-spacing: .08em; }
+.box { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+.box-acc { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.8; }
+.row { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
+.row-opt { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 3; }
+.t { fill: var(--ink); font: 600 13px var(--sans); }
+.s { fill: var(--muted); font: 400 11.5px var(--sans); }
+.r { fill: var(--ink); font: 400 11.5px var(--sans); }
+.rb { fill: var(--ink); font: 600 11.5px var(--mono); }
+.acc-t { fill: var(--accent); font: 600 11px var(--mono); letter-spacing: .04em; }
+.edge { fill: none; stroke: var(--arrow); stroke-width: 1.4; }
+.edge-x { fill: none; stroke: var(--accent); stroke-width: 1.6; }
+.head { fill: var(--arrow); }
+.head-x { fill: var(--accent); }
+.lbl { fill: var(--muted); font: 400 11px var(--mono); }
+.lbl-x { fill: var(--accent); font: 500 11px var(--mono); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 14px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 22px; height: 14px; border-radius: 3px; border: 1px solid var(--line); background: var(--surface); }
+.sw.acc { background: var(--accent-soft); border: 1.8px solid var(--accent); }
+.sw.opt { background: none; border: 1px dashed var(--muted); }
+
+ul.inv { padding-left: 20px; margin: 0; display: grid; gap: 8px; }
+ul.inv li::marker { color: var(--accent); }
+
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+th { font: 500 11.5px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+td:first-child { font-family: var(--mono); white-space: nowrap; }
+td.wk { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--muted); }
+.pill { display: inline-block; font: 500 11px var(--mono); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.pill.now { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.pill.opt { border-style: dashed; }
+
+.trace { display: grid; grid-template-columns: minmax(120px, 180px) 1fr; gap: 0; border-top: 1px solid var(--line); }
+.trace > div { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); min-width: 0; overflow-wrap: anywhere; }
+.trace > div:nth-child(odd) { font: 500 12px/1.9 var(--mono); color: var(--muted); }
+@media (max-width: 520px) { .trace { grid-template-columns: 1fr; } .trace > div:nth-child(odd) { border-bottom: 0; padding-bottom: 0; } }
+</style>
+
+<div class="wrap">
+  <div class="col">
+    <p class="eyebrow">Applied NLP course project · Amina Yousef</p>
+    <h1>ATHAR Chat architecture</h1>
+    <p class="lead">How one Egyptian Arabic request becomes an <b>ACT</b>, <b>CLARIFY</b> or <b>ABSTAIN</b> response, and how the offline pipeline builds and judges the three intent systems without touching the locked test set.</p>
+  </div>
+
+  <figure>
+    <div class="scroll">
+      <svg viewBox="0 0 1260 720" role="img" aria-label="Runtime pipeline: request, normalizer, then a parallel argument extractor and intent recognizer feeding a deterministic policy and a response builder. Offline pipeline: task contract and dataset feed a family-level split; train and dev data train and freeze the intent models that the runtime loads; the locked test split and runtime predictions feed the evaluation harness and error analysis.">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+          <marker id="ahx" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-x"/></marker>
+        </defs>
+
+        <!-- ===== Lane backgrounds ===== -->
+        <rect class="lane" x="8" y="8" width="1244" height="362" rx="10"/>
+        <text class="lane-t" x="24" y="34">RUNTIME · ONE REQUEST · CPU ONLY</text>
+        <rect class="lane" x="8" y="398" width="1244" height="312" rx="10"/>
+        <text class="lane-t" x="24" y="424">OFFLINE · DATA · TRAINING · LOCKED-TEST EVALUATION</text>
+
+        <!-- ===== Runtime: request ===== -->
+        <rect class="box" x="20" y="132" width="150" height="100" rx="6"/>
+        <text class="t" x="95" y="156" text-anchor="middle">User request</text>
+        <text class="s" x="95" y="178" text-anchor="middle">Egyptian Arabic text</text>
+        <text class="s" x="95" y="196" text-anchor="middle">+ reference datetime</text>
+        <text class="s" x="95" y="214" text-anchor="middle">+ tz Africa/Cairo</text>
+
+        <path class="edge" d="M170,182 H228" marker-end="url(#ah)"/>
+        <text class="lbl" x="199" y="175" text-anchor="middle">text</text>
+
+        <!-- ===== Runtime: normalizer ===== -->
+        <rect class="box" x="230" y="132" width="160" height="100" rx="6"/>
+        <text class="t" x="310" y="156" text-anchor="middle">Normalizer</text>
+        <text class="s" x="310" y="178" text-anchor="middle">alef · yaa · taa marbuta</text>
+        <text class="s" x="310" y="196" text-anchor="middle">Arabic-Indic digits</text>
+        <text class="s" x="310" y="214" text-anchor="middle">tatweel · diacritics</text>
+
+        <!-- fan-out to extractor + intent -->
+        <path class="edge" d="M390,182 H405 V105 H478" marker-end="url(#ah)"/>
+        <path class="edge" d="M405,182 V260 H478"  marker-end="url(#ah)"/>
+        <text class="lbl" x="446" y="98"  text-anchor="middle">normalized</text>
+        <text class="lbl" x="446" y="253" text-anchor="middle">normalized</text>
+
+        <!-- ===== Runtime: argument extractor ===== -->
+        <rect class="box" x="480" y="60" width="230" height="90" rx="6"/>
+        <text class="t" x="595" y="82"  text-anchor="middle">Argument extractor</text>
+        <text class="s" x="595" y="102" text-anchor="middle">date/time → ISO-8601 (Cairo)</text>
+        <text class="s" x="595" y="120" text-anchor="middle">reminder-text span</text>
+        <text class="s" x="595" y="138" text-anchor="middle">gaps: date · time · am_pm · past</text>
+
+        <!-- ===== Runtime: intent recognizer (the swapped part) ===== -->
+        <rect class="box-acc" x="480" y="170" width="230" height="180" rx="6"/>
+        <text class="t" x="595" y="192" text-anchor="middle">Intent recognizer</text>
+        <text class="acc-t" x="595" y="209" text-anchor="middle">ONLY PART THAT VARIES</text>
+        <rect class="row" x="494" y="220" width="202" height="26" rx="4"/>
+        <text class="r" x="506" y="237">S1 · keyword rules</text>
+        <rect class="row" x="494" y="252" width="202" height="26" rx="4"/>
+        <text class="r" x="506" y="269">S2 · word TF-IDF + LogReg</text>
+        <rect class="row" x="494" y="284" width="202" height="26" rx="4"/>
+        <text class="r" x="506" y="301">S3 · S2 + char n-grams</text>
+        <rect class="row-opt" x="494" y="316" width="202" height="26" rx="4"/>
+        <text class="s" x="506" y="333">S4 · Jais zero-shot (optional)</text>
+
+        <!-- fan-in to policy -->
+        <path class="edge" d="M710,105 H785 V162 H798" marker-end="url(#ah)"/>
+        <path class="edge" d="M710,260 H785 V202 H798" marker-end="url(#ah)"/>
+        <text class="lbl" x="747" y="98"  text-anchor="middle">args + gaps</text>
+        <text class="lbl" x="747" y="253" text-anchor="middle">intent</text>
+
+        <!-- ===== Runtime: policy ===== -->
+        <rect class="box" x="800" y="122" width="170" height="120" rx="6"/>
+        <text class="t" x="885" y="144" text-anchor="middle">Execution policy</text>
+        <text class="s" x="885" y="161" text-anchor="middle">deterministic · shared</text>
+        <text class="r" x="885" y="184" text-anchor="middle">unsupported → ABSTAIN</text>
+        <text class="r" x="885" y="202" text-anchor="middle">no gaps → ACT</text>
+        <text class="r" x="885" y="220" text-anchor="middle">otherwise → CLARIFY</text>
+
+        <path class="edge" d="M970,182 H1028" marker-end="url(#ah)"/>
+        <text class="lbl" x="999" y="175" text-anchor="middle">route</text>
+
+        <!-- ===== Runtime: response builder ===== -->
+        <rect class="box" x="1030" y="72" width="210" height="220" rx="6"/>
+        <text class="t" x="1135" y="94"  text-anchor="middle">Response builder</text>
+        <text class="s" x="1135" y="111" text-anchor="middle">fixed JSON schema</text>
+        <rect class="row" x="1044" y="124" width="182" height="44" rx="4"/>
+        <text class="rb" x="1056" y="142">ACT</text>
+        <text class="s"  x="1056" y="159">simulated tool call</text>
+        <rect class="row" x="1044" y="178" width="182" height="44" rx="4"/>
+        <text class="rb" x="1056" y="196">CLARIFY</text>
+        <text class="s"  x="1056" y="213">template question per gap</text>
+        <rect class="row" x="1044" y="232" width="182" height="44" rx="4"/>
+        <text class="rb" x="1056" y="250">ABSTAIN</text>
+        <text class="s"  x="1056" y="267">templated decline</text>
+
+        <!-- ===== Cross-lane edges ===== -->
+        <path class="edge-x" d="M595,444 V352" marker-end="url(#ahx)"/>
+        <text class="lbl-x" x="607" y="389">loads frozen models</text>
+        <path class="edge" d="M1135,292 V442" marker-end="url(#ah)"/>
+        <text class="lbl" x="1147" y="389">predictions</text>
+
+        <!-- ===== Offline: contract ===== -->
+        <rect class="box" x="20" y="444" width="150" height="90" rx="6"/>
+        <text class="t" x="95" y="466" text-anchor="middle">Task contract</text>
+        <text class="s" x="95" y="486" text-anchor="middle">+ annotation guide</text>
+        <text class="s" x="95" y="504" text-anchor="middle">weekday, AM/PM rules</text>
+        <text class="s" x="95" y="522" text-anchor="middle">required args per tool</text>
+
+        <path class="edge" d="M170,489 H228" marker-end="url(#ah)"/>
+        <text class="lbl" x="199" y="482" text-anchor="middle">guides</text>
+
+        <!-- ===== Offline: dataset ===== -->
+        <rect class="box" x="230" y="444" width="160" height="90" rx="6"/>
+        <text class="t" x="310" y="466" text-anchor="middle">Dataset · JSONL</text>
+        <text class="s" x="310" y="486" text-anchor="middle">300 hand-written items</text>
+        <text class="s" x="310" y="504" text-anchor="middle">native-speaker review</text>
+        <text class="s" x="310" y="522" text-anchor="middle">families kept together</text>
+
+        <path class="edge" d="M260,534 V554 H95 V572" marker-end="url(#ah)"/>
+        <path class="edge" d="M350,534 V572" marker-end="url(#ah)"/>
+
+        <!-- ===== Offline: agreement ===== -->
+        <rect class="box" x="20" y="574" width="150" height="90" rx="6"/>
+        <text class="t" x="95" y="596" text-anchor="middle">Agreement check</text>
+        <text class="s" x="95" y="616" text-anchor="middle">2nd annotator, 60 items</text>
+        <text class="s" x="95" y="634" text-anchor="middle">agreement + Cohen's κ</text>
+        <text class="s" x="95" y="652" text-anchor="middle">else dated self-review</text>
+
+        <!-- ===== Offline: validate + split ===== -->
+        <rect class="box" x="230" y="574" width="160" height="90" rx="6"/>
+        <text class="t" x="310" y="596" text-anchor="middle">Validate + split</text>
+        <text class="s" x="310" y="616" text-anchor="middle">by scenario family</text>
+        <text class="s" x="310" y="634" text-anchor="middle">train 140 · dev 40</text>
+        <text class="s" x="310" y="652" text-anchor="middle">test 120 (50 / 50 / 20)</text>
+
+        <path class="edge" d="M390,619 H478" marker-end="url(#ah)"/>
+        <text class="lbl" x="435" y="612" text-anchor="middle">train + dev</text>
+
+        <!-- test split runs underneath everything -->
+        <path class="edge" d="M310,664 V690 H1135 V666" marker-end="url(#ah)"/>
+        <text class="lbl" x="722" y="684" text-anchor="middle">test 120 · locked until week 6</text>
+
+        <!-- ===== Offline: train & freeze ===== -->
+        <rect class="box" x="480" y="444" width="230" height="220" rx="6"/>
+        <text class="t" x="595" y="466" text-anchor="middle">Train &amp; freeze</text>
+        <text class="s" x="595" y="483" text-anchor="middle">S2 / S3 learn intent labels only</text>
+        <text class="r" x="595" y="510" text-anchor="middle">TF-IDF fitted on train only</text>
+        <text class="r" x="595" y="530" text-anchor="middle">dev-only search: C, n-grams</text>
+        <text class="r" x="595" y="550" text-anchor="middle">S1 keywords written by hand</text>
+        <text class="r" x="595" y="570" text-anchor="middle">rules + normalizer frozen</text>
+        <text class="s" x="595" y="600" text-anchor="middle">logs CPU time + peak RAM</text>
+        <text class="s" x="595" y="618" text-anchor="middle">saves models/*.joblib</text>
+
+        <!-- ===== Offline: error analysis ===== -->
+        <rect class="box" x="800" y="484" width="170" height="140" rx="6"/>
+        <text class="t" x="885" y="506" text-anchor="middle">Error analysis</text>
+        <text class="s" x="885" y="526" text-anchor="middle">≤ 30 failures coded:</text>
+        <text class="r" x="885" y="548" text-anchor="middle">intent · extraction</text>
+        <text class="r" x="885" y="566" text-anchor="middle">normalization · routing</text>
+        <text class="s" x="885" y="594" text-anchor="middle">→ report + slides</text>
+
+        <path class="edge" d="M1030,554 H972" marker-end="url(#ah)"/>
+        <text class="lbl" x="1001" y="547" text-anchor="middle">failures</text>
+
+        <!-- ===== Offline: evaluation ===== -->
+        <rect class="box" x="1030" y="444" width="210" height="220" rx="6"/>
+        <text class="t" x="1135" y="466" text-anchor="middle">Evaluation harness</text>
+        <text class="s" x="1135" y="483" text-anchor="middle">same locked test, every system</text>
+        <text class="rb" x="1135" y="510" text-anchor="middle">Safe Task Success</text>
+        <text class="r" x="1135" y="530" text-anchor="middle">intent + route macro-F1</text>
+        <text class="r" x="1135" y="548" text-anchor="middle">unsafe-execution rate</text>
+        <text class="r" x="1135" y="566" text-anchor="middle">unnecessary clarification</text>
+        <text class="r" x="1135" y="584" text-anchor="middle">complete/incomplete pairs</text>
+        <text class="r" x="1135" y="602" text-anchor="middle">95% bootstrap by family</text>
+        <text class="s" x="1135" y="628" text-anchor="middle">per-class P/R · confusion</text>
+      </svg>
+    </div>
+    <figcaption>Only the highlighted intent recognizer changes between S1, S2 and S3. Normalizer, extractor, policy and templates are shared, so any difference in Safe Task Success comes from intent recognition. The harness replays each locked test item through the runtime path. The test split goes straight to evaluation and never reaches training.</figcaption>
+  </figure>
+
+  <div class="legend">
+    <span><i class="sw"></i>shared, identical for every system</span>
+    <span><i class="sw acc"></i>varies per system (S1 / S2 / S3)</span>
+    <span><i class="sw opt"></i>optional, exploratory, outside the core claims</span>
+  </div>
+
+  <div class="col">
+    <h2>Invariants the code enforces</h2>
+    <ul class="inv">
+      <li>Classifiers predict one of three <b>intent</b> labels (<code>create_reminder</code>, <code>create_alarm</code>, <code>unsupported</code>). They never predict the route. The policy derives the route.</li>
+      <li>The system never invents a value. A missing date uses the next-occurrence rule from the contract. Anything else unresolved becomes a clarification target.</li>
+      <li>Vocabularies, hyper-parameters, keyword lists and extraction rules are frozen before the test split is opened once, in week 6.</li>
+      <li>Splits are made by scenario family, so paraphrases and complete/incomplete pairs never cross between train, dev and test.</li>
+      <li>Tools are simulated. An ACT response is a JSON call record and nothing is scheduled.</li>
+    </ul>
+
+    <h2>One request, traced</h2>
+    <div class="trace">
+      <div>input</div><div><span class="ar">فكرني بكرة الساعة ٧ الصبح أشتري عيش</span></div>
+      <div>reference</div><div class="mono">2026-10-07T10:00+03:00 · Africa/Cairo</div>
+      <div>normalized</div><div><span class="ar">فكرني بكره الساعه 7 الصبح اشتري عيش</span></div>
+      <div>intent</div><div class="mono">create_reminder</div>
+      <div>arguments</div><div><span class="mono">datetime = 2026-10-08T07:00+03:00</span> · <span class="mono">reminder_text = </span><span class="ar">أشتري عيش</span></div>
+      <div>gaps</div><div class="mono">∅ → route ACT</div>
+      <div>remove <span class="ar">الصبح</span></div><div>gap <code>am_pm</code> → route CLARIFY, question <span class="ar">الساعة 7 الصبح ولا بالليل؟</span></div>
+    </div>
+
+    <h2>Delivery phases</h2>
+  </div>
+  <div class="table-wrap col">
+    <table>
+      <thead><tr><th>Phase</th><th>Scope</th><th>Weeks</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>P0</td><td>Repository, locked environment (uv), HLD, test runner</td><td class="wk">1</td><td><span class="pill now">done</span></td></tr>
+        <tr><td>P1</td><td>Task contract and shared core: normalizer, time and argument extractor, policy, templates, schemas, contract tests</td><td class="wk">1–2</td><td><span class="pill now">done · in review</span></td></tr>
+        <tr><td>P2</td><td>Data tooling: validator, family splitter and manifest, κ script, annotation guide, data card, 20-item pilot. The 300 items themselves are written by a native speaker.</td><td class="wk">2–4</td><td><span class="pill">next</span></td></tr>
+        <tr><td>P3</td><td>S1 rules, S2 and S3 classifiers, dev-only search, freezing, CPU and RAM log</td><td class="wk">5</td><td><span class="pill">planned</span></td></tr>
+        <tr><td>P4</td><td>Locked-test evaluation: all metrics, paired subset, family bootstrap</td><td class="wk">6</td><td><span class="pill">planned</span></td></tr>
+        <tr><td>P5</td><td>Error analysis and local demo interface</td><td class="wk">7–8</td><td><span class="pill">planned</span></td></tr>
+        <tr><td>P6</td><td>Final report and presentation</td><td class="wk">8</td><td><span class="pill">planned</span></td></tr>
+        <tr><td>P7</td><td>Jais zero-shot intent baseline (S4), reported separately from the core comparison</td><td class="wk">after 6</td><td><span class="pill opt">optional</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>

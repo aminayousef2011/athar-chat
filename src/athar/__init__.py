@@ -1,0 +1,1 @@
+﻿"""ATHAR Chat core package."""
