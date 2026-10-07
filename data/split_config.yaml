@@ -1,0 +1,8 @@
+# Split of the 300-item dataset (data/athar.jsonl), by scenario family.
+# Proposal: train 140 / dev 40 / test 120, test = 50 ACT + 50 CLARIFY + 20 ABSTAIN.
+# The dev route mix follows what remains after test; train is the rest.
+# Do not change after the manifest is committed: the same file + config gives the same split.
+seed: 20261007
+trials: 5000
+test: {ACT: 50, CLARIFY: 50, ABSTAIN: 20}
+dev: 40

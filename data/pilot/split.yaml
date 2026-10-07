@@ -1,0 +1,7 @@
+# Pilot split. Every pilot item is assistant_draft, so no pilot family may enter test;
+# the pilot only exercises the splitter, the manifest and the dev-side tooling.
+seed: 20261007
+trials: 2000
+test: {ACT: 0, CLARIFY: 0, ABSTAIN: 0}
+# 5 = 2 ACT / 2 CLARIFY / 1 ABSTAIN: every supported pilot family is one ACT + one CLARIFY pair
+dev: 5

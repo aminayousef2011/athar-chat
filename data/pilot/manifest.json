@@ -1,0 +1,86 @@
+{
+  "manifest_version": 1,
+  "contract_version": "0.1",
+  "dataset": {
+    "path": "pilot.jsonl",
+    "sha256": "a29d477ec1ecf61752f42011d96ac7fe460749e1391a943a4898a65a9c958843",
+    "n_items": 20,
+    "n_families": 12
+  },
+  "config": {
+    "seed": 20261007,
+    "test": {
+      "ACT": 0,
+      "CLARIFY": 0,
+      "ABSTAIN": 0
+    },
+    "dev": 5,
+    "trials": 2000
+  },
+  "splits": {
+    "train": {
+      "families": [
+        "pilot-f02",
+        "pilot-f03",
+        "pilot-f04",
+        "pilot-f05",
+        "pilot-f06",
+        "pilot-f08",
+        "pilot-f09",
+        "pilot-f10",
+        "pilot-f12"
+      ],
+      "counts": {
+        "ACT": 6,
+        "CLARIFY": 6,
+        "ABSTAIN": 3
+      },
+      "items": {
+        "pilot-003": "e43beeb8f624e9bab8f63761a065071265ff41350129397fa2d916e80977071a",
+        "pilot-004": "4fee2f3e838893c44f09ea8d7f4c1bcd400f18bffdaf7de02d440524507f5dfd",
+        "pilot-005": "8888e65a48af97138385d4d102873b3e98be273ebdd6f10292e38cc8f824c9c2",
+        "pilot-006": "e98a6e6af6751975b2178ad87e61ab1b10d1b7bc03247a8bcf8621e31af7c24d",
+        "pilot-007": "96e89a2d2dc894ac5c8e2160607e6e93adedddff3843f53525f9819ed978721e",
+        "pilot-008": "52f76a41967386a780c46aa252934215d2dbe53c3ad896ea179a08f39bfd08ac",
+        "pilot-009": "fb26c5361170f5c1d365921b817856cb6f098eaba2398ee6af5a83ec62842b4b",
+        "pilot-010": "0f5ddfb743a5133c1d1075c1afedd43a39f7f4a7be8cab6997abcba600d61d9c",
+        "pilot-011": "dd247b382163dc28b11095ea9f03bf615be3778cffe55161f6ba63c24c03ae55",
+        "pilot-012": "fc6a09a5e80db1edffb6dedec866491f06fe6b638a919c648cacd7e395994cac",
+        "pilot-015": "2e81a3eb04b32065110d555a1ee57cf7bffd0cb50e303dceddabfcab03aed2c6",
+        "pilot-016": "aea4b61d3362d09d1c78297ed8df5f69ed18b7bfe09c7ce43ee1d1998274472e",
+        "pilot-017": "5739e32e3578d825242e9643e1729c5482641bbfc9321f4b6f51d6b19e1cfc8d",
+        "pilot-018": "4b89970f73feaded593e6e97ed021f742772d140a72cefa3b17f15e4c0ea94e2",
+        "pilot-020": "fc3cc8fe6c4da47c68fb46e41c5da919cd053e71be57366d99b3f403c6da3df2"
+      }
+    },
+    "dev": {
+      "families": [
+        "pilot-f01",
+        "pilot-f07",
+        "pilot-f11"
+      ],
+      "counts": {
+        "ACT": 2,
+        "CLARIFY": 2,
+        "ABSTAIN": 1
+      },
+      "items": {
+        "pilot-001": "93e0263875ad6f41039b3fe2f5efd44490b21fa19aa8da8de98a17d04694c206",
+        "pilot-002": "98e38decca0b6585065e439d049b6bb59de253cb770532cb9a743ce9a058e04a",
+        "pilot-013": "461990e1eb435f9f34cff74ba6a5ff3efdb94eed263440c4359f8a5fc6966251",
+        "pilot-014": "65fe60b463aad8f305a2b0fbc3c316bf382f22a6431513752c54b17e784bb9a3",
+        "pilot-019": "1332b6f624ffce2159cd72bee933cfb1e46adb08c6b1abc5ce55c45d4d027340"
+      }
+    },
+    "test": {
+      "families": [],
+      "counts": {
+        "ACT": 0,
+        "CLARIFY": 0,
+        "ABSTAIN": 0
+      },
+      "items": {}
+    }
+  },
+  "manifest_sha256": "a6efd5012241a620fb5f1db18821c145f029afd7c6132388d9dc38ca791fe558"
+}

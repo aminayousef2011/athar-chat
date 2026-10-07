@@ -16,6 +16,9 @@ dependencies = [
     "psutil>=5.9",      # peak-RSS measurement for the CPU resource log
 ]
 
+[project.scripts]
+athar-data = "athar.data.cli:main"
+
 [project.optional-dependencies]
 ui = ["streamlit>=1.36"]
 # Exploratory only (Phase 7). Not part of the proposal's core comparison.
