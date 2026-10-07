@@ -1,0 +1,32 @@
+# Local hooks run through uv, so they use the locked tool versions and need no network.
+#   uv run pre-commit install        # once per clone
+#   uv run pre-commit run --all-files
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+      - id: mypy
+        name: mypy
+        entry: uv run mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: validate-data
+        name: validate dataset files
+        entry: uv run athar-data validate --strict
+        language: system
+        files: ^data/.*\.jsonl$
+      - id: verify-manifests
+        name: verify split manifests
+        entry: uv run athar-data verify
+        language: system
+        files: ^data/.*manifest\.json$
+      - id: lf-line-endings
+        name: data files use LF (hashes depend on bytes)
+        entry: uv run python scripts/check_lf.py
+        language: system
+        files: ^data/.*\.(jsonl|json|yaml)$

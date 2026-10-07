@@ -44,9 +44,17 @@ from athar.schema import GoldItem
 LEARNED = ("S2", "S3")
 SYSTEMS = ("S1", *LEARNED)
 PKG = Path(athar.__file__).resolve().parent
-#: everything shared by all systems, plus S1's rules and the S2/S3 builders
-FROZEN_SOURCES = ("normalize.py", "lexicon.py", "timeexpr.py", "extract.py", "policy.py",
-                  "respond.py", "schema.py", "pipeline.py", "intent/rules.py", "intent/models.py")
+REPO = PKG.parents[1]
+#: repo-relative files frozen before the test split is opened: everything shared by all
+#: systems, S1's rules and the S2/S3 builders, the scoring/statistics code, and the documents
+#: and settings that pre-register the evaluation
+FROZEN_SOURCES = tuple(
+    [f"src/athar/{m}.py" for m in ("normalize", "lexicon", "timeexpr", "extract", "policy",
+                                   "respond", "schema", "pipeline")]
+    + [f"src/athar/intent/{m}.py" for m in ("rules", "models")]
+    + [f"src/athar/eval/{m}.py" for m in ("metrics", "stats", "perturb", "harness")]
+    + ["docs/task_contract.md", "docs/evaluation_protocol.md", "configs/eval.yaml"]
+)
 
 
 class FreezeError(RuntimeError):
@@ -56,7 +64,7 @@ class FreezeError(RuntimeError):
 # --------------------------------------------------------------------------- hashing
 def source_hash(rel: str) -> str:
     """Line-ending independent, so a CRLF checkout does not look like a code change."""
-    return sha256_text((PKG / rel).read_text(encoding="utf-8").replace("\r\n", "\n"))
+    return sha256_text((REPO / rel).read_text(encoding="utf-8").replace("\r\n", "\n"))
 
 
 def source_hashes() -> dict[str, str]:
@@ -65,13 +73,13 @@ def source_hashes() -> dict[str, str]:
 
 # --------------------------------------------------------------------------- resources
 def _peak_rss_mb() -> float:
-    mem = psutil.Process().memory_info()
-    peak = getattr(mem, "peak_wset", None)  # Windows
-    if peak is None:
+    if sys.platform == "win32":
+        peak = float(psutil.Process().memory_info().peak_wset)
+    else:
         import resource  # POSIX only
 
         ru = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        peak = ru if sys.platform == "darwin" else ru * 1024
+        peak = float(ru if sys.platform == "darwin" else ru * 1024)
     return round(peak / 2**20, 1)
 
 
@@ -200,7 +208,7 @@ def read_freeze(models_dir: str | Path) -> dict[str, Any]:
     p = Path(models_dir) / "freeze.json"
     if not p.exists():
         raise FreezeError(f"{p} not found; run `athar-train fit` first")
-    f = json.loads(p.read_text(encoding="utf-8"))
+    f: dict[str, Any] = json.loads(p.read_text(encoding="utf-8"))
     body = {k: v for k, v in f.items() if k != "freeze_sha256"}
     if sha256_text(canonical_json(body)) != f.get("freeze_sha256"):
         raise FreezeError(f"{p} was edited after freezing")
@@ -221,7 +229,7 @@ def verify_freeze(models_dir: str | Path) -> list[str]:
         elif sha256_file(path) != s["sha256"]:
             problems.append(f"{name}: {path.name} changed after freezing")
     for rel, h in f["frozen_sources"].items():
-        if not (PKG / rel).exists():
+        if not (REPO / rel).exists():
             problems.append(f"source {rel} is missing")
         elif source_hash(rel) != h:
             problems.append(f"source {rel} changed after freezing")
@@ -245,7 +253,7 @@ def load_recognizer(name: str, models_dir: str | Path = "models") -> KeywordInte
 def main(argv: Sequence[str] | None = None) -> int:
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
-            stream.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+            stream.reconfigure(encoding="utf-8")
     p = argparse.ArgumentParser(prog="athar-train", description="ATHAR Chat Phase 3: search + freeze")
     sub = p.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("fit", help="dev-only search, fit on train, freeze")

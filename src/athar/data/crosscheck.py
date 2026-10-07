@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime
 
 from athar.extract import canonical_text
 from athar.pipeline import respond_with_intent
@@ -26,7 +27,7 @@ class Disagreement:
     system: str
 
 
-def _same_instant(a, b) -> bool:
+def _same_instant(a: datetime | None, b: datetime | None) -> bool:
     if a is None or b is None:
         return a is b
     return not is_after(a, b) and not is_after(b, a)

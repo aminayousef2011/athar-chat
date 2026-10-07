@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]  # Windows: the project's primary platform (tzdata, CRLF)
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - name: Install (frozen lockfile)
+        run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Type check
+        run: uv run mypy
+      - name: Tests + branch coverage (>= 85%)
+        run: uv run pytest --cov --cov-report=term
+      - name: Dataset gates
+        run: |
+          uv run athar-data validate data/pilot/pilot.jsonl --strict
+          uv run athar-data validate data/draft/athar_draft.jsonl --strict
+          uv run athar-data verify data/pilot/manifest.json

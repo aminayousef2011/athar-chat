@@ -15,6 +15,14 @@ SOURCES = ("author", "contributor", "assistant_draft")
 REASONS = ("deletion", "modification", "recurring", "other_person", "multi_action", "other_tool", "other")
 
 
+def _eq(field: str, value: object) -> Callable[[GoldItem], bool]:
+    return lambda it: bool(getattr(it, field) == value)
+
+
+def _has_target(gap: str) -> Callable[[GoldItem], bool]:
+    return lambda it: gap in it.clarify_targets
+
+
 def _table(columns: dict[str, Sequence[GoldItem]],
            rows: Sequence[tuple[str, Callable[[GoldItem], bool]]]) -> list[str]:
     head = "| | " + " | ".join(columns) + " |"
@@ -38,12 +46,12 @@ def stats_markdown(items: Sequence[GoldItem], splits: dict[str, Sequence[GoldIte
                  f"(median {statistics.median(lengths) if lengths else 0:g}).")
     lines.append("")
     rows: list[tuple[str, Callable[[GoldItem], bool]]] = []
-    rows += [(f"route {r}", lambda it, r=r: it.route == r) for r in ROUTES]
-    rows += [(f"intent {i}", lambda it, i=i: it.intent == i) for i in INTENTS]
-    rows += [(f"target `{g}`", lambda it, g=g: g in it.clarify_targets) for g in GAP_ORDER]
-    rows += [(f"reason {r}", lambda it, r=r: it.unsupported_reason == r) for r in REASONS]
-    rows += [("code-switched", lambda it: it.code_switched)]
-    rows += [(f"source {s}", lambda it, s=s: it.source == s) for s in SOURCES]
+    rows += [(f"route {r}", _eq("route", r)) for r in ROUTES]
+    rows += [(f"intent {i}", _eq("intent", i)) for i in INTENTS]
+    rows += [(f"target `{g}`", _has_target(g)) for g in GAP_ORDER]
+    rows += [(f"reason {r}", _eq("unsupported_reason", r)) for r in REASONS]
+    rows += [("code-switched", _eq("code_switched", True))]
+    rows += [(f"source {s}", _eq("source", s)) for s in SOURCES]
     rows += [("**items**", lambda it: True)]
     lines += _table(columns, rows)
     return "\n".join(lines) + "\n"

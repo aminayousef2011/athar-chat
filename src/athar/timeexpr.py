@@ -145,7 +145,7 @@ def _amount(tok: str) -> float:
         return float(tok)
     if tok in _FRACTIONS:
         return _FRACTIONS[tok]
-    return float(L.AMOUNT_WORDS[tok])  # type: ignore[arg-type]
+    return float(L.AMOUNT_WORDS[tok])
 
 
 def _explicit_date(d: int, m: int, y: int | None, ref: date) -> DateRef:
@@ -212,7 +212,7 @@ def detect(text: str, ref: datetime) -> list[Mention]:
             if not claims.free(*m.span()):
                 continue
             g = m.groupdict()
-            month = int(L.MONTHS[g["mon"]]) if g.get("mon") else int(g["m"])  # type: ignore[arg-type]
+            month = int(L.MONTHS[g["mon"]]) if g.get("mon") else int(g["m"])
             year = int(g["y"]) if g.get("y") else None
             add("date", *m.span(), _explicit_date(int(g["d"]), month, year, today))
     for rx in RX_DATE_DOM_ONLY:
@@ -256,7 +256,7 @@ def detect(text: str, ref: datetime) -> list[Mention]:
         if not claims.free(hs, he):
             continue
         raw = m["h"]
-        hour = int(L.HOUR_WORDS[raw]) if is_word else int(raw)  # type: ignore[arg-type]
+        hour = int(L.HOUR_WORDS[raw]) if is_word else int(raw)
         prefix = RX_CLOCK_PREFIX.search(text, 0, hs)
         start = prefix.start() if prefix else hs
         pos, minute, has_colon, has_wordmin = he, 0, False, False
@@ -266,7 +266,7 @@ def detect(text: str, ref: datetime) -> list[Mention]:
             for rx, sign, base in RX_MIN_WORDS:
                 if mw := rx.match(text, pos):
                     n = mw["n"]
-                    val = int(n) if n.isdigit() else int(L.MINUTE_WORDS[n])  # type: ignore[arg-type]
+                    val = int(n) if n.isdigit() else int(L.MINUTE_WORDS[n])
                     minute, pos, has_wordmin = base + sign * val, mw.end(), True
                     break
         marker = None
@@ -338,10 +338,10 @@ def resolve(mentions: list[Mention], ref: datetime, tz_name: str = "Africa/Cairo
     tz = ZoneInfo(tz_name)
     ref = ref.astimezone(tz)
     gaps: set[str] = set()
-    rel = [m.value for m in mentions if m.kind == "relative"]
+    rel = [m.value for m in mentions if m.kind == "relative" and isinstance(m.value, timedelta)]
     dates = [m.value for m in mentions if m.kind == "date"]
     clocks = list(dict.fromkeys(m.value for m in mentions if m.kind == "clock"))
-    periods = {m.value for m in mentions if m.kind == "period"}
+    periods = {m.value for m in mentions if m.kind == "period" and isinstance(m.value, str)}
 
     def done(dt: datetime | None) -> Temporal:
         return Temporal(dt, frozenset(gaps), tuple(mentions))

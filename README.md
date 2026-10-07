@@ -25,19 +25,42 @@ docs/            HLD, task contract, annotation guide, data card
 src/athar/       shared core: normalizer, time/argument extractor, policy, responses, schema
 src/athar/data/  dataset tooling (`athar-data` CLI): validator, splitter, agreement, stats
 src/athar/intent/ S1 keyword rules, S2/S3 classifiers, search + freeze (`athar-train` CLI)
+src/athar/eval/  scoring, family-level statistics, robustness suite, harness (`athar-eval` CLI)
 configs/         training/search config
 data/            dataset, split config and manifest; data/pilot/ = 20 assistant-drafted pilot items
 tests/           unit tests for the contract and the tooling (pytest)
 ```
 
-Later phases add `src/athar/eval/`, `models/` (frozen systems) and `app/`.
+Later phases add `models/` (frozen systems), `results/` (the one locked test run) and `app/`.
 
 ## Setup (CPU only)
 
 ```powershell
 # Behind a TLS-intercepting proxy, also set:  $env:UV_NATIVE_TLS = "1"
 uv sync                 # creates .venv from uv.lock (frozen dependencies)
-uv run pytest           # contract + tooling tests
+uv run pytest           # contract, tooling, statistics and property tests
+```
+
+## Quality gates
+
+```powershell
+uv run ruff check .                  # lint
+uv run mypy                          # types (untyped definitions disallowed)
+uv run pytest --cov                  # tests + branch coverage (fails under 85%)
+uv run pre-commit install            # same gates + data validation on every commit
+```
+
+CI (`.github/workflows/ci.yml`) runs them on Linux and Windows from the frozen lockfile.
+
+## Evaluation
+
+The protocol is pre-registered in [docs/evaluation_protocol.md](docs/evaluation_protocol.md):
+hypotheses H1-H3 on Safe Task Success, family-bootstrap CIs, paired permutation tests with Holm
+correction, robustness, calibration and a power analysis.
+
+```powershell
+uv run athar-eval --manifest data/splits/manifest.json --models models --split dev
+uv run athar-eval --manifest data/splits/manifest.json --models models --split test --unlock-test  # once
 ```
 
 ## Dataset tooling

@@ -13,3 +13,10 @@ runs/
 
 # raw contributor data stays local until permission to share is confirmed
 data/raw/private/
+
+# test artefacts
+.coverage
+.coverage.*
+htmlcov/
+.hypothesis/
+.mypy_cache/

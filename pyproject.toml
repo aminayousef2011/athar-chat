@@ -19,6 +19,7 @@ dependencies = [
 [project.scripts]
 athar-data = "athar.data.cli:main"
 athar-train = "athar.intent.train:main"
+athar-eval = "athar.eval.harness:main"
 
 [project.optional-dependencies]
 ui = ["streamlit>=1.36"]
@@ -26,7 +27,15 @@ ui = ["streamlit>=1.36"]
 jais = ["transformers>=4.44", "torch>=2.3", "accelerate>=0.33"]
 
 [dependency-groups]
-dev = ["pytest>=8.2", "ruff>=0.5"]
+dev = [
+    "hypothesis>=6.100",
+    "mypy>=1.11",
+    "pre-commit>=3.7",
+    "pytest>=8.2",
+    "pytest-cov>=5.0",
+    "ruff>=0.5",
+    "types-pyyaml>=6.0.12.20260906",
+]
 
 [build-system]
 requires = ["hatchling>=1.24"]
@@ -47,3 +56,28 @@ src = ["src", "tests"]
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
 ignore = ["E501"]  # long Arabic lexicon lines are clearer unwrapped
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src/athar"]
+strict_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+no_implicit_reexport = true
+
+[[tool.mypy.overrides]]
+module = ["sklearn.*", "joblib.*", "scipy.*", "psutil.*"]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["athar"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+skip_covered = true
+exclude_also = ["if __name__ == .__main__.:", "raise SystemExit"]

@@ -67,8 +67,8 @@ Vec = tuple[int, int, int]  # items per route, in ROUTES order
 
 
 def _vec(items: Sequence[GoldItem]) -> Vec:
-    c = Counter(it.route for it in items)
-    return tuple(c[r] for r in ROUTES)  # type: ignore[return-value]
+    c: Counter[str] = Counter(it.route for it in items)
+    return (c["ACT"], c["CLARIFY"], c["ABSTAIN"])
 
 
 def _largest_remainder(total: int, weights: Vec) -> Vec:
@@ -183,7 +183,7 @@ def write_manifest(manifest: dict[str, Any], path: str | Path) -> None:
 
 
 def read_manifest(path: str | Path) -> dict[str, Any]:
-    m = json.loads(Path(path).read_text(encoding="utf-8"))
+    m: dict[str, Any] = json.loads(Path(path).read_text(encoding="utf-8"))
     body = {k: v for k, v in m.items() if k != "manifest_sha256"}
     if sha256_text(canonical_json(body)) != m.get("manifest_sha256"):
         raise DatasetError(f"{path}: manifest hash mismatch; the manifest was edited by hand")
@@ -191,7 +191,7 @@ def read_manifest(path: str | Path) -> dict[str, Any]:
 
 
 def dataset_path_of(manifest: dict[str, Any], manifest_path: str | Path) -> Path:
-    return Path(manifest_path).resolve().parent / manifest["dataset"]["path"]
+    return Path(manifest_path).resolve().parent / str(manifest["dataset"]["path"])
 
 
 def _raw_by_id(dataset: Path) -> dict[str, dict[str, Any]]:
@@ -225,7 +225,7 @@ def verify_manifest(manifest_path: str | Path) -> list[Issue]:
                 continue
             if item_hash(raw) != h:
                 issues.append(Issue("error", where, f"{name} item {iid} changed after the split"))
-            fam = raw.get("family_id")
+            fam = str(raw.get("family_id"))
             if fam_split.setdefault(fam, name) != name:
                 issues.append(Issue("error", where, f"family {fam} is in {fam_split[fam]} and {name}"))
             if name == "test" and raw.get("source") == "assistant_draft":

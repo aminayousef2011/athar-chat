@@ -1,8 +1,8 @@
 """``athar-data``: command line for the dataset tooling.
 
-    athar-data validate  DATA.jsonl [--strict]
+    athar-data validate  DATA.jsonl [MORE.jsonl ...] [--strict]
     athar-data split     DATA.jsonl --config CFG.yaml --out MANIFEST.json [--allow-shortfall]
-    athar-data verify    MANIFEST.json
+    athar-data verify    MANIFEST.json [MORE.json ...]
     athar-data crosscheck (--manifest MANIFEST.json --split train|dev | --pilot PILOT.jsonl)
     athar-data agreement-sheet DATA.jsonl --out SHEET.csv [--n 60] [--seed N]
     athar-data kappa     DATA.jsonl SHEET.csv --annotator NAME [--date YYYY-MM-DD] [--out PREFIX]
@@ -33,6 +33,7 @@ from athar.data.split import (
 )
 from athar.data.stats import stats_markdown, write_into_card
 from athar.data.validate import Issue, has_errors, validate_records
+from athar.schema import GoldItem
 
 
 def _print_issues(issues: Sequence[Issue]) -> None:
@@ -41,12 +42,15 @@ def _print_issues(issues: Sequence[Issue]) -> None:
 
 
 def cmd_validate(a: argparse.Namespace) -> int:
-    records = read_records(a.data)
-    issues = validate_records(records)
-    _print_issues(issues)
-    n_err = sum(i.level == "error" for i in issues)
-    print(f"{a.data}: {len(records)} items, {n_err} errors, {len(issues) - n_err} warnings")
-    return 1 if has_errors(issues, a.strict) else 0
+    failed = False
+    for path in a.data:
+        records = read_records(path)
+        issues = validate_records(records)
+        _print_issues(issues)
+        n_err = sum(i.level == "error" for i in issues)
+        print(f"{path}: {len(records)} items, {n_err} errors, {len(issues) - n_err} warnings")
+        failed |= has_errors(issues, a.strict)
+    return 1 if failed else 0
 
 
 def cmd_split(a: argparse.Namespace) -> int:
@@ -76,12 +80,14 @@ def cmd_split(a: argparse.Namespace) -> int:
 
 
 def cmd_verify(a: argparse.Namespace) -> int:
-    issues = verify_manifest(a.manifest)
-    _print_issues(issues)
-    if not issues:
-        m = read_manifest(a.manifest)
-        print(f"{a.manifest}: OK  manifest_sha256={m['manifest_sha256']}")
-    return 1 if issues else 0
+    failed = False
+    for path in a.manifest:
+        issues = verify_manifest(path)
+        _print_issues(issues)
+        if not issues:
+            print(f"{path}: OK  manifest_sha256={read_manifest(path)['manifest_sha256']}")
+        failed |= bool(issues)
+    return 1 if failed else 0
 
 
 def cmd_crosscheck(a: argparse.Namespace) -> int:
@@ -129,7 +135,7 @@ def cmd_kappa(a: argparse.Namespace) -> int:
 
 def cmd_stats(a: argparse.Namespace) -> int:
     items = load_items(a.data)
-    splits = None
+    splits: dict[str, Sequence[GoldItem]] | None = None
     if a.manifest:
         m = read_manifest(a.manifest)
         by_id = {it.id: it for it in items}
@@ -149,7 +155,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="cmd", required=True)
 
     s = sub.add_parser("validate", help="schema + dataset-level checks")
-    s.add_argument("data")
+    s.add_argument("data", nargs="+")
     s.add_argument("--strict", action="store_true", help="treat warnings as errors")
     s.set_defaults(func=cmd_validate)
 
@@ -161,7 +167,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.set_defaults(func=cmd_split)
 
     s = sub.add_parser("verify", help="check a manifest against its dataset")
-    s.add_argument("manifest")
+    s.add_argument("manifest", nargs="+")
     s.set_defaults(func=cmd_verify)
 
     s = sub.add_parser("crosscheck", help="gold vs. shared core with gold intent (never on test)")
@@ -197,10 +203,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     for stream in (sys.stdout, sys.stderr):  # Arabic output on a Windows console
         if hasattr(stream, "reconfigure"):
-            stream.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+            stream.reconfigure(encoding="utf-8")
     a = build_parser().parse_args(argv)
     try:
-        return a.func(a)
+        return int(a.func(a))
     except (DatasetError, PermissionError, FileNotFoundError, ValueError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 2

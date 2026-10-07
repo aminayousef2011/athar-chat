@@ -6,8 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from athar.data.io import load_items, read_records
-from athar.data.split import SplitConfig, make_split, write_manifest
+from athar.data.io import load_items
 from athar.intent import train as T
 from athar.intent.models import SklearnIntent, build
 from athar.intent.rules import KeywordIntent, classify
@@ -72,41 +71,6 @@ def test_grid_covers_the_config():
 
 
 # --------------------------------------------------------------------------- search + freeze
-def _row(i, fam, text, intent):
-    route = "ABSTAIN" if intent == "unsupported" else "CLARIFY"
-    row = {"id": f"x{i:03d}", "family_id": fam, "text": text, "ref_datetime": "2026-10-07T10:00:00+03:00",
-           "intent": intent, "route": route}
-    if intent == "unsupported":
-        row["unsupported_reason"] = "deletion"
-    else:
-        row["clarify_targets"] = ["time"]
-    return row
-
-
-@pytest.fixture
-def split_dir(tmp_path):
-    """60 items, 3 intents, families of one; dev 15, no test."""
-    rows = []
-    for i in range(20):
-        rows.append(_row(3 * i, f"r{i}", f"فكرني أشتري حاجات البيت رقم {i}", "create_reminder"))
-        rows.append(_row(3 * i + 1, f"a{i}", f"صحيني بدري عشان الشغل رقم {i}", "create_alarm"))
-        rows.append(_row(3 * i + 2, f"u{i}", f"امسح المنبه بتاع الشغل رقم {i}", "unsupported"))
-    data = tmp_path / "data.jsonl"
-    data.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
-    records = read_records(data)
-    cfg = SplitConfig(seed=1, test={"ACT": 0, "CLARIFY": 0, "ABSTAIN": 0}, dev=15)
-    mpath = tmp_path / "manifest.json"
-    manifest, short, _ = make_split([r.item for r in records], {r.raw["id"]: r.raw for r in records},
-                                    cfg, data, mpath)
-    assert short == []
-    write_manifest(manifest, mpath)
-    small = {"seed": 0, "common": {"class_weight": "balanced", "max_iter": 500},
-             "S2": {"C": [10, 1], "word_ngram": [[1, 2], [1, 1]]},
-             "S3": {"C": [1], "word_ngram": [[1, 1]], "char_ngram": [[2, 4]]}}
-    (tmp_path / "train.yaml").write_text(yaml.safe_dump(small), encoding="utf-8")
-    return tmp_path
-
-
 def test_search_breaks_ties_toward_the_simplest_model(split_dir):
     from athar.data.split import load_split
 
@@ -158,8 +122,8 @@ def test_changed_shared_source_is_detected(split_dir, monkeypatch):
     out = split_dir / "models"
     T.fit_and_freeze(split_dir / "manifest.json", split_dir / "train.yaml", out, log=lambda _: None)
     real = T.source_hash
-    monkeypatch.setattr(T, "source_hash", lambda rel: "0" * 64 if rel == "lexicon.py" else real(rel))
-    assert T.verify_freeze(out) == ["source lexicon.py changed after freezing"]
+    monkeypatch.setattr(T, "source_hash", lambda rel: "0" * 64 if rel == "src/athar/lexicon.py" else real(rel))
+    assert T.verify_freeze(out) == ["source src/athar/lexicon.py changed after freezing"]
 
 
 def test_cli_refuses_to_refreeze(split_dir, capsys):

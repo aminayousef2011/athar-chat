@@ -18,7 +18,7 @@ AR_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو",
              "أكتوبر", "نوفمبر", "ديسمبر"]
 
 ABSTAIN_MESSAGE = "معلش، أنا أقدر أعمل تذكير أو منبه لمرة واحدة ليك بس، ومقدرش أنفذ الطلب ده."
-QUESTIONS = {
+QUESTIONS: dict[str, str | dict[str, str]] = {
     "date": "تقصد أنهي يوم بالظبط؟",
     "time": {"create_reminder": "عايزني أفكرك الساعة كام؟", "create_alarm": "عايز المنبه يرن الساعة كام؟"},
     "am_pm": "الساعة {h} الصبح ولا بالليل؟",
@@ -54,11 +54,10 @@ def _said_hour(ext: Extraction) -> str | None:
 
 
 def question(decision: Decision, ext: Extraction) -> str:
-    parts = []
+    parts: list[str] = []
     for gap in decision.targets:
-        q = QUESTIONS[gap]
-        if isinstance(q, dict):
-            q = q[decision.intent]
+        template = QUESTIONS[gap]
+        q = template[decision.intent] if isinstance(template, dict) else template
         if gap == "am_pm":
             h = _said_hour(ext)
             q = q.format(h=h) if h else "تقصد الصبح ولا بالليل؟"

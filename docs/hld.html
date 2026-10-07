@@ -142,7 +142,7 @@ td.wk { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--mu
         <rect class="row" x="494" y="284" width="202" height="26" rx="4"/>
         <text class="r" x="506" y="301">S3 · S2 + char n-grams</text>
         <rect class="row-opt" x="494" y="316" width="202" height="26" rx="4"/>
-        <text class="s" x="506" y="333">S4 · Jais zero-shot (optional)</text>
+        <text class="s" x="506" y="333">S4–S6 · extended (optional)</text>
 
         <!-- fan-in to policy -->
         <path class="edge" d="M710,105 H785 V162 H798" marker-end="url(#ah)"/>
@@ -211,7 +211,7 @@ td.wk { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--mu
         <!-- ===== Offline: validate + split ===== -->
         <rect class="box" x="230" y="574" width="160" height="90" rx="6"/>
         <text class="t" x="310" y="596" text-anchor="middle">Validate + split</text>
-        <text class="s" x="310" y="616" text-anchor="middle">by scenario family</text>
+        <text class="s" x="310" y="616" text-anchor="middle">by family · hashed manifest</text>
         <text class="s" x="310" y="634" text-anchor="middle">train 140 · dev 40</text>
         <text class="s" x="310" y="652" text-anchor="middle">test 120 (50 / 50 / 20)</text>
 
@@ -231,7 +231,8 @@ td.wk { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--mu
         <text class="r" x="595" y="550" text-anchor="middle">S1 keywords written by hand</text>
         <text class="r" x="595" y="570" text-anchor="middle">rules + normalizer frozen</text>
         <text class="s" x="595" y="600" text-anchor="middle">logs CPU time + peak RAM</text>
-        <text class="s" x="595" y="618" text-anchor="middle">saves models/*.joblib</text>
+        <text class="s" x="595" y="618" text-anchor="middle">freeze.json hashes models,</text>
+        <text class="s" x="595" y="636" text-anchor="middle">code, protocol, contract</text>
 
         <!-- ===== Offline: error analysis ===== -->
         <rect class="box" x="800" y="484" width="170" height="140" rx="6"/>
@@ -247,14 +248,14 @@ td.wk { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--mu
         <!-- ===== Offline: evaluation ===== -->
         <rect class="box" x="1030" y="444" width="210" height="220" rx="6"/>
         <text class="t" x="1135" y="466" text-anchor="middle">Evaluation harness</text>
-        <text class="s" x="1135" y="483" text-anchor="middle">same locked test, every system</text>
-        <text class="rb" x="1135" y="510" text-anchor="middle">Safe Task Success</text>
-        <text class="r" x="1135" y="530" text-anchor="middle">intent + route macro-F1</text>
-        <text class="r" x="1135" y="548" text-anchor="middle">unsafe-execution rate</text>
-        <text class="r" x="1135" y="566" text-anchor="middle">unnecessary clarification</text>
-        <text class="r" x="1135" y="584" text-anchor="middle">complete/incomplete pairs</text>
-        <text class="r" x="1135" y="602" text-anchor="middle">95% bootstrap by family</text>
-        <text class="s" x="1135" y="628" text-anchor="middle">per-class P/R · confusion</text>
+        <text class="s" x="1135" y="483" text-anchor="middle">pre-registered · one-shot run</text>
+        <text class="rb" x="1135" y="510" text-anchor="middle">Safe Task Success (H1–H3)</text>
+        <text class="r" x="1135" y="530" text-anchor="middle">macro-F1 · unsafe · clarification</text>
+        <text class="r" x="1135" y="548" text-anchor="middle">95% CI: bootstrap by family</text>
+        <text class="r" x="1135" y="566" text-anchor="middle">paired permutation · Holm</text>
+        <text class="r" x="1135" y="584" text-anchor="middle">oracle-intent ceiling · pairs</text>
+        <text class="r" x="1135" y="602" text-anchor="middle">robustness (9 perturbations)</text>
+        <text class="s" x="1135" y="628" text-anchor="middle">calibration · per-class P/R</text>
       </svg>
     </div>
     <figcaption>Only the highlighted intent recognizer changes between S1, S2 and S3. Normalizer, extractor, policy and templates are shared, so any difference in Safe Task Success comes from intent recognition. The harness replays each locked test item through the runtime path. The test split goes straight to evaluation and never reaches training.</figcaption>
@@ -271,8 +272,9 @@ td.wk { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--mu
     <ul class="inv">
       <li>Classifiers predict one of three <b>intent</b> labels (<code>create_reminder</code>, <code>create_alarm</code>, <code>unsupported</code>). They never predict the route. The policy derives the route.</li>
       <li>The system never invents a value. A missing date uses the next-occurrence rule from the contract. Anything else unresolved becomes a clarification target.</li>
-      <li>Vocabularies, hyper-parameters, keyword lists and extraction rules are frozen before the test split is opened once, in week 6.</li>
-      <li>Splits are made by scenario family, so paraphrases and complete/incomplete pairs never cross between train, dev and test.</li>
+      <li>Vocabularies, hyper-parameters, keyword lists and extraction rules are frozen before the test split is opened once, in week 6. <code>models/freeze.json</code> hashes the models, the shared-core and scoring code, the task contract, the evaluation protocol and its config. The test run refuses to start if any of them changed, and refuses to run a second time.</li>
+      <li>Splits are made by scenario family, so paraphrases and complete/incomplete pairs never cross between train, dev and test. Every item is hashed in the split manifest, so an edit after splitting fails verification.</li>
+      <li>Statistics resample whole families too: items in a family are not independent.</li>
       <li>Tools are simulated. An ACT response is a JSON call record and nothing is scheduled.</li>
     </ul>
 
@@ -287,6 +289,28 @@ td.wk { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--mu
       <div>remove <span class="ar">الصبح</span></div><div>gap <code>am_pm</code> → route CLARIFY, question <span class="ar">الساعة 7 الصبح ولا بالليل؟</span></div>
     </div>
 
+    <h2>Evaluation protocol (pre-registered)</h2>
+    <p>Fixed in <code>docs/evaluation_protocol.md</code> before any training on annotated data. The primary metric is Safe Task Success. An item succeeds only when the route, the intent, the exact clarification-target set and, for ACT, the tool, the instant and the reminder text are all right. An invalid output is a failure.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Hypothesis</th><th>Comparison</th><th>Test</th></tr></thead>
+        <tbody>
+          <tr><td>H1</td><td>S2 vs S1</td><td>paired permutation by family, 10,000 draws</td></tr>
+          <tr><td>H2</td><td>S3 vs S1</td><td>same, Holm-adjusted over H1–H3 at α = 0.05</td></tr>
+          <tr><td>H3</td><td>S3 vs S2</td><td>same, plus exact McNemar as a sensitivity check</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Each result comes with a 95% family-bootstrap CI (10,000 resamples). A simulated power analysis at 120 test items shows that differences of about 15 STS points are detectable (power 0.73–0.96) and 5-point differences are not (0.11–0.22). A non-significant result is therefore reported as inconclusive, with the effect sizes its CI rules out. The secondary analyses are descriptive: the oracle-intent gap, nine CheckList-style label-preserving perturbations, calibration (ECE, Brier, AURC) and subgroups. S4–S6 (Jais 2 or Nile-Chat zero-shot, frozen Arabic sentence embeddings + LR, fine-tuned MARBERTv2 over 5 seeds) answer "would a pretrained model do better?". They are reported separately and stay outside H1–H3.</p>
+
+    <h2>Quality gates</h2>
+    <ul class="inv">
+      <li>Tests: contract tests, Hypothesis property tests (normalization idempotence, offsets, future-only resolution across both DST changes, exact relative offsets), statistics checked against hand-computed values, and an end-to-end one-shot test run. Branch coverage of at least 85% is enforced.</li>
+      <li>Static checks: <code>ruff</code> and <code>mypy</code> with untyped definitions disallowed, both clean.</li>
+      <li>Data gates: <code>athar-data validate --strict</code>, manifest verification, and LF-only data files, so that hashes are byte-stable.</li>
+      <li>The same gates run in pre-commit hooks (locked tool versions, no network) and in CI on Linux and Windows from the frozen <code>uv.lock</code>.</li>
+    </ul>
+
     <h2>Delivery phases</h2>
   </div>
   <div class="table-wrap col">
@@ -296,11 +320,12 @@ td.wk { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--mu
         <tr><td>P0</td><td>Repository, locked environment (uv), HLD, test runner</td><td class="wk">1</td><td><span class="pill now">done</span></td></tr>
         <tr><td>P1</td><td>Task contract and shared core: normalizer, time and argument extractor, policy, templates, schemas, contract tests</td><td class="wk">1–2</td><td><span class="pill now">done · in review</span></td></tr>
         <tr><td>P2</td><td>Data tooling: validator, family splitter and manifest, κ script, annotation guide, data card, 20-item pilot. The 300 items themselves are written by a native speaker.</td><td class="wk">2–4</td><td><span class="pill now">tooling done · items pending</span></td></tr>
-        <tr><td>P3</td><td>S1 rules, S2 and S3 classifiers, dev-only search, freezing, CPU and RAM log</td><td class="wk">5</td><td><span class="pill now">code done · fit pending data</span></td></tr>
-        <tr><td>P4</td><td>Locked-test evaluation: all metrics, paired subset, family bootstrap</td><td class="wk">6</td><td><span class="pill">planned</span></td></tr>
+        <tr><td>P2b</td><td>Expert-review hardening: pre-registered protocol, scoring and statistics code, robustness suite, power analysis, type checking, property tests, CI</td><td class="wk">4</td><td><span class="pill now">done</span></td></tr>
+        <tr><td>P3</td><td>S1 rules, S2 and S3 classifiers, dev-only search, freezing, CPU and RAM log; extended baselines S5 (frozen Arabic embeddings + LR) and S6 (MARBERTv2, 5 seeds)</td><td class="wk">5</td><td><span class="pill now">S1–S3 done · S5/S6 next</span></td></tr>
+        <tr><td>P4</td><td>Locked-test evaluation: one run of the pre-registered protocol</td><td class="wk">6</td><td><span class="pill">harness done · run after freeze</span></td></tr>
         <tr><td>P5</td><td>Error analysis and local demo interface</td><td class="wk">7–8</td><td><span class="pill">planned</span></td></tr>
         <tr><td>P6</td><td>Final report and presentation</td><td class="wk">8</td><td><span class="pill">planned</span></td></tr>
-        <tr><td>P7</td><td>Jais zero-shot intent baseline (S4), reported separately from the core comparison</td><td class="wk">after 6</td><td><span class="pill opt">optional</span></td></tr>
+        <tr><td>P7</td><td>LLM zero-shot intent baseline (S4: Jais 2 or Nile-Chat), reported separately from the core comparison</td><td class="wk">after 6</td><td><span class="pill opt">optional</span></td></tr>
       </tbody>
     </table>
   </div>

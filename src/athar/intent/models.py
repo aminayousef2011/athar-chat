@@ -47,3 +47,9 @@ class SklearnIntent:
 
     def predict(self, normalized_texts: Sequence[str]) -> list[str]:
         return [str(p) for p in self.model.predict(list(normalized_texts))]
+
+    def predict_proba(self, normalized_texts: Sequence[str], labels: Sequence[str]) -> list[list[float]]:
+        """Class probabilities in the order of ``labels`` (0 for a label unseen in training)."""
+        proba = self.model.predict_proba(list(normalized_texts))
+        col = {str(c): i for i, c in enumerate(self.model.classes_)}
+        return [[float(row[col[lab]]) if lab in col else 0.0 for lab in labels] for row in proba]
