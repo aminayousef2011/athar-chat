@@ -113,8 +113,13 @@ def _confusion(gold: Sequence[str], pred: Sequence[str], labels: Sequence[str]) 
 
 
 def macro_f1(gold: Sequence[str], pred: Sequence[str], labels: Sequence[str]) -> float:
-    """Macro-F1 over the fixed label set (an invalid prediction counts as a wrong label)."""
-    return float(f1_score(gold, pred, labels=list(labels), average="macro", zero_division=0))
+    """Macro-F1 over the labels of ``labels`` that occur in ``gold`` or ``pred``. A label absent
+    from both is undefined in that sample and left out, not scored 0, which would bias small
+    samples and bootstrap resamples downwards. An invalid prediction counts as a wrong label."""
+    present = [lab for lab in labels if lab in set(gold) | set(pred)]
+    if not present:
+        return float("nan")
+    return float(f1_score(gold, pred, labels=present, average="macro", zero_division=0))
 
 
 def safe_task_success(scores: Sequence[ItemScore]) -> float:
@@ -175,15 +180,16 @@ def _codes(values: Sequence[str], labels: Sequence[str]) -> NDArray[np.int64]:
 def macro_f1_codes(gold: NDArray[np.int64], pred: NDArray[np.int64], k: int) -> float:
     """Macro-F1 over labels 0..k-1 from integer codes (pred may use k for "invalid").
 
-    Same definition as :func:`macro_f1` (sklearn, fixed labels, zero_division=0), computed
-    from a confusion matrix so that thousands of bootstrap resamples stay cheap.
+    Same definition as :func:`macro_f1` (labels absent from both gold and prediction are left
+    out), computed from a confusion matrix so that thousands of bootstrap resamples stay cheap.
     """
     cm = np.bincount(gold * (k + 1) + pred, minlength=(k + 1) ** 2).reshape(k + 1, k + 1)
     tp = np.diag(cm)[:k].astype(float)
     fp = cm[:, :k].sum(axis=0) - tp
     fn = cm[:k, :].sum(axis=1) - tp
     denom = 2 * tp + fp + fn
-    return float(np.where(denom > 0, 2 * tp / np.maximum(denom, 1), 0.0).mean())
+    present = denom > 0  # tp + fp + fn > 0: the label occurs in gold or prediction
+    return float((2 * tp[present] / denom[present]).mean()) if present.any() else float("nan")
 
 
 class ScoreArrays:

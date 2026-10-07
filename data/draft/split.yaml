@@ -1,0 +1,6 @@
+# Dry-run split of the assistant-drafted data (train/dev only: drafts never enter test).
+# Used to exercise Phase 3 end to end; numbers from it are not results.
+seed: 20261007
+trials: 5000
+test: {ACT: 0, CLARIFY: 0, ABSTAIN: 0}
+dev: 40

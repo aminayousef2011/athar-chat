@@ -1,6 +1,6 @@
 {
   "manifest_version": 1,
-  "contract_version": "0.1",
+  "contract_version": "1.0",
   "dataset": {
     "path": "pilot.jsonl",
     "sha256": "a29d477ec1ecf61752f42011d96ac7fe460749e1391a943a4898a65a9c958843",
@@ -82,5 +82,5 @@
       "items": {}
     }
   },
-  "manifest_sha256": "a6efd5012241a620fb5f1db18821c145f029afd7c6132388d9dc38ca791fe558"
+  "manifest_sha256": "25092929f57703e1f22c804f09eaab469d24ed20f6abf6667196dfaa0f64e941"
 }

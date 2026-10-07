@@ -10,11 +10,12 @@ Status: **planned, not yet written.** The statistics below describe the 20-item 
 | Task | route one Egyptian Arabic request to ACT / CLARIFY / ABSTAIN, with tool arguments or clarification targets |
 | Size | 300 single-turn requests (planned) |
 | Language | Egyptian Arabic (Arabic script), with Arabic-English code-switching; Arabizi excluded |
+| Users | about 70% project managers about their work (`domain: project_management`), 30% general requests |
 | Labels | intent, route, clarification targets, unsupported reason, resolved datetime, reminder text |
 | Format | JSONL, one item per line, schema `athar.schema.GoldItem` |
 | Splits | by scenario family: train 140, dev 40, test 120 (50 ACT / 50 CLARIFY / 20 ABSTAIN) |
 | Authors | Amina Yousef (author, native speaker); second annotator _TBD_ |
-| Contract | [task_contract.md](task_contract.md) v0.1 (to be frozen at v1.0 before annotation) |
+| Contract | [task_contract.md](task_contract.md) v1.0 (frozen 2026-10-07) |
 | Licence | _TBD_ |
 
 ## Motivation
@@ -39,6 +40,9 @@ so the requests are written for this project.
 - **Planned mix**: about 125 ACT, 125 CLARIFY and 50 ABSTAIN. Every clarification target and
   every unsupported reason is covered. About a quarter of the items are code-switched.
   Some items resolve across Cairo's DST change.
+- **Domain**: about 70% of the requests come from project managers about their work (standups,
+  sprint reviews, status reports, deadlines, client and vendor follow-ups, Jira, sign-offs).
+  The rest are general personal requests. Results are reported per domain.
 - **Personal data**: none. Names are invented; no real contact details.
 
 ## Collection and annotation
@@ -130,8 +134,9 @@ Regenerate with
   Spelling noise, regional variety and request length may differ from real traffic.
 - **Few annotators**: one or two native speakers, mostly from one region. Labels follow the
   contract's conventions (weekday rules, AM/PM periods), which other speakers may read
-  differently. Those conventions are listed as [DECIDE] items in the contract.
-- **Address form**: templates and many requests use masculine second person.
+  differently. They were confirmed explicitly at contract v1.0.
+- **Address form**: replies are gender-neutral (contract v1.0); many requests are written in
+  the masculine, as people type them.
 - **Script**: Arabizi is excluded, though many Egyptian users write it.
 
 ## Maintenance

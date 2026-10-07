@@ -33,3 +33,16 @@ jobs:
           uv run athar-data validate data/pilot/pilot.jsonl --strict
           uv run athar-data validate data/draft/athar_draft.jsonl --strict
           uv run athar-data verify data/pilot/manifest.json
+
+  neural:
+    # S5/S6 code paths, offline (fake encoder + a tiny BERT built locally; nothing downloaded)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - name: Install with the neural extra (CPU PyTorch)
+        run: uv sync --frozen --extra neural
+      - name: Extended-baseline tests
+        run: uv run pytest tests/test_neural.py

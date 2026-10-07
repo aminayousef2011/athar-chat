@@ -1,9 +1,9 @@
-# ATHAR Chat annotation guide (v0.1, follows task contract v0.1)
+# ATHAR Chat annotation guide (v1.0, follows task contract v1.0)
 
 This guide is for the people who write and label the dataset: the author and the second
 annotator. It turns the [task contract](task_contract.md) into a procedure. When the two
 disagree, the contract wins and this guide gets fixed. Annotation starts only after the
-contract is frozen at v1.0.
+contract was frozen at v1.0 (2026-10-07).
 
 ## 1. What you produce
 
@@ -40,6 +40,20 @@ The locked test split needs **50 ACT, 50 CLARIFY, 20 ABSTAIN** from families wri
 (`source` `author` or `contributor`). Aim for about **125 ACT, 125 CLARIFY, 50 ABSTAIN** overall
 so the splitter has room. Within that:
 
+- **who is asking**: about **70% project managers** about their work (`domain:
+  project_management`), the main target users, and about 30% general requests (`domain: general`).
+  Project-manager requests cover:
+  - meetings: standups, sprint reviews and retros, kickoffs, one-on-ones;
+  - reports and deadlines: status and weekly reports, deadlines, milestones, release notes;
+  - clients and vendors: follow-ups, sign-offs, invoices and payments;
+  - delivery: Jira tickets, UAT, go-lives, handovers;
+  - budgets, resource plans and timesheets;
+  - early alarms for site visits and client travel.
+
+  Their out-of-scope requests should be the ones project managers really make: "every standup",
+  "remind the team", "move the client call", "create a Jira ticket", "book a meeting room".
+  Write them the way Egyptian project managers type, usually with English work terms
+  (`فكرني أراجع الـ risk register قبل اجتماع الإدارة`);
 - both tools: reminders and alarms (alarms need no reminder text);
 - every clarification target at least 10 times: `date`, `time`, `am_pm`, `past`, `reminder_text`,
   including some items with two targets;
@@ -68,7 +82,7 @@ Label each item in this order. Each step uses only the request text and `ref_dat
   `ظبطلي منبه`). Go to step 2.
 - no: `intent: unsupported`, `route: ABSTAIN`, set `unsupported_reason`, and stop. If several
   reasons apply, take the first in this order: `deletion`, `modification`, `recurring`,
-  `other_person`, `multi_action`, `other_tool` **[DECIDE]**. `other` is for out-of-scope
+  `other_person`, `multi_action`, `other_tool` (contract v1.0). `other` is for out-of-scope
   requests that fit none of these; explain it in `notes`.
 
 **Step 2: arguments.** Resolve the date and time with the contract rules (section 4). Resolve the
@@ -112,6 +126,7 @@ of them. The validator rejects inconsistent combinations (for example ACT with t
 | `args.reminder_text_alts` | optional | other readings that are equally correct |
 | `code_switched` | yes if true | `true` when the text mixes Arabic and Latin-script words |
 | `source` | yes | `author` (you), `contributor` (another native speaker), `assistant_draft` (machine-drafted, never in test) |
+| `domain` | yes | `project_management` (a project manager about their work) or `general` (anything else) |
 | `notes` | optional | anything a reviewer should know, e.g. the rule you applied |
 
 ### 4.1 Writing datetimes
@@ -201,8 +216,9 @@ A full line (ACT reminder):
 {"id": "r0001", "family_id": "f0001", "pair_id": "p0001", "text": "فكرني بكرة الساعة ٧ الصبح أشتري عيش", "ref_datetime": "2026-10-07T10:00:00+03:00", "intent": "create_reminder", "route": "ACT", "args": {"datetime": "2026-10-08T07:00:00+03:00", "reminder_text": "أشتري عيش"}, "source": "author"}
 ```
 
-## 9. Open points
+## 9. Conventions confirmed at contract v1.0
 
-The **[DECIDE]** items in the task contract (weekday rules, `بالليل` after midnight, relative
-offsets, template wording) and the reason priority in section 3 must be confirmed when the
-contract is frozen at v1.0. Changing them later means relabelling.
+Same-weekday requests ask for the date; `X الجاي` is the nearest upcoming X; `بالليل` at 12-5
+is the next calendar day (and asks for the date when one is given); relative offsets are in
+scope; the reason priority is the order in section 3, step 1. Changing any of them means a
+contract version bump and relabelling.

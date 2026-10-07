@@ -20,3 +20,6 @@ data/raw/private/
 htmlcov/
 .hypothesis/
 .mypy_cache/
+
+# fine-tuned encoder weights (~650 MB per seed); hashes are in models/freeze.json
+models/S6/

@@ -31,9 +31,10 @@ over H1-H3. Secondary analyses (section 6) are descriptive and carry no signific
 | S2 | word TF-IDF (1-2 g) + logistic regression | train | core |
 | S3 | S2 + character `char_wb` n-grams | train | core |
 | Oracle | gold intent + the shared pipeline | gold labels | ceiling: isolates extractor/policy error |
-| S4 | instruction-tuned Arabic LLM, zero-shot intent only (e.g. Jais 2, Nile-Chat) | nothing | extended, reported separately |
-| S5 | frozen multilingual or Arabic sentence embeddings + logistic regression | train | extended, reported separately |
-| S6 | fine-tuned dialect encoder (MARBERTv2), 5 seeds | train | extended, reported separately |
+| S4 | instruction-tuned LLMs, intent only: `inception42/Jais-2-8B-Chat` (primary), `MBZUAI-Paris/Nile-Chat-4B` (Egyptian), `Qwen/Qwen3-8B` (multilingual reference); 0-shot and 6-shot | few-shot exemplars from train | extended, reported separately |
+| S7 | Jais 2 8B + QLoRA (r 16, α 32, 3 epochs, LR 2e-4, fixed) | train | exploratory |
+| S5 | frozen `intfloat/multilingual-e5-small` embeddings (revision `614241f`) + logistic regression | train | extended, reported separately |
+| S6 | `UBC-NLP/MARBERTv2` (revision `fe88db9`) fine-tuned with a 3-way head, 5 seeds | train | extended, reported separately |
 
 Every system predicts **only** the intent label (`create_reminder`, `create_alarm`,
 `unsupported`). The route always comes from the shared deterministic policy. The extended
@@ -43,9 +44,30 @@ They are outside H1-H3 and get no significance tests against the core systems.
 **Model selection (dev only).** S2/S3: grid over C ∈ {0.1, 0.3, 1, 3, 10, 30}, word n-gram
 upper bound ∈ {1, 2}, (S3) character n-gram range ∈ {2-4, 2-5, 3-5}. The winner has the highest
 dev intent macro-F1; ties go to the simpler model (smaller C, then shorter n-grams). It is then
-refitted on train only. The vectorizers never see dev or test text during fitting. S6: learning
-rate, epochs and seeds are fixed in its config before training. The reported value is the mean
-and standard deviation over 5 seeds.
+refitted on train only. The vectorizers never see dev or test text during fitting.
+
+S5 searches only C ∈ {0.1, 0.3, 1, 3, 10, 30}, by the same rule. The encoder was chosen in
+advance: multilingual, CPU-sized, with L2-normalised mean-pooled embeddings and the `query: `
+prefix, and it is never tuned.
+
+S4 scores each label's Arabic verbalizer (`تذكير`, `منبه`, `غير مدعوم`) after a fixed chat
+prompt (`athar.intent.llm`). The **primary S4 number is the 6-shot `calibrated` method**: two
+train exemplars per label, chosen with a fixed seed from distinct families, followed by
+contextual calibration with content-free inputs (Zhao et al. 2021). `raw` scores and greedy
+`generate`-then-parse are also reported, because first-token scores and generated answers of
+chat models can disagree (Wang et al. 2024). A generated answer that names no label is a
+failure. The models run on Kaggle T4 GPUs (`notebooks/kaggle_s4_llm.ipynb`) with the same
+`athar` scoring code, in fp16, or fp32 / 4-bit NF4 when fp16 overflows, and the model revision
+is recorded with each result.
+
+S6 has no dev search. Every setting is fixed in `configs/train.yaml` before training, following
+the small-data recipe of Mosbach et al. (2021): AdamW with learning rate 2e-5 and weight decay
+0.01, 20 epochs, batch size 16, linear warm-up over 10% of steps then linear decay, gradient
+clipping at 1.0, class-balanced cross-entropy (the counterpart of `class_weight="balanced"` in
+S2/S3) and a maximum length of 64 word pieces. It is trained with seeds 0-4, and the report
+gives the mean and SD over seeds (Reimers & Gurevych 2017). Before training, the tokenizer must
+map at most 5% of the training word pieces to `[UNK]`. On the draft data MARBERTv2 maps 0%.
+Models are loaded from the Hugging Face Hub at the pinned revisions above.
 
 ## 3. Metrics (item level, then aggregated)
 
@@ -65,8 +87,8 @@ STS is the mean over items. It is reported overall and per gold route.
 
 | Metric | Definition |
 |---|---|
-| intent macro-F1 | over the three intent labels |
-| route macro-F1 | over ACT / CLARIFY / ABSTAIN |
+| intent macro-F1 | over the three intent labels; a label absent from both gold and prediction in a (re)sample is left out, not scored 0 |
+| route macro-F1 | over ACT / CLARIFY / ABSTAIN, same rule |
 | unsafe-execution rate | items where a tool call was issued and the item is not a success, ÷ all items |
 | unsafe execution on non-ACT | tool calls on gold CLARIFY/ABSTAIN items ÷ those items |
 | wrong-argument execution | gold-ACT items executed with a wrong tool, time or text ÷ gold-ACT items |
@@ -136,11 +158,19 @@ Consequences, fixed in advance:
 - **Robustness** (CheckList INV tests). These are label-preserving perturbations of every test
   item: `ة→ه`, hamza removal, final `ي→ى`, Western ↔ Arabic-Indic digits, diacritics,
   elongation, punctuation, a `لو سمحت` prefix, and `فكرني → remind me`. For each, the report
-  gives STS and the invariance rate (unchanged output). The minimal pairs serve as the
+  gives STS and the invariance rate: the share of items whose decision is unchanged, i.e. the same route, intent, target set, tool, instant and *canonical* reminder text. Echoing the user's own spelling of the reminder is correct behaviour, not a change. The minimal pairs serve as the
   directional tests.
 - **Calibration and selective prediction** (S2, S3, S5, S6). ECE (10 equal-width bins),
   multi-class Brier score, and the area under the risk-coverage curve, for the intent
   probabilities.
+- **Domain.** STS and intent macro-F1 for **project-manager requests** (`domain:
+  project_management`, the main target users, about 70% of the data) and for general requests
+  separately, with CIs. This is the first subgroup reported for every system.
+- **Out of distribution.** Intent macro-F1 on MASSIVE ar-SA test (Saudi-localised MSA, CC BY
+  4.0). Mapping: `alarm_set` → alarm; `alarm_remove`, `calendar_remove`, `weather_query`,
+  `play_music`, `email_sendemail`, `calendar_query` → unsupported; `calendar_set` excluded (it
+  mixes reminders with calendar events). Balanced sample of up to 100 per label, seed 0.
+  Intent only, because MASSIVE has no datetime gold.
 - **Subgroups.** STS for code-switched vs Arabic-only items, and for reminders vs alarms, with
   CIs. Subgroups are small, so these are descriptive only.
 - **Resources.** CPU time and peak memory for training and per-item prediction latency, from
@@ -187,6 +217,7 @@ Testing Hypotheses*. Holm (1979), *A Simple Sequentially Rejective Multiple Test
 Ribeiro, Wu, Guestrin & Singh (2020), *Beyond Accuracy: Behavioral Testing of NLP Models with
 CheckList*. Gardner et al. (2020), *Evaluating Models' Local Decision Boundaries via Contrast
 Sets*. Guo, Pleiss, Sun & Weinberger (2017), *On Calibration of Modern Neural Networks*.
-Geifman & El-Yaniv (2017), *Selective Classification for Deep Neural Networks*. Card et al.
+Geifman & El-Yaniv (2017), *Selective Classification for Deep Neural Networks*. Mosbach, Andriushchenko & Klakow (2021), *On the Stability of Fine-tuning BERT*.
+Reimers & Gurevych (2017), *Reporting Score Distributions Makes a Difference*. Zhao, Wallace, Feng, Klein & Singh (2021), *Calibrate Before Use*. Wang et al. (2024), *My Answer is C: First-Token Probabilities Do Not Match Text Answers in Instruction-Tuned Language Models*. FitzGerald et al. (2023), *MASSIVE*. Card et al.
 (2020), *With Little Power Comes Great Responsibility*. Abdul-Mageed, Elmadany & Nagoudi (2021),
 *ARBERT & MARBERT*. Obeid et al. (2020), *CAMeL Tools*.

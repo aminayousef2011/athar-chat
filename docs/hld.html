@@ -84,7 +84,7 @@ td.wk { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--mu
   <div class="col">
     <p class="eyebrow">Applied NLP course project · Amina Yousef</p>
     <h1>ATHAR Chat architecture</h1>
-    <p class="lead">How one Egyptian Arabic request becomes an <b>ACT</b>, <b>CLARIFY</b> or <b>ABSTAIN</b> response, and how the offline pipeline builds and judges the three intent systems without touching the locked test set.</p>
+    <p class="lead">How one Egyptian Arabic request becomes an <b>ACT</b>, <b>CLARIFY</b> or <b>ABSTAIN</b> response, and how the offline pipeline builds and judges the three intent systems without touching the locked test set. The main users are Egyptian project managers asking about their work (standups, deadlines, client follow-ups, about 70% of the data), plus general requests.</p>
   </div>
 
   <figure>
@@ -142,7 +142,7 @@ td.wk { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--mu
         <rect class="row" x="494" y="284" width="202" height="26" rx="4"/>
         <text class="r" x="506" y="301">S3 · S2 + char n-grams</text>
         <rect class="row-opt" x="494" y="316" width="202" height="26" rx="4"/>
-        <text class="s" x="506" y="333">S4–S6 · extended (optional)</text>
+        <text class="s" x="506" y="333">S4–S7 · extended (optional)</text>
 
         <!-- fan-in to policy -->
         <path class="edge" d="M710,105 H785 V162 H798" marker-end="url(#ah)"/>
@@ -301,7 +301,7 @@ td.wk { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--mu
         </tbody>
       </table>
     </div>
-    <p>Each result comes with a 95% family-bootstrap CI (10,000 resamples). A simulated power analysis at 120 test items shows that differences of about 15 STS points are detectable (power 0.73–0.96) and 5-point differences are not (0.11–0.22). A non-significant result is therefore reported as inconclusive, with the effect sizes its CI rules out. The secondary analyses are descriptive: the oracle-intent gap, nine CheckList-style label-preserving perturbations, calibration (ECE, Brier, AURC) and subgroups. S4–S6 (Jais 2 or Nile-Chat zero-shot, frozen Arabic sentence embeddings + LR, fine-tuned MARBERTv2 over 5 seeds) answer "would a pretrained model do better?". They are reported separately and stay outside H1–H3.</p>
+    <p>Each result comes with a 95% family-bootstrap CI (10,000 resamples). A simulated power analysis at 120 test items shows that differences of about 15 STS points are detectable (power 0.73–0.96) and 5-point differences are not (0.11–0.22). A non-significant result is therefore reported as inconclusive, with the effect sizes its CI rules out. The secondary analyses are descriptive: the oracle-intent gap, nine CheckList-style label-preserving perturbations, calibration (ECE, Brier, AURC) and subgroups. S4–S7 (Jais 2 8B, Nile-Chat 4B and Qwen3 8B zero/few-shot with calibrated label scoring, run on Kaggle GPUs; frozen multilingual-e5 embeddings + LR; fine-tuned MARBERTv2 over 5 seeds; Jais 2 + QLoRA) answer "would a pretrained model do better?". They are reported separately and stay outside H1–H3.</p>
 
     <h2>Quality gates</h2>
     <ul class="inv">
@@ -318,14 +318,14 @@ td.wk { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--mu
       <thead><tr><th>Phase</th><th>Scope</th><th>Weeks</th><th>Status</th></tr></thead>
       <tbody>
         <tr><td>P0</td><td>Repository, locked environment (uv), HLD, test runner</td><td class="wk">1</td><td><span class="pill now">done</span></td></tr>
-        <tr><td>P1</td><td>Task contract and shared core: normalizer, time and argument extractor, policy, templates, schemas, contract tests</td><td class="wk">1–2</td><td><span class="pill now">done · in review</span></td></tr>
+        <tr><td>P1</td><td>Task contract and shared core: normalizer, time and argument extractor, policy, templates, schemas, contract tests</td><td class="wk">1–2</td><td><span class="pill now">done · contract v1.0 frozen</span></td></tr>
         <tr><td>P2</td><td>Data tooling: validator, family splitter and manifest, κ script, annotation guide, data card, 20-item pilot. The 300 items themselves are written by a native speaker.</td><td class="wk">2–4</td><td><span class="pill now">tooling done · items pending</span></td></tr>
         <tr><td>P2b</td><td>Expert-review hardening: pre-registered protocol, scoring and statistics code, robustness suite, power analysis, type checking, property tests, CI</td><td class="wk">4</td><td><span class="pill now">done</span></td></tr>
-        <tr><td>P3</td><td>S1 rules, S2 and S3 classifiers, dev-only search, freezing, CPU and RAM log; extended baselines S5 (frozen Arabic embeddings + LR) and S6 (MARBERTv2, 5 seeds)</td><td class="wk">5</td><td><span class="pill now">S1–S3 done · S5/S6 next</span></td></tr>
+        <tr><td>P3</td><td>S1 rules, S2 and S3 classifiers, dev-only search, freezing, CPU and RAM log; extended baselines S5 (frozen Arabic embeddings + LR) and S6 (MARBERTv2, 5 seeds)</td><td class="wk">5</td><td><span class="pill now">code done · dry run passed</span></td></tr>
         <tr><td>P4</td><td>Locked-test evaluation: one run of the pre-registered protocol</td><td class="wk">6</td><td><span class="pill">harness done · run after freeze</span></td></tr>
         <tr><td>P5</td><td>Error analysis and local demo interface</td><td class="wk">7–8</td><td><span class="pill">planned</span></td></tr>
         <tr><td>P6</td><td>Final report and presentation</td><td class="wk">8</td><td><span class="pill">planned</span></td></tr>
-        <tr><td>P7</td><td>LLM zero-shot intent baseline (S4: Jais 2 or Nile-Chat), reported separately from the core comparison</td><td class="wk">after 6</td><td><span class="pill opt">optional</span></td></tr>
+        <tr><td>P7</td><td>LLM baselines on Kaggle GPUs: S4 (Jais 2 8B, Nile-Chat 4B, Qwen3 8B; 0/6-shot; calibrated scoring) and S7 (Jais 2 + QLoRA), plus MASSIVE out-of-distribution check; reported separately</td><td class="wk">5–6</td><td><span class="pill now">notebook ready</span></td></tr>
       </tbody>
     </table>
   </div>

@@ -15,6 +15,7 @@ import argparse
 import json
 import sys
 from collections.abc import Sequence
+from datetime import UTC
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -33,8 +34,9 @@ from athar.eval.stats import (
     mcnemar_exact,
     paired_permutation_test,
 )
+from athar.extract import canonical_text
 from athar.normalize import norm
-from athar.pipeline import FixedIntent, IntentRecognizer, Pipeline
+from athar.pipeline import FixedIntent, IntentRecognizer, respond_with_intent
 from athar.schema import INTENTS, GoldItem, Response
 
 #: metrics reported with a family-bootstrap CI
@@ -51,11 +53,16 @@ class Oracle:
     name = "oracle"
 
 
-def run(recognizer: IntentRecognizer | Oracle, items: Sequence[GoldItem]) -> list[Response]:
+def run(recognizer: IntentRecognizer | Oracle, items: Sequence[GoldItem]) -> list[Response | None]:
+    """Runtime path for every item. A recognizer answer outside the three intent labels (an
+    LLM that produced no parseable label) yields no response, which scores as a failure."""
     if isinstance(recognizer, Oracle):
         recognizer = FixedIntent([it.intent for it in items])
-    return Pipeline(recognizer).run_batch([it.text for it in items], [it.ref_datetime for it in items],
-                                          [it.timezone for it in items])
+    intents = recognizer.predict([norm(it.text) for it in items])
+    if len(intents) != len(items):
+        raise ValueError(f"{recognizer.name} returned {len(intents)} labels for {len(items)} items")
+    return [respond_with_intent(i, it.text, it.ref_datetime, it.timezone, recognizer.name)
+            if i in INTENTS else None for i, it in zip(intents, items, strict=True)]
 
 
 def _calibration(recognizer: Any, items: Sequence[GoldItem], bins: int) -> dict[str, float] | None:
@@ -71,6 +78,31 @@ def _calibration(recognizer: Any, items: Sequence[GoldItem], bins: int) -> dict[
             "aurc": aurc(conf, correct)}
 
 
+SUBGROUPS: dict[str, Any] = {
+    "domain": lambda it: it.domain,  # project_management (main target users) vs general
+    "code_switching": lambda it: "code-switched" if it.code_switched else "arabic-only",
+    "tool": lambda it: it.intent,
+}
+
+
+def _subgroups(items: Sequence[GoldItem], scores: Sequence[Any], cfg: dict[str, Any]) -> dict[str, Any]:
+    """STS and intent macro-F1 with family-bootstrap CIs per subgroup (protocol section 6)."""
+    out: dict[str, Any] = {}
+    for group, key in SUBGROUPS.items():
+        members: dict[str, list[int]] = {}
+        for i, it in enumerate(items):
+            members.setdefault(str(key(it)), []).append(i)
+        out[group] = {}
+        for value, idx in sorted(members.items()):
+            sub = [scores[i] for i in idx]
+            arrays, clusters = ScoreArrays(sub), [s.family_id for s in sub]
+            out[group][value] = {"n": len(sub), **{
+                m: cluster_bootstrap(arrays.metric(m), clusters, resamples=cfg["resamples"],
+                                     level=cfg["level"], seed=cfg["seed"]).as_dict()
+                for m in ("safe_task_success", "intent_macro_f1")}}
+    return out
+
+
 def evaluate_system(recognizer: IntentRecognizer | Oracle, items: Sequence[GoldItem], cfg: dict[str, Any]) -> dict[str, Any]:
     outputs = run(recognizer, items)
     scores = score_all(items, outputs)
@@ -81,6 +113,7 @@ def evaluate_system(recognizer: IntentRecognizer | Oracle, items: Sequence[GoldI
     report["ci"] = {m: cluster_bootstrap(arrays.metric(m), clusters, resamples=resamples,
                                          level=level, seed=seed).as_dict() for m in CI_METRICS}
     report["calibration"] = _calibration(recognizer, items, cfg.get("calibration_bins", 10))
+    report["subgroups"] = _subgroups(items, scores, cfg)
 
     robustness = {}
     original = {it.id: o for it, o in zip(items, outputs, strict=True)}
@@ -98,10 +131,16 @@ def evaluate_system(recognizer: IntentRecognizer | Oracle, items: Sequence[GoldI
     return report
 
 
-def _core(r: Response) -> tuple[Any, ...]:
+def _core(r: Response | None) -> tuple[Any, ...]:
+    """What must not change under a label-preserving perturbation. The reminder text is
+    compared in canonical form: echoing the user's own spelling (``أشتري`` vs ``اشتري``) is
+    correct behaviour, not a change of decision."""
+    if r is None:
+        return ("invalid",)
     call = r.tool_call
     return (r.route, r.intent, tuple(r.clarify_targets),
-            None if call is None else (call.name, call.datetime.isoformat(), call.reminder_text))
+            None if call is None else (call.name, call.datetime.astimezone(UTC).isoformat(),
+                                       canonical_text(call.reminder_text) if call.reminder_text else None))
 
 
 def compare(reports: dict[str, dict[str, Any]], comparisons: Sequence[Sequence[str]],
@@ -123,6 +162,33 @@ def compare(reports: dict[str, dict[str, Any]], comparisons: Sequence[Sequence[s
     return tests
 
 
+SEED_SUMMARY_METRICS = ("safe_task_success", "intent_macro_f1", "route_macro_f1",
+                        "unsafe_execution_rate", "unnecessary_clarification_rate")
+
+
+def seed_summaries(reports: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Mean and SD over seeds for multi-seed systems named ``<system>-s<seed>`` (e.g. S6)."""
+    import re
+
+    import numpy as np
+
+    groups: dict[str, list[str]] = {}
+    for name in reports:
+        m = re.fullmatch(r"(.+)-s\d+", name)
+        if m:
+            groups.setdefault(m.group(1), []).append(name)
+    out: dict[str, Any] = {}
+    for base, names in groups.items():
+        summary: dict[str, Any] = {"seeds": sorted(names)}
+        for metric in SEED_SUMMARY_METRICS:
+            vals = [float(reports[n]["metrics"][metric] or 0.0) for n in names]
+            summary[metric] = {"mean": float(np.mean(vals)),
+                               "sd": float(np.std(vals, ddof=1)) if len(vals) > 1 else 0.0,
+                               "min": min(vals), "max": max(vals)}
+        out[base] = summary
+    return out
+
+
 def evaluate(recognizers: dict[str, IntentRecognizer], items: Sequence[GoldItem], cfg: dict[str, Any]) -> dict[str, Any]:
     systems: dict[str, IntentRecognizer | Oracle] = dict(recognizers)
     if cfg.get("oracle", True):
@@ -130,12 +196,19 @@ def evaluate(recognizers: dict[str, IntentRecognizer], items: Sequence[GoldItem]
     reports = {name: evaluate_system(r, items, cfg) for name, r in systems.items()}
     comparisons = [c for c in cfg.get("comparisons", []) if c[0] in reports and c[1] in reports]
     return {"config": cfg, "config_sha256": sha256_text(canonical_json(cfg)), "n_items": len(items),
-            "systems": reports, "comparisons": compare(reports, comparisons, cfg)}
+            "systems": reports, "seed_summaries": seed_summaries(reports),
+            "comparisons": compare(reports, comparisons, cfg)}
 
 
 # --------------------------------------------------------------------------- CLI
 def main(argv: Sequence[str] | None = None) -> int:
-    from athar.intent.train import FreezeError, load_recognizer, read_freeze, verify_freeze
+    from athar.intent.train import (
+        FreezeError,
+        frozen_systems,
+        load_recognizer,
+        read_freeze,
+        verify_freeze,
+    )
 
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
@@ -145,7 +218,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     p.add_argument("--models", default="models")
     p.add_argument("--config", default="configs/eval.yaml")
     p.add_argument("--split", choices=["dev", "test"], default="dev")
-    p.add_argument("--systems", nargs="+", default=["S1", "S2", "S3"])
+    p.add_argument("--systems", nargs="+", default=["S1", "S2", "S3"],
+                   help="system names, or 'all' for every frozen system (S5, S6-s<seed> need the neural extra)")
     p.add_argument("--unlock-test", action="store_true", help="the one-shot locked test run")
     p.add_argument("--out")
     a = p.parse_args(argv)
@@ -165,7 +239,13 @@ def main(argv: Sequence[str] | None = None) -> int:
                 print(f"{out} exists: the locked test set has already been evaluated")
                 return 1
         items = load_split(a.manifest, a.split, unlock_test=a.split == "test")
-        recognizers: dict[str, IntentRecognizer] = {s: load_recognizer(s, a.models) for s in a.systems}
+        names = frozen_systems(a.models) if a.systems == ["all"] else a.systems
+        strict = a.split == "test"
+        if not strict and (changed := [p for p in verify_freeze(a.models) if p.startswith("source ")]):
+            print(f"note: {len(changed)} frozen source(s) changed since the freeze; fine for a dev run, "
+                  f"the test run requires a clean freeze")
+        recognizers: dict[str, IntentRecognizer] = {s: load_recognizer(s, a.models, strict=strict)
+                                                    for s in names}
         result = evaluate(recognizers, items, cfg)
         result["freeze_sha256"] = read_freeze(a.models)["freeze_sha256"]
         result["split"] = a.split
@@ -180,6 +260,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"{name:7} STS {ci['estimate']:.3f} [{ci['low']:.3f}, {ci['high']:.3f}]  "
               f"intent F1 {rep['metrics']['intent_macro_f1']:.3f}  "
               f"unsafe {rep['metrics']['unsafe_execution_rate']:.3f}")
+    for base, summ in result["seed_summaries"].items():
+        sts = summ["safe_task_success"]
+        print(f"{base:7} STS {sts['mean']:.3f} +/- {sts['sd']:.3f} over {len(summ['seeds'])} seeds")
     for k, v in result["comparisons"].items():
         print(f"{k:12} diff {v['difference']:+.3f}  p={v['p_value']:.4f}  p_holm={v['p_holm']:.4f}")
     print(f"wrote {out}")

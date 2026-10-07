@@ -1,7 +1,6 @@
 """Fixed Egyptian Arabic response templates. Questions never contain invented values.
 
-Templates use masculine second person as the default address form; the wording is listed in
-docs/task_contract.md for native-speaker review before the dataset is frozen.
+Templates avoid gendered second-person forms (task contract v1.0 section 6).
 """
 
 from __future__ import annotations
@@ -17,12 +16,12 @@ AR_WEEKDAYS = ["الاتنين", "التلات", "الأربع", "الخميس",
 AR_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر",
              "أكتوبر", "نوفمبر", "ديسمبر"]
 
-ABSTAIN_MESSAGE = "معلش، أنا أقدر أعمل تذكير أو منبه لمرة واحدة ليك بس، ومقدرش أنفذ الطلب ده."
+ABSTAIN_MESSAGE = "معلش، أنا أقدر أعمل تذكير أو منبه لمرة واحدة بس، ومقدرش أنفذ الطلب ده."
 QUESTIONS: dict[str, str | dict[str, str]] = {
-    "date": "تقصد أنهي يوم بالظبط؟",
-    "time": {"create_reminder": "عايزني أفكرك الساعة كام؟", "create_alarm": "عايز المنبه يرن الساعة كام؟"},
-    "am_pm": "الساعة {h} الصبح ولا بالليل؟",
-    "past": "الوقت ده عدّى خلاص، تحب أخليه إمتى؟",
+    "date": "أنهي يوم بالظبط؟",
+    "time": {"create_reminder": "أفكرك الساعة كام؟", "create_alarm": "المنبه يرن الساعة كام؟"},
+    "am_pm": "الساعة {h} {day} ولا بالليل؟",
+    "past": "الوقت ده عدّى خلاص، أخليه إمتى؟",
     "reminder_text": "أفكرك بإيه؟",
 }
 
@@ -53,6 +52,15 @@ def _said_hour(ext: Extraction) -> str | None:
     return None
 
 
+def _daytime_word(said: str) -> str:
+    """Daytime reading of a 1-12 hour, as the contract's period table assigns it: 6-11 الصبح,
+    12 and 1-3 الضهر, 4-5 العصر. The other reading is always بالليل."""
+    hour = int(said.split(":")[0])
+    if 6 <= hour <= 11:
+        return "الصبح"
+    return "الضهر" if hour in (12, 1, 2, 3) else "العصر"
+
+
 def question(decision: Decision, ext: Extraction) -> str:
     parts: list[str] = []
     for gap in decision.targets:
@@ -60,7 +68,7 @@ def question(decision: Decision, ext: Extraction) -> str:
         q = template[decision.intent] if isinstance(template, dict) else template
         if gap == "am_pm":
             h = _said_hour(ext)
-            q = q.format(h=h) if h else "تقصد الصبح ولا بالليل؟"
+            q = q.format(h=h, day=_daytime_word(h)) if h else "الصبح ولا بالليل؟"
         parts.append(q)
     return " ".join(parts)
 

@@ -133,3 +133,16 @@ def test_cli_refuses_to_refreeze(split_dir, capsys):
     assert T.main(args) == 1
     assert T.main(["verify", str(split_dir / "models")]) == 0
     capsys.readouterr()
+
+
+def test_non_strict_load_tolerates_source_changes_but_not_model_changes(split_dir, monkeypatch):
+    out = split_dir / "models"
+    T.fit_and_freeze(split_dir / "manifest.json", split_dir / "train.yaml", out, log=lambda _: None)
+    real = T.source_hash
+    monkeypatch.setattr(T, "source_hash", lambda rel: "0" * 64 if rel.endswith("metrics.py") else real(rel))
+    with pytest.raises(T.FreezeError):
+        T.load_recognizer("S2", out)  # strict
+    assert T.load_recognizer("S2", out, strict=False).name == "S2"
+    (out / "S2.joblib").write_bytes((out / "S2.joblib").read_bytes() + b"\0")
+    with pytest.raises(T.FreezeError):
+        T.load_recognizer("S2", out, strict=False)  # model files are always checked

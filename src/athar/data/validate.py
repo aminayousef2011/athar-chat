@@ -30,6 +30,7 @@ from athar.normalize import norm
 from athar.schema import GoldItem
 
 RX_LATIN = re.compile(r"[A-Za-z]")
+RX_WORD = re.compile(r"\w+")
 
 
 @dataclass(frozen=True)
@@ -77,7 +78,7 @@ def _item_issues(r: Record) -> list[Issue]:
         out.append(Issue("warning", r.where,
                          f"code_switched is {it.code_switched} but the text "
                          f"{'contains' if has_latin else 'has no'} Latin letters"))
-    request_words = set(norm(it.text).split())
+    request_words = set(RX_WORD.findall(norm(it.text)))  # same tokenization as canonical_text
     request_words |= {w[1:] for w in request_words if w.startswith("بال")}  # "بالايجار" -> "الايجار"
     for gold in [it.args.reminder_text, *it.args.reminder_text_alts]:
         canon = canonical_text(gold) if gold else None

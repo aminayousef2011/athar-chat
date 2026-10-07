@@ -273,3 +273,33 @@ def test_vectorised_metrics_equal_the_reference_definitions():
         ref = aggregate([scores[i] for i in idx])
         for name in ScoreArrays.METRICS:
             assert arrays.metric(name)(idx) == pytest.approx(ref[name], abs=1e-12), name
+
+
+def test_oracle_is_invariant_under_every_orthographic_perturbation():
+    """Regression: invariance compares the canonical reminder text, not the user's spelling."""
+    items = load_items(DRAFT)[:60]
+    kinds = ["taa_marbuta", "hamza", "alef_maqsura", "digits", "diacritics", "elongation", "punctuation"]
+    rep = H.evaluate({}, items, {**FAST, "perturbations": kinds, "comparisons": []})
+    rob = rep["systems"]["oracle"]["robustness"]
+    assert {k: v["invariance_rate"] for k, v in rob.items()} == dict.fromkeys(rob, 1.0)
+
+
+def test_subgroups_cover_domain_code_switching_and_tool():
+    items = load_items(DRAFT)[:80]
+    rep = H.evaluate({}, items, {**FAST, "perturbations": ["digits"], "comparisons": []})
+    sub = rep["systems"]["oracle"]["subgroups"]
+    assert set(sub) == {"domain", "code_switching", "tool"}
+    assert sum(v["n"] for v in sub["domain"].values()) == len(items)
+    assert all(v["safe_task_success"]["estimate"] == 1.0 for v in sub["domain"].values())
+
+
+def test_macro_f1_leaves_out_labels_absent_from_the_sample():
+    from athar.eval.metrics import _codes, macro_f1, macro_f1_codes
+    from athar.schema import INTENTS
+
+    gold, pred = ["create_reminder", "create_alarm"], ["create_reminder", "create_alarm"]
+    assert macro_f1(gold, pred, INTENTS) == 1.0  # 'unsupported' absent: not a zero
+    assert macro_f1_codes(_codes(gold, INTENTS), _codes(pred, INTENTS), 3) == 1.0
+    pred2 = ["create_reminder", "unsupported"]  # predicted but absent from gold: counts
+    assert macro_f1(gold, pred2, INTENTS) == pytest.approx((1 + 0 + 0) / 3)
+    assert macro_f1_codes(_codes(gold, INTENTS), _codes(pred2, INTENTS), 3) == pytest.approx(1 / 3)

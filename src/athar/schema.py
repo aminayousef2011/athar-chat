@@ -22,6 +22,8 @@ UnsupportedReason = Literal[
     "deletion", "recurring", "other_person", "multi_action", "other_tool", "modification", "other"
 ]
 Source = Literal["author", "contributor", "assistant_draft"]
+#: who would send the request: a project manager about their work (the main target users) or anyone
+Domain = Literal["project_management", "general"]
 
 INTENTS: tuple[str, ...] = ("create_reminder", "create_alarm", "unsupported")
 ROUTES: tuple[str, ...] = ("ACT", "CLARIFY", "ABSTAIN")
@@ -70,6 +72,7 @@ class GoldItem(BaseModel):
     pair_id: str | None = None
     code_switched: bool = False
     source: Source = "author"
+    domain: Domain = "general"
     notes: str = ""
 
     check_ref_datetime = field_validator("ref_datetime")(_aware)

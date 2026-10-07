@@ -110,3 +110,10 @@ def test_gold_item_valid():
 def test_gold_item_rejects_contract_violations(patch):
     with pytest.raises(ValidationError):
         GoldItem(**{**GOLD, **patch})
+
+
+@pytest.mark.parametrize("hour, day", [("7", "الصبح"), ("11", "الصبح"), ("12", "الضهر"), ("2", "الضهر"),
+                                        ("4", "العصر"), ("5", "العصر")])
+def test_am_pm_question_pairs_the_hour_with_its_daytime_period(hour, day, ref):
+    r = respond_with_intent("create_reminder", f"فكرني بكرة الساعة {hour} أشتري عيش", ref)
+    assert r.message == f"الساعة {hour} {day} ولا بالليل؟"

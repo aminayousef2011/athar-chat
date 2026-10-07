@@ -12,6 +12,7 @@ from athar.timeexpr import GAP_ORDER
 
 START, END = "<!-- stats:start -->", "<!-- stats:end -->"
 SOURCES = ("author", "contributor", "assistant_draft")
+DOMAINS = ("project_management", "general")
 REASONS = ("deletion", "modification", "recurring", "other_person", "multi_action", "other_tool", "other")
 
 
@@ -51,6 +52,7 @@ def stats_markdown(items: Sequence[GoldItem], splits: dict[str, Sequence[GoldIte
     rows += [(f"target `{g}`", _has_target(g)) for g in GAP_ORDER]
     rows += [(f"reason {r}", _eq("unsupported_reason", r)) for r in REASONS]
     rows += [("code-switched", _eq("code_switched", True))]
+    rows += [(f"domain {d}", _eq("domain", d)) for d in DOMAINS]
     rows += [(f"source {s}", _eq("source", s)) for s in SOURCES]
     rows += [("**items**", lambda it: True)]
     lines += _table(columns, rows)

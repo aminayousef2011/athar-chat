@@ -51,7 +51,7 @@ REPO = PKG.parents[1]
 FROZEN_SOURCES = tuple(
     [f"src/athar/{m}.py" for m in ("normalize", "lexicon", "timeexpr", "extract", "policy",
                                    "respond", "schema", "pipeline")]
-    + [f"src/athar/intent/{m}.py" for m in ("rules", "models")]
+    + [f"src/athar/intent/{m}.py" for m in ("rules", "models", "neural", "llm")]
     + [f"src/athar/eval/{m}.py" for m in ("metrics", "stats", "perturb", "harness")]
     + ["docs/task_contract.md", "docs/evaluation_protocol.md", "configs/eval.yaml"]
 )
@@ -144,8 +144,65 @@ def _timed_predict(predict: Callable[[list[str]], list[str]], texts: list[str]) 
     return pred, round(1000 * (time.perf_counter() - t0) / max(len(texts), 1), 4)
 
 
+def _dir_hashes(directory: Path, root: Path) -> dict[str, str]:
+    return {f.relative_to(root).as_posix(): sha256_file(f) for f in sorted(directory.rglob("*")) if f.is_file()}
+
+
+def _train_extended(cfg: dict[str, Any], xtr: list[str], ytr: Sequence[str], xdv: list[str], ydv: Sequence[str],
+                    out: Path, log: Callable[[str], None], encoder_factory: Callable[[str, str], Any] | None,
+                    pretrained_factory: Callable[[str, str], tuple[Any, Any]] | None) -> dict[str, Any]:
+    """S5 and S6 (extended baselines, reported separately). Needs the ``neural`` extra."""
+    from athar.intent import neural
+
+    systems: dict[str, Any] = {}
+    if "S5" in cfg:
+        c5 = {"seed": cfg.get("seed", 0), **cfg["S5"]}
+        with measure() as enc_res:
+            encoder = (encoder_factory or neural.load_encoder)(c5["model"], c5["revision"])
+        with measure() as fit_res:
+            model, best, results = neural.fit_s5(encoder, xtr, ytr, xdv, ydv, c5, scores)
+        pred, ms = _timed_predict(model.predict, xdv)
+        path = out / "S5.joblib"
+        neural.save_s5(model, path)
+        systems["S5"] = {"kind": "frozen sentence embeddings + logistic regression",
+                         "model": c5["model"], "revision": c5["revision"], "params": best,
+                         "dev": scores(ydv, pred), "files": {path.name: sha256_file(path)},
+                         "resources": {"load_encoder": enc_res,
+                                       "search_and_fit": {**fit_res, "n_fits": len(results)},
+                                       "predict_ms_per_item": ms}, "grid": results}
+        log(f"S5  dev {systems['S5']['dev']}  C={best['C']}")
+    if "S6" in cfg:
+        c6 = cfg["S6"]
+        for seed in c6["seeds"]:
+            name = f"S6-s{seed}"
+            net, tok = (pretrained_factory or neural.load_pretrained)(c6["model"], c6["revision"])
+            unk = neural.unk_rate(tok, xtr)
+            if unk > c6.get("max_unk_rate", 0.05):
+                raise ValueError(f"S6 tokenizer maps {unk:.1%} of training word pieces to its unknown "
+                                 f"token; the tokenizer or vocabulary is wrong")
+            with measure() as fit_res:
+                model6 = neural.fine_tune(net, tok, xtr, ytr, c6, seed, log)
+            pred, ms = _timed_predict(model6.predict, xdv)
+            directory = out / "S6" / f"seed{seed}"
+            neural.save_s6(model6, directory)
+            systems[name] = {"kind": "fine-tuned encoder", "model": c6["model"], "revision": c6["revision"],
+                             "seed": seed, "dir": directory.relative_to(out).as_posix(),
+                             "dev": scores(ydv, pred), "files": _dir_hashes(directory, out),
+                             "train_unk_rate": round(unk, 4),
+                             "resources": {"fine_tune": {**fit_res, "process_peak_rss_mb": _peak_rss_mb()},
+                                           "predict_ms_per_item": ms}}
+            log(f"{name}  dev {systems[name]['dev']}  fine-tune {fit_res['wall_seconds']}s wall")
+        f1s = [systems[f"S6-s{s}"]["dev"]["intent_macro_f1"] for s in c6["seeds"]]
+        systems["S6"] = {"kind": "seed summary", "seeds": list(c6["seeds"]),
+                         "dev_intent_macro_f1_mean": round(float(numpy.mean(f1s)), 4),
+                         "dev_intent_macro_f1_sd": round(float(numpy.std(f1s, ddof=1)), 4) if len(f1s) > 1 else 0.0}
+    return systems
+
+
 def fit_and_freeze(manifest_path: str | Path, config_path: str | Path, out: str | Path,
-                   log: Callable[[str], None] = print) -> dict[str, Any]:
+                   log: Callable[[str], None] = print, *, extended: bool = False,
+                   encoder_factory: Callable[[str, str], Any] | None = None,
+                   pretrained_factory: Callable[[str, str], tuple[Any, Any]] | None = None) -> dict[str, Any]:
     problems = verify_manifest(manifest_path)
     if problems:
         raise DatasetError(f"manifest does not verify: {problems[0]}")
@@ -176,7 +233,7 @@ def fit_and_freeze(manifest_path: str | Path, config_path: str | Path, out: str 
         joblib.dump(model, path)
         systems[name] = {
             "kind": "tf-idf + logistic regression", "params": best, "dev": scores(ydv, pred),
-            "file": path.name, "sha256": sha256_file(path),
+            "file": path.name, "sha256": sha256_file(path), "files": {path.name: sha256_file(path)},
             "size_kb": round(path.stat().st_size / 1024, 1),
             "n_features": int(len(model.named_steps["clf"].coef_[0])),
             "resources": {"final_fit": fit_res, "search": {**search_res, "n_fits": len(results)},
@@ -186,6 +243,9 @@ def fit_and_freeze(manifest_path: str | Path, config_path: str | Path, out: str 
         log(f"{name}  dev {systems[name]['dev']}  C={best['C']} word={best['word_ngram']}"
             + (f" char={best['char_ngram']}" if "char_ngram" in best else "")
             + f"  fit {fit_res['cpu_seconds']}s CPU, {fit_res['peak_traced_mb']} MB peak")
+
+    if extended:
+        systems.update(_train_extended(cfg, xtr, ytr, xdv, ydv, out, log, encoder_factory, pretrained_factory))
 
     body = {
         "contract_version": CONTRACT_VERSION,
@@ -222,12 +282,15 @@ def verify_freeze(models_dir: str | Path) -> list[str]:
         return [str(e)]
     problems = []
     for name in LEARNED:
-        s = f["systems"].get(name)
-        path = Path(models_dir) / s["file"] if s else None
-        if path is None or not path.exists():
+        if name not in f["systems"]:
             problems.append(f"{name}: model file missing")
-        elif sha256_file(path) != s["sha256"]:
-            problems.append(f"{name}: {path.name} changed after freezing")
+    for name, s in f["systems"].items():
+        for rel, h in s.get("files", {}).items():
+            path = Path(models_dir) / rel
+            if not path.exists():
+                problems.append(f"{name}: model file missing ({rel})")
+            elif sha256_file(path) != h:
+                problems.append(f"{name}: {rel} changed after freezing")
     for rel, h in f["frozen_sources"].items():
         if not (REPO / rel).exists():
             problems.append(f"source {rel} is missing")
@@ -236,17 +299,37 @@ def verify_freeze(models_dir: str | Path) -> list[str]:
     return problems
 
 
-def load_recognizer(name: str, models_dir: str | Path = "models") -> KeywordIntent | SklearnIntent:
-    """A frozen system. Model files are pickles: they are loaded only after their hash checks."""
-    if name not in SYSTEMS:
-        raise ValueError(f"unknown system {name!r}; choose from {SYSTEMS}")
+def frozen_systems(models_dir: str | Path) -> list[str]:
+    """Loadable system names in a freeze (S6 is loaded per seed: S6-s0, S6-s1, ...)."""
+    return [n for n, s in read_freeze(models_dir)["systems"].items() if s.get("kind") != "seed summary"]
+
+
+def load_recognizer(name: str, models_dir: str | Path = "models", *, strict: bool = True) -> Any:
+    """A frozen system. Model files are pickles: they are always hash-checked before loading.
+
+    ``strict`` (the default, and what the locked test run uses) also requires every frozen
+    source (shared core, scoring code, protocol, contract) to be unchanged. Dev evaluations may
+    pass ``strict=False`` to re-score frozen models after a fix to scoring code."""
     problems = verify_freeze(models_dir)
+    if not strict:
+        problems = [p for p in problems if not p.startswith("source ")]
     if problems:
         raise FreezeError("; ".join(problems))
+    f = read_freeze(models_dir)
+    if name not in SYSTEMS and name not in f["systems"]:
+        raise ValueError(f"unknown system {name!r}; choose from {frozen_systems(models_dir)}")
     if name == "S1":
         return KeywordIntent()
-    f = read_freeze(models_dir)
-    return SklearnIntent(name, joblib.load(Path(models_dir) / f["systems"][name]["file"]))
+    if name in LEARNED:
+        return SklearnIntent(name, joblib.load(Path(models_dir) / f["systems"][name]["file"]))
+    from athar.intent import neural
+
+    s = f["systems"][name]
+    if name == "S5":
+        return neural.load_s5(Path(models_dir) / "S5.joblib", f["config"]["S5"])
+    if name.startswith("S6-s"):
+        return neural.load_s6(Path(models_dir) / s["dir"], f["config"]["S6"]["max_length"], name)
+    raise ValueError(f"{name!r} is not a loadable system")
 
 
 # --------------------------------------------------------------------------- CLI
@@ -261,6 +344,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     s.add_argument("--config", required=True)
     s.add_argument("--out", default="models")
     s.add_argument("--force", action="store_true", help="overwrite an existing freeze")
+    s.add_argument("--extended", action="store_true",
+                   help="also train S5/S6 (needs the neural extra: uv sync --extra neural)")
     s = sub.add_parser("verify", help="check frozen models and sources")
     s.add_argument("models_dir", nargs="?", default="models")
     a = p.parse_args(argv)
@@ -269,8 +354,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             if (Path(a.out) / "freeze.json").exists() and not a.force:
                 print(f"{a.out}/freeze.json exists; models are frozen once (use --force to refit)")
                 return 1
-            f = fit_and_freeze(a.manifest, a.config, a.out)
-            print(f"froze {', '.join(SYSTEMS)} in {a.out}  freeze_sha256={f['freeze_sha256']}")
+            f = fit_and_freeze(a.manifest, a.config, a.out, extended=a.extended)
+            print(f"froze {', '.join(frozen_systems(a.out))} in {a.out}  freeze_sha256={f['freeze_sha256']}")
             return 0
         problems = verify_freeze(a.models_dir)
         for msg in problems:

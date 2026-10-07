@@ -52,6 +52,19 @@ uv run pre-commit install            # same gates + data validation on every com
 
 CI (`.github/workflows/ci.yml`) runs them on Linux and Windows from the frozen lockfile.
 
+## LLM baselines on Kaggle GPUs (S4 / S7)
+
+Jais 2 8B, Nile-Chat 4B and Qwen3 8B (S4), and Jais 2 + QLoRA (S7), run in
+[notebooks/kaggle_s4_llm.ipynb](notebooks/kaggle_s4_llm.ipynb) on Kaggle's T4 x2 GPUs, using the
+same `athar` scoring code (`athar.intent.llm`, tested offline in `tests/test_llm.py`):
+
+```powershell
+uv run python scripts/build_kaggle_kit.py   # -> dist/athar-chat-kit.zip: upload as a Kaggle Dataset
+```
+
+Then accept the Jais 2 terms on Hugging Face, add an `HF_TOKEN` Kaggle secret, choose GPU T4 x2
+with internet on, attach the dataset and run all. The notebook explains each step.
+
 ## Evaluation
 
 The protocol is pre-registered in [docs/evaluation_protocol.md](docs/evaluation_protocol.md):
@@ -80,6 +93,17 @@ uv run athar-data stats data/athar.jsonl --manifest data/splits/manifest.json --
 ```powershell
 uv run athar-train fit --manifest data/splits/manifest.json --config configs/train.yaml --out models
 uv run athar-train verify models     # model files, config and shared-core sources unchanged
+```
+
+Extended baselines (reported separately from the core comparison): S5 frozen
+`multilingual-e5-small` embeddings + logistic regression, and S6 fine-tuned `MARBERTv2` over 5
+seeds. Both use pinned model revisions and need the optional `neural` extra (PyTorch CPU,
+transformers):
+
+```powershell
+uv sync --extra neural
+uv run athar-train fit --manifest data/splits/manifest.json --config configs/train.yaml --out models --extended
+uv run athar-eval --manifest data/splits/manifest.json --models models --split dev --systems all
 ```
 
 `fit` reads train and dev only, searches C and n-gram ranges on dev, refits the winners on train,
