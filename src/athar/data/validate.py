@@ -78,6 +78,7 @@ def _item_issues(r: Record) -> list[Issue]:
                          f"code_switched is {it.code_switched} but the text "
                          f"{'contains' if has_latin else 'has no'} Latin letters"))
     request_words = set(norm(it.text).split())
+    request_words |= {w[1:] for w in request_words if w.startswith("بال")}  # "بالايجار" -> "الايجار"
     for gold in [it.args.reminder_text, *it.args.reminder_text_alts]:
         canon = canonical_text(gold) if gold else None
         missing = [w for w in (canon or "").split() if w not in request_words]
