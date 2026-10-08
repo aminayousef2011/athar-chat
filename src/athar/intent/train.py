@@ -36,6 +36,7 @@ import athar
 from athar import CONTRACT_VERSION
 from athar.data.io import DatasetError, canonical_json, sha256_file, sha256_text
 from athar.data.split import load_split, read_manifest, verify_manifest
+from athar.gate import fit_threshold
 from athar.intent.models import SklearnIntent, build
 from athar.intent.rules import KeywordIntent
 from athar.normalize import norm
@@ -50,7 +51,7 @@ REPO = PKG.parents[1]
 #: and settings that pre-register the evaluation
 FROZEN_SOURCES = tuple(
     [f"src/athar/{m}.py" for m in ("normalize", "lexicon", "timeexpr", "extract", "policy",
-                                   "respond", "schema", "pipeline")]
+                                   "respond", "schema", "pipeline", "gate")]
     + [f"src/athar/intent/{m}.py" for m in ("rules", "models", "neural", "llm")]
     + [f"src/athar/eval/{m}.py" for m in ("metrics", "stats", "perturb", "harness")]
     + ["docs/task_contract.md", "docs/evaluation_protocol.md", "configs/eval.yaml"]
@@ -149,7 +150,7 @@ def _dir_hashes(directory: Path, root: Path) -> dict[str, str]:
 
 
 def _train_extended(cfg: dict[str, Any], xtr: list[str], ytr: Sequence[str], xdv: list[str], ydv: Sequence[str],
-                    out: Path, log: Callable[[str], None], encoder_factory: Callable[[str, str], Any] | None,
+                    dev: Sequence[GoldItem], out: Path, log: Callable[[str], None], encoder_factory: Callable[[str, str], Any] | None,
                     pretrained_factory: Callable[[str, str], tuple[Any, Any]] | None) -> dict[str, Any]:
     """S5 and S6 (extended baselines, reported separately). Needs the ``neural`` extra."""
     from athar.intent import neural
@@ -169,7 +170,8 @@ def _train_extended(cfg: dict[str, Any], xtr: list[str], ytr: Sequence[str], xdv
                          "dev": scores(ydv, pred), "files": {path.name: sha256_file(path)},
                          "resources": {"load_encoder": enc_res,
                                        "search_and_fit": {**fit_res, "n_fits": len(results)},
-                                       "predict_ms_per_item": ms}, "grid": results}
+                                       "predict_ms_per_item": ms}, "grid": results,
+                         "gate": fit_threshold(model, dev, cfg.get("gate", {}))}
         log(f"S5  dev {systems['S5']['dev']}  C={best['C']}")
     if "S6" in cfg:
         c6 = cfg["S6"]
@@ -190,7 +192,8 @@ def _train_extended(cfg: dict[str, Any], xtr: list[str], ytr: Sequence[str], xdv
                              "dev": scores(ydv, pred), "files": _dir_hashes(directory, out),
                              "train_unk_rate": round(unk, 4),
                              "resources": {"fine_tune": {**fit_res, "process_peak_rss_mb": _peak_rss_mb()},
-                                           "predict_ms_per_item": ms}}
+                                           "predict_ms_per_item": ms},
+                             "gate": fit_threshold(model6, dev, cfg.get("gate", {}))}
             log(f"{name}  dev {systems[name]['dev']}  fine-tune {fit_res['wall_seconds']}s wall")
         f1s = [systems[f"S6-s{s}"]["dev"]["intent_macro_f1"] for s in c6["seeds"]]
         systems["S6"] = {"kind": "seed summary", "seeds": list(c6["seeds"]),
@@ -239,13 +242,15 @@ def fit_and_freeze(manifest_path: str | Path, config_path: str | Path, out: str 
             "resources": {"final_fit": fit_res, "search": {**search_res, "n_fits": len(results)},
                           "predict_ms_per_item": ms},
             "grid": results,
+            "gate": fit_threshold(recognizer, dev, cfg.get("gate", {})),
         }
         log(f"{name}  dev {systems[name]['dev']}  C={best['C']} word={best['word_ngram']}"
             + (f" char={best['char_ngram']}" if "char_ngram" in best else "")
-            + f"  fit {fit_res['cpu_seconds']}s CPU, {fit_res['peak_traced_mb']} MB peak")
+            + f"  fit {fit_res['cpu_seconds']}s CPU, {fit_res['peak_traced_mb']} MB peak"
+            + f"  gate tau={systems[name]['gate']['threshold']}")
 
     if extended:
-        systems.update(_train_extended(cfg, xtr, ytr, xdv, ydv, out, log, encoder_factory, pretrained_factory))
+        systems.update(_train_extended(cfg, xtr, ytr, xdv, ydv, dev, out, log, encoder_factory, pretrained_factory))
 
     body = {
         "contract_version": CONTRACT_VERSION,

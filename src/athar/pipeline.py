@@ -1,6 +1,7 @@
-"""End-to-end runtime path: normalize -> (intent || extract) -> policy -> response.
+"""End-to-end runtime path: normalize -> (intent || extract) -> policy -> response -> gate.
 
-Only the intent recognizer differs between systems; everything else is shared.
+Only the intent recognizer differs between systems; everything else is shared. The optional
+confidence gate (athar.gate) turns a low-confidence execution into a confirmation question.
 """
 
 from __future__ import annotations
@@ -10,6 +11,7 @@ from datetime import datetime
 from typing import Protocol
 
 from athar.extract import extract
+from athar.gate import apply_gate, confidences
 from athar.normalize import norm
 from athar.policy import decide
 from athar.respond import build_response
@@ -44,15 +46,22 @@ def respond_with_intent(intent: str, text: str, ref: datetime, tz_name: str = "A
 
 
 class Pipeline:
-    def __init__(self, recognizer: IntentRecognizer) -> None:
+    def __init__(self, recognizer: IntentRecognizer, gate_threshold: float | None = None) -> None:
         self.recognizer = recognizer
+        self.gate_threshold = gate_threshold
 
     def run_batch(self, texts: Sequence[str], refs: Sequence[datetime],
                   tz_names: Sequence[str] | None = None) -> list[Response]:
         tz_names = tz_names or ["Africa/Cairo"] * len(texts)
-        intents = self.recognizer.predict([norm(t) for t in texts])
-        return [respond_with_intent(i, t, r, z, self.recognizer.name)
-                for i, t, r, z in zip(intents, texts, refs, tz_names, strict=True)]
+        normalized = [norm(t) for t in texts]
+        intents = self.recognizer.predict(normalized)
+        conf = confidences(self.recognizer, normalized, intents)
+        out = []
+        for i, c, t, r, z in zip(intents, conf, texts, refs, tz_names, strict=True):
+            gated = apply_gate(respond_with_intent(i, t, r, z, self.recognizer.name), c, self.gate_threshold)
+            assert gated is not None
+            out.append(gated)
+        return out
 
     def run(self, text: str, ref: datetime, tz_name: str = "Africa/Cairo") -> Response:
         return self.run_batch([text], [ref], [tz_name])[0]

@@ -17,6 +17,9 @@ from athar.timeexpr import GAP_ORDER
 Intent = Literal["create_reminder", "create_alarm", "unsupported"]
 Route = Literal["ACT", "CLARIFY", "ABSTAIN"]
 Gap = Literal["date", "time", "am_pm", "past", "reminder_text"]
+#: what a system may ask about: a missing argument, or ``confirm`` from the confidence gate
+#: (athar.gate). Gold items never carry ``confirm``: it depends on the system, not the request.
+ClarifyTarget = Literal["date", "time", "am_pm", "past", "reminder_text", "confirm"]
 ToolName = Literal["create_reminder", "create_alarm"]
 UnsupportedReason = Literal[
     "deletion", "recurring", "other_person", "multi_action", "other_tool", "modification", "other"
@@ -37,7 +40,7 @@ REQUIRED_GAPS: dict[str, frozenset[str]] = {
 def _sorted_gaps(v: list[str]) -> list[str]:
     if len(set(v)) != len(v):
         raise ValueError("duplicate clarification target")
-    return sorted(v, key=GAP_ORDER.index)
+    return sorted(v, key=(*GAP_ORDER, "confirm").index)
 
 
 def _aware(v: dt.datetime | None) -> dt.datetime | None:
@@ -124,11 +127,13 @@ class Response(BaseModel):
     route: Route
     intent: Intent
     tool_call: ToolCall | None = None
-    clarify_targets: list[Gap] = Field(default_factory=list)
+    clarify_targets: list[ClarifyTarget] = Field(default_factory=list)
     message: str
     # diagnostics (not scored): what the extractor saw even when the route is not ACT
     extracted_datetime: dt.datetime | None = None
     extracted_reminder_text: str | None = None
+    # probability the recognizer gave its intent (None for S1 / oracle); see athar.gate
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
 
     check_targets = field_validator("clarify_targets")(_sorted_gaps)
 
@@ -140,6 +145,8 @@ class Response(BaseModel):
             raise ValueError("tool_call present if and only if route is ACT")
         if (self.route == "CLARIFY") != bool(self.clarify_targets):
             raise ValueError("clarify_targets non-empty if and only if route is CLARIFY")
+        if "confirm" in self.clarify_targets and len(self.clarify_targets) > 1:
+            raise ValueError("a confirmation is asked on its own")
         if self.tool_call is not None and self.tool_call.name != self.intent:
             raise ValueError("tool_call.name must equal intent")
         if self.tool_call and self.tool_call.name == "create_reminder" and not self.tool_call.reminder_text:

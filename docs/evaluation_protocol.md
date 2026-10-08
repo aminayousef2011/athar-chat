@@ -57,7 +57,7 @@ contextual calibration with content-free inputs (Zhao et al. 2021). `raw` scores
 `generate`-then-parse are also reported, because first-token scores and generated answers of
 chat models can disagree (Wang et al. 2024). A generated answer that names no label is a
 failure. The models run on Kaggle T4 GPUs (`notebooks/kaggle_s4_llm.ipynb`) with the same
-`athar` scoring code, in fp16, or fp32 / 4-bit NF4 when fp16 overflows, and the model revision
+`athar` scoring code, in fp16, or fp32 / 4-bit NF4 (fp32 compute) when fp16 overflows, and the model revision
 is recorded with each result.
 
 S6 has no dev search. Every setting is fixed in `configs/train.yaml` before training, following
@@ -163,6 +163,18 @@ Consequences, fixed in advance:
 - **Calibration and selective prediction** (S2, S3, S5, S6). ECE (10 equal-width bins),
   multi-class Brier score, and the area under the risk-coverage curve, for the intent
   probabilities.
+- **Confidence gate** (S2, S3, S5, S6, and S4/S7 on Kaggle). The confidence of a prediction is
+  the probability of the chosen intent. Below a threshold τ, an execution becomes a
+  confirmation question (contract 3, target `confirm`); CLARIFY and ABSTAIN are never changed,
+  so the gate can only remove executions. τ is chosen **on dev only** at `athar-train fit`,
+  by a rule fixed in `configs/train.yaml`: the smallest τ in {0, .4, .5, .6, .7, .8, .9, .95}
+  whose dev unsafe-execution rate is ≤ 0.02 (if none, the τ with the lowest rate; ties: the
+  smaller τ). It is frozen with the models. On test the report gives, for each probabilistic
+  system: all metrics with CIs at the frozen τ, and the risk-coverage table (coverage, gated
+  share, STS, unsafe execution, execution precision, unnecessary clarification) at every τ.
+  A confirmation scores as a failure on every gold route, so the gate trades STS (more
+  unnecessary clarification) for fewer unsafe executions; both sides are reported. **H1-H3 are
+  tested on the ungated systems**; the gate is descriptive.
 - **Domain.** STS and intent macro-F1 for **project-manager requests** (`domain:
   project_management`, the main target users, about 70% of the data) and for general requests
   separately, with CIs. This is the first subgroup reported for every system.
@@ -171,6 +183,13 @@ Consequences, fixed in advance:
   `play_music`, `email_sendemail`, `calendar_query` → unsupported; `calendar_set` excluded (it
   mixes reminders with calendar events). Balanced sample of up to 100 per label, seed 0.
   Intent only, because MASSIVE has no datetime gold.
+- **Out of distribution, native Egyptian** (`athar-ood`; LLMs in the Kaggle notebook). The
+  200-item human test split of `Alhasan/egyptian-nlu` (CC BY 4.0; commands written and
+  annotated by a native Egyptian speaker, MASSIVE schema), pinned revision `5094a703` and
+  SHA-256. Same mapping as MASSIVE (`calendar_set` excluded, 196 items). Only 4 items set an
+  alarm, so the reported numbers are **unsupported recall** (n = 192: does the system abstain
+  on real out-of-scope Egyptian requests?) and alarm recall (n = 4, descriptive), plus the
+  confidence of the false in-scope predictions (would the gate have stopped them?).
 - **Subgroups.** STS for code-switched vs Arabic-only items, and for reminders vs alarms, with
   CIs. Subgroups are small, so these are descriptive only.
 - **Resources.** CPU time and peak memory for training and per-item prediction latency, from
@@ -206,7 +225,7 @@ their agreement is reported.
 
 | Date | Change | Reason | Before/after test opened |
 |---|---|---|---|
-| _none yet_ | | | |
+| 2026-10-08 | Added the confidence-gate analysis (section 6) and contract v1.1 `confirm` target | Avoid executing on uncertain intents; report the safety/helpfulness trade-off | Before: no native-speaker data and no test split exist yet; H1-H3 unchanged |
 
 ## References
 

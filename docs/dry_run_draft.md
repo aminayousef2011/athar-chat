@@ -89,3 +89,28 @@ Machine: Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, 12 logical CPUs, 3
 - It caught a measurement bug before any real data was touched. Invariance compared the user's spelling of the reminder text instead of its canonical form. It is fixed, a regression test was added, and the protocol states the definition.
 - It also caught a bias in small-sample macro-F1. A label absent from a bootstrap resample was scored 0 instead of being left out, which pulled subgroup intervals down (e.g. 1.00 [0.33, 1.00]). It is fixed in both implementations, tested against each other, and the protocol states the rule.
 - Frozen models can be re-scored on dev after a scoring-code fix (model files stay hash-checked). Only the locked test run requires an unchanged freeze.
+
+## P7 dry run: LLM baselines on Kaggle (S4, S7), same draft dev split
+
+Run on Kaggle 2x T4, 2026-10-08, `notebooks/kaggle_s4_llm.ipynb`; outputs in `runs/s4/draft-dev/` (not committed). Same 40 dev items as above, so the same caveats apply: these are integration-test numbers, not results. Jais 2 overflowed in fp16 and ran in `nf4-fp32` (revision `da0e1639cd92`); Nile-Chat ran in fp32, Qwen3 in fp16.
+
+| System | STS [95% CI] | intent macro-F1 | unsafe exec. | ECE | PM STS (n=32) | PM intent F1 |
+|---|---|---|---|---|---|---|
+| S4 Jais 2 8B, 0-shot, calibrated | 0.85 [0.67, 1.00] | 0.60 | 0.05 | 0.12 | 0.88 | 0.61 |
+| S4 Jais 2 8B, 6-shot, calibrated | 0.53 [0.33, 0.71] | 0.45 | 0.20 | 0.46 | 0.56 | 0.47 |
+| S4 Nile-Chat 4B, 0-shot, calibrated | 0.68 [0.48, 0.85] | 0.67 | 0.18 | 0.12 | 0.66 | 0.64 |
+| S4 Nile-Chat 4B, 6-shot, calibrated | 0.88 [0.73, 0.98] | 0.77 | 0.03 | 0.08 | 0.91 | 0.75 |
+| S4 Nile-Chat 4B, 6-shot, raw | 0.95 [0.83, 1.00] | 0.91 | 0.00 | 0.09 | 0.94 | 0.85 |
+| S4 Qwen3 8B, 0-shot, calibrated | 0.55 [0.34, 0.78] | 0.51 | 0.20 | 0.42 | 0.50 | 0.43 |
+| S4 Qwen3 8B, 6-shot, calibrated | 0.85 [0.70, 0.97] | 0.83 | 0.05 | 0.14 | 0.84 | 0.77 |
+| S7 Jais 2 8B + QLoRA, raw | 0.93 [0.84, 1.00] | 0.87 | 0.03 | 0.16 | 0.94 | 0.87 |
+| S7 Jais 2 8B + QLoRA, calibrated | 0.88 [0.71, 1.00] | 0.70 | 0.05 | 0.09 | 0.91 | 0.73 |
+
+`calibrated` is the pre-registered primary S4 number; `raw` is shown where it differs notably. All rows are in `summary.csv`.
+
+What the run established:
+- The P7 path runs end to end on Kaggle: gated-model access check, fp16 overflow detection with a whole-model rerun in `nf4-fp32`, QLoRA training (loss 0.26 -> 0.13 over 3 epochs, 80 min) and per-domain reporting.
+- `generate` gave the same label as `raw` on all 240 S4 items (0 unparseable answers): each verbalizer starts with a distinct token, so greedy decoding agrees with label scoring here.
+- Contextual calibration did not help on this draft: it lowered STS in 4 of 6 model/shot settings. Few-shot prompts helped Nile-Chat and Qwen3 but hurt Jais 2.
+- No LLM beat S2/S3/S5 (0.97) on these 40 items, and every interval overlaps. Nothing is decided on these numbers.
+- The MASSIVE out-of-distribution cell failed: the S7 model was still on the GPUs when Jais 2 was reloaded. Fixed (S7 frees its model; `RUN_S4 = False` reruns S7/MASSIVE without S4); the check has not been rerun yet.

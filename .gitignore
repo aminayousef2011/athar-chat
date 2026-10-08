@@ -13,6 +13,8 @@ runs/
 
 # raw contributor data stays local until permission to share is confirmed
 data/raw/private/
+# external datasets are downloaded (pinned revision + SHA-256), not committed
+data/external/
 
 # test artefacts
 .coverage

@@ -183,17 +183,19 @@ def _softmax(z: NDArray[np.float64]) -> NDArray[np.float64]:
 def load_llm(model_id: str, precision: str = "fp16", token: str | None = None,
              revision: str | None = None) -> tuple[Any, Any]:
     """Load a chat LLM for scoring. ``precision``: fp16 / bf16 / fp32 (sharded over the visible
-    GPUs with ``device_map="auto"``) or nf4 (bitsandbytes 4-bit, fp16 compute)."""
+    GPUs with ``device_map="auto"``), nf4 (bitsandbytes 4-bit, fp16 compute) or nf4-fp32 (4-bit
+    weights, fp32 compute: no fp16 overflow, and it fits an 8B model on T4s where fp32 does not)."""
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     tok = AutoTokenizer.from_pretrained(model_id, token=token, revision=revision)
     kw: dict[str, Any] = {"device_map": "auto", "token": token, "revision": revision}
-    if precision == "nf4":
+    if precision in ("nf4", "nf4-fp32"):
         from transformers import BitsAndBytesConfig
 
+        compute = torch.float32 if precision == "nf4-fp32" else torch.float16
         kw["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
-                                                       bnb_4bit_compute_dtype=torch.float16)
+                                                       bnb_4bit_compute_dtype=compute)
     else:
         kw["dtype"] = {"fp16": torch.float16, "bf16": torch.bfloat16, "fp32": torch.float32}[precision]
     model = AutoModelForCausalLM.from_pretrained(model_id, **kw).eval()

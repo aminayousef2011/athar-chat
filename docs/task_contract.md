@@ -1,4 +1,4 @@
-# ATHAR Chat task contract (v1.0, frozen 2026-10-07)
+# ATHAR Chat task contract (v1.1, frozen 2026-10-07; v1.1 adds the system-side confirmation)
 
 This contract is the single source of truth for annotation, the shared extractor and the
 policy. Every rule below has at least one executable case in `tests/`. It was frozen at
@@ -45,6 +45,12 @@ least one blocking gap. **ABSTAIN** = unsupported intent (even when arguments ar
 | `reminder_text` | reminder with no content, or vague content (`حاجة`, `something`); never for alarms |
 
 A CLARIFY item succeeds only when the predicted set equals the gold set exactly.
+
+**System-side target `confirm` (v1.1).** A system may also answer CLARIFY with the single target
+`confirm`: the confidence gate (`athar.gate`) asks the user to confirm an execution its intent
+recognizer is unsure about (confidence below a threshold frozen on dev). `confirm` depends on
+the system, not on the request, so **annotators never use it**; a confirmation is never a
+correct answer to any gold item, it only avoids an execution.
 Note: a **missing date is never a gap** (next-occurrence rule, 4.1).
 
 ## 4. Time-expression conventions
@@ -114,6 +120,7 @@ readings are equally correct.
 | `past` | `الوقت ده عدّى خلاص، أخليه إمتى؟` |
 | `reminder_text` | `أفكرك بإيه؟` |
 | ABSTAIN | `معلش، أنا أقدر أعمل تذكير أو منبه لمرة واحدة بس، ومقدرش أنفذ الطلب ده.` |
+| `confirm` (v1.1) | `للتأكيد: أفكرك بـ«{text}» يوم ... الساعة ...، صح كده؟` / `للتأكيد: أظبط منبه يرن يوم ... الساعة ...، صح كده؟` |
 
 Replies avoid gendered second-person forms (`تقصد/تقصدي`, `عايز/عايزة`, `تحب/تحبي`,
 `ليك/ليكي`): questions are phrased from the assistant's side (`أفكرك ...؟`, `أخليه إمتى؟`).
@@ -136,3 +143,4 @@ of the section 1 table**: `deletion`, `modification`, `recurring`, `other_person
 |---|---|---|
 | 0.1 | 2026-10-07 | Draft with [DECIDE] items |
 | 1.0 | 2026-10-07 | Frozen. Confirmed: same-weekday -> `date`; `X الجاي` = nearest 1-7 days; `بالليل` 12-5 = next calendar day, `date` gap with an explicit date; relative offsets in scope; reason priority = table order. Changed: gender-neutral templates. |
+| 1.1 | 2026-10-08 | Added the system-side clarify target `confirm` and its template (confidence gate) and an optional `confidence` field in the response. Annotation rules unchanged; items annotated under 1.0 stay valid. |

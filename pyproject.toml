@@ -20,6 +20,7 @@ dependencies = [
 athar-data = "athar.data.cli:main"
 athar-train = "athar.intent.train:main"
 athar-eval = "athar.eval.harness:main"
+athar-ood = "athar.eval.ood:main"
 
 [project.optional-dependencies]
 ui = ["streamlit>=1.36"]

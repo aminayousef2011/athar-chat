@@ -35,6 +35,7 @@ from athar.eval.stats import (
     paired_permutation_test,
 )
 from athar.extract import canonical_text
+from athar.gate import DEFAULT_THRESHOLDS, apply_gate, confidences, curve, select_threshold
 from athar.normalize import norm
 from athar.pipeline import FixedIntent, IntentRecognizer, respond_with_intent
 from athar.schema import INTENTS, GoldItem, Response
@@ -103,15 +104,42 @@ def _subgroups(items: Sequence[GoldItem], scores: Sequence[Any], cfg: dict[str, 
     return out
 
 
-def evaluate_system(recognizer: IntentRecognizer | Oracle, items: Sequence[GoldItem], cfg: dict[str, Any]) -> dict[str, Any]:
+def _with_ci(scores: Sequence[Any], cfg: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    clusters = [s.family_id for s in scores]
+    arrays = ScoreArrays(scores)
+    return aggregate(scores), {m: cluster_bootstrap(arrays.metric(m), clusters, resamples=cfg["resamples"],
+                                                    level=cfg["level"], seed=cfg["seed"]).as_dict()
+                               for m in CI_METRICS}
+
+
+def _gate(recognizer: IntentRecognizer | Oracle, items: Sequence[GoldItem], outputs: Sequence[Response | None],
+          cfg: dict[str, Any], tau: float | None) -> dict[str, Any] | None:
+    """Confidence-gate analysis (protocol 6.4), secondary to the ungated pre-registered metrics:
+    the risk-coverage table, the threshold the dev rule would pick on *this* split (meaningful on
+    dev only), and full metrics at the threshold frozen on dev, when one is given."""
+    if not hasattr(recognizer, "predict_proba"):
+        return None
+    g = cfg.get("gate", {})
+    intents = [o.intent if o is not None else "invalid" for o in outputs]
+    conf = confidences(recognizer, [norm(it.text) for it in items], intents)
+    rows = curve(items, outputs, conf, g.get("thresholds", DEFAULT_THRESHOLDS))
+    out: dict[str, Any] = {"curve": rows, "max_unsafe_execution_rate": g.get("max_unsafe_execution_rate", 0.02),
+                           "rule_threshold_on_this_split": select_threshold(rows, g.get("max_unsafe_execution_rate", 0.02)),
+                           "confidence": conf}
+    if tau is not None:
+        gated = [apply_gate(o, c, tau) for o, c in zip(outputs, conf, strict=True)]
+        metrics, ci = _with_ci(score_all(items, gated), cfg)
+        out["frozen_threshold"] = tau
+        out["at_frozen_threshold"] = {"metrics": metrics, "ci": ci}
+    return out
+
+
+def evaluate_system(recognizer: IntentRecognizer | Oracle, items: Sequence[GoldItem], cfg: dict[str, Any],
+                    gate_threshold: float | None = None) -> dict[str, Any]:
     outputs = run(recognizer, items)
     scores = score_all(items, outputs)
-    clusters = [s.family_id for s in scores]
-    seed, resamples, level = cfg["seed"], cfg["resamples"], cfg["level"]
-    report: dict[str, Any] = {"metrics": aggregate(scores)}
-    arrays = ScoreArrays(scores)
-    report["ci"] = {m: cluster_bootstrap(arrays.metric(m), clusters, resamples=resamples,
-                                         level=level, seed=seed).as_dict() for m in CI_METRICS}
+    metrics, ci = _with_ci(scores, cfg)
+    report: dict[str, Any] = {"metrics": metrics, "ci": ci}
     report["calibration"] = _calibration(recognizer, items, cfg.get("calibration_bins", 10))
     report["subgroups"] = _subgroups(items, scores, cfg)
 
@@ -127,6 +155,8 @@ def evaluate_system(recognizer: IntentRecognizer | Oracle, items: Sequence[GoldI
         robustness[kind] = {"n": len(copies), "safe_task_success": aggregate(p_scores)["safe_task_success"],
                             "invariance_rate": sum(same) / len(same)}
     report["robustness"] = robustness
+    if (gate := _gate(recognizer, items, outputs, cfg, gate_threshold)) is not None:
+        report["gate"] = gate
     report["items"] = [s.__dict__ for s in scores]
     return report
 
@@ -189,11 +219,14 @@ def seed_summaries(reports: dict[str, dict[str, Any]]) -> dict[str, Any]:
     return out
 
 
-def evaluate(recognizers: dict[str, IntentRecognizer], items: Sequence[GoldItem], cfg: dict[str, Any]) -> dict[str, Any]:
+def evaluate(recognizers: dict[str, IntentRecognizer], items: Sequence[GoldItem], cfg: dict[str, Any],
+             gate_thresholds: dict[str, float] | None = None) -> dict[str, Any]:
+    """``gate_thresholds``: per-system confidence-gate thresholds frozen on dev (athar.gate)."""
     systems: dict[str, IntentRecognizer | Oracle] = dict(recognizers)
     if cfg.get("oracle", True):
         systems["oracle"] = Oracle()
-    reports = {name: evaluate_system(r, items, cfg) for name, r in systems.items()}
+    taus = gate_thresholds or {}
+    reports = {name: evaluate_system(r, items, cfg, taus.get(name)) for name, r in systems.items()}
     comparisons = [c for c in cfg.get("comparisons", []) if c[0] in reports and c[1] in reports]
     return {"config": cfg, "config_sha256": sha256_text(canonical_json(cfg)), "n_items": len(items),
             "systems": reports, "seed_summaries": seed_summaries(reports),
@@ -246,7 +279,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                   f"the test run requires a clean freeze")
         recognizers: dict[str, IntentRecognizer] = {s: load_recognizer(s, a.models, strict=strict)
                                                     for s in names}
-        result = evaluate(recognizers, items, cfg)
+        frozen = read_freeze(a.models)["systems"]
+        taus = {s: frozen[s]["gate"]["threshold"] for s in names if "gate" in frozen.get(s, {})}
+        result = evaluate(recognizers, items, cfg, taus)
         result["freeze_sha256"] = read_freeze(a.models)["freeze_sha256"]
         result["split"] = a.split
     except (FreezeError, FileNotFoundError, ValueError) as e:
@@ -260,6 +295,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"{name:7} STS {ci['estimate']:.3f} [{ci['low']:.3f}, {ci['high']:.3f}]  "
               f"intent F1 {rep['metrics']['intent_macro_f1']:.3f}  "
               f"unsafe {rep['metrics']['unsafe_execution_rate']:.3f}")
+        if "at_frozen_threshold" in rep.get("gate", {}):
+            g = rep["gate"]["at_frozen_threshold"]["metrics"]
+            print(f"{'':7} gated (tau={rep['gate']['frozen_threshold']}): STS {g['safe_task_success']:.3f}  "
+                  f"unsafe {g['unsafe_execution_rate']:.3f}  unnecessary clarification "
+                  f"{g['unnecessary_clarification_rate'] or 0:.3f}")
     for base, summ in result["seed_summaries"].items():
         sts = summ["safe_task_success"]
         print(f"{base:7} STS {sts['mean']:.3f} +/- {sts['sd']:.3f} over {len(summ['seeds'])} seeds")

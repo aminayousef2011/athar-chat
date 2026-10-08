@@ -1,6 +1,6 @@
 """Fixed Egyptian Arabic response templates. Questions never contain invented values.
 
-Templates avoid gendered second-person forms (task contract v1.0 section 6).
+Templates avoid gendered second-person forms (task contract section 6).
 """
 
 from __future__ import annotations

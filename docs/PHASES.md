@@ -6,13 +6,13 @@ HLD: [hld.html](hld.html) (published at https://claude.ai/artifact/RXeHV9e9ctgry
 |---|---|---|---|---|
 | P0 | Repo, uv lockfile (Python 3.11), HLD, test runner, lint | 1 | `uv sync` + `uv run pytest` green | **done** |
 | P1 | Task contract + shared core: normalizer, time/argument extractor, policy, templates, schemas | 1-2 | contract tests green; contract v1.0 frozen after review | **done**: contract **v1.0 frozen 2026-10-07** (all [DECIDE] items confirmed; gender-neutral replies) |
-| P2 | Data tooling: JSONL validator, family splitter + manifest, kappa script, annotation guide, data card, 20-item pilot | 2-4 | every item validates; split manifest hashed | **tooling done** (pilot validates, pilot manifest hashed); the 300 items are pending |
+| P2 | Data tooling: JSONL validator, family splitter + manifest, kappa script, annotation guide, data card, 20-item pilot | 2-4 | every item validates; split manifest hashed | **tooling done** (pilot validates, pilot manifest hashed); **contributor kit ready** (`contrib/`, `docs/contributor_guide.md`: 175 scenario cards for 300 requests, `athar-data import-contrib` / `build`); the 300 native-speaker items are pending |
 | P2b | Expert-review hardening: pre-registered evaluation protocol, scoring + statistics code (family bootstrap, paired permutation + Holm, McNemar, calibration, power), CheckList-style robustness suite, Hypothesis property tests, mypy, coverage gate, pre-commit, CI | 4 | protocol + gates in place, all green | **done** |
 | P3 | S1 keyword rules, S2 word TF-IDF+LR, S3 +char n-grams; dev-only search; freeze; CPU/RAM log. Extended baselines (reported separately): S5 frozen Arabic sentence embeddings + LR, S6 fine-tuned MARBERTv2 (5 seeds) | 5 | models + config hash saved | S1-S3, S5, S6 **code done**; end-to-end **dry run on the draft data passed** (train/dev only); real fit waits for the native-speaker split |
 | P4 | Locked-test evaluation: one run of `docs/evaluation_protocol.md` (`athar-eval --split test --unlock-test`) | 6 | one run, results JSON + tables | harness **done**; run after freeze |
 | P5 | Error analysis (<=30 coded failures) + Streamlit demo | 7-8 | tables + working demo | planned |
 | P6 | Report + presentation | 8 | submitted | planned |
-| P7 | LLM baselines on Kaggle GPUs: S4 Jais 2 8B / Nile-Chat 4B / Qwen3 8B (0- and 6-shot; calibrated label scoring, raw, generate), S7 Jais 2 + QLoRA, MASSIVE ar out-of-distribution check; reported separately | 5-6 | results JSON per model, with model revision | **notebook ready** (`notebooks/kaggle_s4_llm.ipynb`); run on Kaggle |
+| P7 | LLM baselines on Kaggle GPUs: S4 Jais 2 8B / Nile-Chat 4B / Qwen3 8B (0- and 6-shot; calibrated label scoring, raw, generate), S7 Jais 2 + QLoRA, MASSIVE ar out-of-distribution check; reported separately | 5-6 | results JSON per model, with model revision | **dry run on the draft data done** (S4 x3, S7; see `docs/dry_run_draft.md`); MASSIVE check to rerun; real run waits for the native-speaker split |
 
 ## Notes
 - The 300 dataset items are written and reviewed by native Egyptian Arabic speakers, as the
@@ -34,5 +34,10 @@ HLD: [hld.html](hld.html) (published at https://claude.ai/artifact/RXeHV9e9ctgry
   power analysis (120 test items detect ~15-point STS differences, not 5-point ones). The
   protocol, `configs/eval.yaml`, the contract and the scoring code are hashed into
   `models/freeze.json`. The test run refuses a changed copy and refuses to run twice.
+- **Confidence gate** (`athar.gate`, contract v1.1): below a threshold chosen on dev at `athar-train fit` and frozen,
+  an execution becomes a confirmation question. Reported beside the ungated, pre-registered metrics (protocol 6).
+- **Native Egyptian OOD check** (`athar-ood`): 196 human-written items of `Alhasan/egyptian-nlu` (CC BY 4.0, pinned).
+  On the draft-trained models S2/S3 take ~20% of real out-of-scope Egyptian requests as in scope (S1: 1%): the
+  draft has too few out-of-scope negatives, which the native-speaker data must fix.
 - P4 adds an **oracle-intent** run (gold intent + shared extractor). It is an upper bound that
   separates extractor errors from intent errors in the error analysis.

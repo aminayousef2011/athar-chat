@@ -47,8 +47,8 @@ oracle run (gold intent) gives the ceiling that extraction and policy allow.
   and come from distinct scenario families, so no paraphrase of a test item can appear in a prompt.
 - **An Arabic system prompt** follows the Jais 2 model card. The prompt is fixed before any test run.
 - **Precision is checked, not assumed.** The models run in fp16 on T4 GPUs and every forward pass
-  is checked for non-finite logits. If fp16 overflows, the run falls back to 4-bit NF4 (or fp32
-  for Gemma-based models), and the precision and the model revision (commit hash) are saved with
+  is checked for non-finite logits. If fp16 overflows, the run falls back to 4-bit NF4 weights with fp32
+  compute (Gemma-based models run in fp32 from the start), and the precision and the model revision (commit hash) are saved with
   every result.
 - **Same inputs, same scorer.** The LLMs receive exactly the normalized text that every other
   system receives, and their outputs go through the same pipeline and scoring code (the `athar`

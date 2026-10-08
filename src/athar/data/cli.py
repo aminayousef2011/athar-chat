@@ -7,6 +7,9 @@
     athar-data agreement-sheet DATA.jsonl --out SHEET.csv [--n 60] [--seed N]
     athar-data kappa     DATA.jsonl SHEET.csv --annotator NAME [--date YYYY-MM-DD] [--out PREFIX]
     athar-data stats     DATA.jsonl [--manifest MANIFEST.json] [--card docs/data_card.md]
+    athar-data cards     --out contrib                    # contributor kit (docs/contributor_guide.md)
+    athar-data import-contrib COLLECTION.csv --cards CARDS.csv --out SHEET.csv
+    athar-data build     SHEET.csv --out data/athar.jsonl [--cards CARDS.csv]
 
 Exit status is 1 when a check fails, so the commands can gate a commit or a CI job.
 """
@@ -21,6 +24,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from athar.data import agreement as ag
+from athar.data import contrib
 from athar.data.crosscheck import crosscheck
 from athar.data.io import DatasetError, load_items, read_records
 from athar.data.split import (
@@ -150,6 +154,32 @@ def cmd_stats(a: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_cards(a: argparse.Namespace) -> int:
+    n = contrib.write_kit(a.out)
+    print(f"wrote {a.out}/scenario_cards.csv ({n['cards']} cards) and {a.out}/collection_sheet.csv "
+          f"({n['requests']} requests to write)")
+    return 0
+
+
+def cmd_import(a: argparse.Namespace) -> int:
+    r = contrib.import_contributions(a.collection, a.cards, a.out)
+    for s in r["skipped"]:
+        print(f"skipped {s}")
+    print(f"wrote {a.out}: {r['rows']} requests to label (labels empty; card plans not shown)")
+    return 0
+
+
+def cmd_build(a: argparse.Namespace) -> int:
+    r = contrib.build_dataset(a.sheet, a.out, a.cards)
+    for e in r["errors"]:
+        print(f"ERROR {e}")
+    for d in r["differs_from_card"]:
+        print(f"check {d}")
+    print(f"wrote {a.out}: {r['items']} items, {len(r['errors'])} rows with errors, "
+          f"{len(r['differs_from_card'])} labels differ from their card's plan (check the card or the label)")
+    return 1 if r["errors"] else 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="athar-data", description="ATHAR Chat dataset tooling")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -197,6 +227,22 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--manifest")
     s.add_argument("--card", help="write into this data card's stats block")
     s.set_defaults(func=cmd_stats)
+
+    s = sub.add_parser("cards", help="scenario cards + empty collection sheet for contributors")
+    s.add_argument("--out", default="contrib")
+    s.set_defaults(func=cmd_cards)
+
+    s = sub.add_parser("import-contrib", help="filled collection sheet -> blind labelling sheet")
+    s.add_argument("collection")
+    s.add_argument("--cards", required=True)
+    s.add_argument("--out", required=True)
+    s.set_defaults(func=cmd_import)
+
+    s = sub.add_parser("build", help="labelled sheet -> dataset JSONL (contract-checked)")
+    s.add_argument("sheet")
+    s.add_argument("--out", required=True)
+    s.add_argument("--cards", help="report labels that differ from the card's plan")
+    s.set_defaults(func=cmd_build)
     return p
 
 

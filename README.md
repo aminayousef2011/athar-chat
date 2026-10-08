@@ -74,11 +74,23 @@ correction, robustness, calibration and a power analysis.
 ```powershell
 uv run athar-eval --manifest data/splits/manifest.json --models models --split dev
 uv run athar-eval --manifest data/splits/manifest.json --models models --split test --unlock-test  # once
+uv run athar-ood --models models --systems S1 S2 S3   # native-written Egyptian out-of-scope check
 ```
+
+**Confidence gate.** Each prediction carries a confidence (the probability of the chosen
+intent). Below a threshold τ, chosen on dev at `athar-train fit` and frozen, the assistant asks
+for confirmation (`للتأكيد: ... صح كده؟`) instead of executing. `athar-eval` reports the
+pre-registered metrics ungated, plus the metrics at the frozen τ and the full risk-coverage
+table. At runtime: `Pipeline(recognizer, gate_threshold=tau)`.
 
 ## Dataset tooling
 
+Collecting the 300 items from native speakers: [docs/contributor_guide.md](docs/contributor_guide.md).
+
 ```powershell
+uv run athar-data cards --out contrib                         # scenario cards + collection sheet
+uv run athar-data import-contrib filled.csv --cards contrib/scenario_cards.csv --out runs/labelling/sheet.csv
+uv run athar-data build runs/labelling/sheet.csv --cards contrib/scenario_cards.csv --out data/athar.jsonl
 uv run athar-data validate data/athar.jsonl --strict          # schema + dataset checks
 uv run athar-data agreement-sheet data/athar.jsonl --out runs/agreement/sheet.csv
 uv run athar-data kappa data/athar.jsonl runs/agreement/sheet.csv --annotator NAME --out docs/agreement

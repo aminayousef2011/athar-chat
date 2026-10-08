@@ -12,5 +12,10 @@ comparisons:
   - [S2, S1]
   - [S3, S1]
   - [S3, S2]
+# confidence gate (protocol 6.4, secondary): risk-coverage table at these thresholds; the
+# threshold applied on test is the one frozen on dev by `athar-train fit` (configs/train.yaml)
+gate:
+  thresholds: [0.0, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
+  max_unsafe_execution_rate: 0.02
 perturbations: [taa_marbuta, hamza, alef_maqsura, digits, diacritics, elongation, punctuation,
                 politeness, english_trigger]
