@@ -23,6 +23,13 @@ reminder/alarm requests?
 Tests are two-sided. The family-wise error rate is held at α = 0.05 with Holm-Bonferroni
 over H1-H3. Secondary analyses (section 6) are descriptive and carry no significance claims.
 
+> **Status (2026-10-10, section 10).** No contributor data was collected. The native test
+> data is instead **written by the project author**, a native Egyptian Arabic speaker
+> (section 4.2): 120 requests (50 ACT / 50 CLARIFY / 20 ABSTAIN) plus up to 30 spare. **H1-H3
+> are tested on that split once it is complete**; until then they are untested, and the
+> project reports the drafts as development evidence only plus the external native evaluation
+> of section 4.1.
+
 ## 2. Systems
 
 | | System | Learns from | Status |
@@ -51,11 +58,17 @@ advance: multilingual, CPU-sized, with L2-normalised mean-pooled embeddings and 
 prefix, and it is never tuned.
 
 S4 scores each label's Arabic verbalizer (`تذكير`, `منبه`, `غير مدعوم`) after a fixed chat
-prompt (`athar.intent.llm`). The **primary S4 number is the 6-shot `calibrated` method**: two
-train exemplars per label, chosen with a fixed seed from distinct families, followed by
-contextual calibration with content-free inputs (Zhao et al. 2021). `raw` scores and greedy
-`generate`-then-parse are also reported, because first-token scores and generated answers of
-chat models can disagree (Wang et al. 2024). A generated answer that names no label is a
+prompt (`athar.intent.llm`). The **primary S4 number for the locked test run is the 6-shot
+`prior` method** (final; section 10: pre-registered `calibrated`, then `raw` on 2026-10-10,
+then `prior` on 2026-10-11, all before the test split existed): two train exemplars per label,
+chosen with a fixed seed from distinct families; summed verbalizer log-probabilities, divided
+by the mean label distribution the same prompt gives 60 unlabeled train requests (after batch
+calibration, Zhou et al. 2024), then renormalised. Also reported: `raw` (no calibration),
+contextual calibration with content-free inputs (`calibrated`, Zhao et al. 2021), and greedy
+`generate`-then-parse,
+because first-token scores and generated answers of chat models can disagree (Wang et al.
+2024). Few-shot sensitivity is reported over three exemplar sets (shot seeds `seed`, `seed+1`,
+`seed+2`, all from train) as mean ± SD; the primary number uses the first. A generated answer that names no label is a
 failure. The models run on Kaggle T4 GPUs (`notebooks/kaggle_s4_llm.ipynb`) with the same
 `athar` scoring code, in fp16, or fp32 / 4-bit NF4 (fp32 compute) when fp16 overflows, and the model revision
 is recorded with each result.
@@ -109,6 +122,42 @@ Implementation: `athar.eval.metrics` (unit-tested; frozen).
   20 ABSTAIN). Assistant-drafted items never enter test. Each item is hashed in the manifest.
 - The test split is read exactly once, by the evaluation run, after `athar-train fit` has
   frozen all systems.
+
+### 4.1 What is evaluated beside it (2026-10-10)
+
+No contributor data was collected (section 10). The data used:
+
+| Data | Written by | Role | What can be claimed |
+|---|---|---|---|
+| `data/draft/athar_draft.jsonl` (300; train 260 / dev 40) | an AI assistant (`source: assistant_draft`) | training; development of every component | nothing about native users: the author of the drafts knew the system rules |
+| `Alhasan/egyptian-nlu` human test split (196 after mapping) | a native Egyptian speaker, independently of this project | **native evaluation**, intent level | out-of-scope recall (n = 192) and its Wilson CI; alarm recall (n = 4, descriptive) |
+| the same 196 requests in their Saudi/MSA MASSIVE original (`egy_test.csv`) | MASSIVE annotators | **paired dialect gap** | the change in out-of-scope recall from MSA to Egyptian on identical content (exact McNemar) |
+| MASSIVE ar-SA test (balanced, ≤100 per label) | MASSIVE annotators | out-of-distribution, MSA | intent macro-F1 |
+
+All systems are trained on drafts and evaluated on human-written data, so every native result
+is also a **synthetic-to-real transfer** result. The native set covers abstention well and
+execution hardly at all: it has no reminders, 4 alarm requests and no reference times, so
+route, argument and STS claims are limited to the drafts. The native set was inspected during
+development (S1-S3 dry runs; the S4 scoring choice, section 10), so it is reported as
+external evidence, not as an untouched test set.
+
+### 4.2 Author-written test data (2026-10-10)
+
+- **Who and how.** The author writes the wave-1 requests (`contrib/author_sheet_wave1.xlsx`,
+  `athar-data author-sheet`): situations in English with no Arabic example wording, the 120
+  core requests first, in 2-3 dated sittings, without looking at the drafts or the pilot.
+  Items are `source: author`; every card is one family and its two versions are a pair.
+- **Split.** `data/athar.jsonl` holds the author items and the drafts. The splitter puts only
+  non-draft families in test (50 / 50 / 20); dev (40) and train come from the rest, so
+  training is mostly on drafts.
+- **Labels.** The author labels with `docs/annotation_guide.md`. Agreement on 60 items is
+  measured with a second annotator, or, failing that, a self-review at least 7 days later
+  (guide 7.2); κ is reported before adjudication.
+- **Threats.** (1) One writer: the test measures one native speaker's style, not the
+  population of users. (2) The writer knows the contract and the systems; S1's rules may be
+  favoured on in-scope phrasing (section 9). (3) Training on drafts and testing on native text
+  is a domain shift for the learned systems. The external native set (4.1, a different
+  writer) is reported beside it as a partial check on (1) and (2).
 
 ## 5. Statistical analysis
 
@@ -188,8 +237,10 @@ Consequences, fixed in advance:
   annotated by a native Egyptian speaker, MASSIVE schema), pinned revision `5094a703` and
   SHA-256. Same mapping as MASSIVE (`calendar_set` excluded, 196 items). Only 4 items set an
   alarm, so the reported numbers are **unsupported recall** (n = 192: does the system abstain
-  on real out-of-scope Egyptian requests?) and alarm recall (n = 4, descriptive), plus the
-  confidence of the false in-scope predictions (would the gate have stopped them?).
+  on real out-of-scope Egyptian requests?) with a 95% Wilson interval, and alarm recall
+  (n = 4, descriptive), plus the confidence of the false in-scope predictions (would the gate
+  have stopped them?), and the **paired dialect gap**: the same items in their Saudi/MSA
+  original, exact McNemar on the paired out-of-scope outcomes (section 4.1).
 - **Subgroups.** STS for code-switched vs Arabic-only items, and for reminders vs alarms, with
   CIs. Subgroups are small, so these are descriptive only.
 - **Resources.** CPU time and peak memory for training and per-item prediction latency, from
@@ -226,6 +277,11 @@ their agreement is reported.
 | Date | Change | Reason | Before/after test opened |
 |---|---|---|---|
 | 2026-10-08 | Added the confidence-gate analysis (section 6) and contract v1.1 `confirm` target | Avoid executing on uncertain intents; report the safety/helpfulness trade-off | Before: no native-speaker data and no test split exist yet; H1-H3 unchanged |
+| 2026-10-09 | S4 scoring ablation: summed vs length-normalised (mean per token) verbalizer scores vs one-token number answers (`llm.LLMIntent(length_norm=..., answer_format=...)`), each raw and calibrated, on dev, native Egyptian and MASSIVE | On the draft dry run the LLMs took most out-of-scope requests as in scope, and `غير مدعوم` has more tokens than `منبه` in the tokenizers checked, so the summed score may favour the in-scope labels | Before: run on the draft data only. The primary S4 number stays the summed calibrated score unless a change is decided and logged here before the native-speaker data exist |
+| 2026-10-11 | **Primary S4 method for the test run: `raw` → `prior`. Final: no further change.** | *A priori:* `prior` takes the label bias from real in-domain requests, so it does not inherit contextual calibration's failure on an abstain label. *Diagnostics* (`docs/dry_run_draft.md`; 3 models × 3 exemplar sets, paired): on the 192 native out-of-scope items `prior` abstained wherever `raw` did, in all 9 cells, and more often (significant after Holm for Nile-Chat in 3/3 sets, +31 points on average, and Jais 2 in 2/3; Qwen3 at ceiling); no dev STS difference was significant (40 items). The empty-input distribution confirms the calibration failure: Jais 2 puts 0.99 on `unsupported` | Before the test split exists. **Disclosure:** the second change of the S4 primary method, chosen with the Egyptian and draft-dev results, so only the locked author-written test split is unbiased evidence for it; `raw`, `calibrated` and `generate` are reported beside it |
+| 2026-10-10 | **Test data written by the project author** (section 4.2), a native Egyptian Arabic speaker: 120 core requests from the wave-1 cards (`source: author`) instead of contributor data; H1-H3 tested on that split once complete | No contributor data could be collected in time; author-written items are allowed by the annotation guide | Before: the test split does not exist yet. One writer, who knows the system: stated as threats in 4.2 |
+| 2026-10-10 | **Native-speaker dataset not collected; H1-H3 not tested.** Evaluation moves to section 4.1: drafts for development only; native evaluation on the human-written `Alhasan/egyptian-nlu` test split (intent level) plus a paired Saudi/MSA → Egyptian dialect gap | Recruiting native contributors was not possible in the time available; a form export submitted as native data was found to repeat the assistant-generated set (97% identical texts) and was excluded (`data/raw/private/`, not committed) | No native test split exists, so no locked test run is possible. The external native set had been inspected before this decision (stated in 4.1) |
+| 2026-10-10 | **Primary S4 method: `calibrated` → `raw`** (summed, word verbalizers). Added `prior` (label prior from 60 unlabeled train texts) and three exemplar sets as secondary analyses; S7 over seeds 0-2 (mean ± SD) | *A priori:* contextual calibration assumes a content-free input deserves a uniform label distribution; with an abstain label (`unsupported`) an empty input is genuinely out of scope, so the assumption fails for this label set. *Observed* (draft dry run, `docs/dry_run_draft.md`): calibration lowered native Egyptian out-of-scope recall in 9 of 9 model × variant cells and MASSIVE F1 in 9 of 9, and raised dev STS once by one item; length normalisation and one-token answers did not help consistently. S7 dev STS varied 0.93 → 1.00 between two runs with the same seed | Before: no native-speaker data or test split exist. **Disclosure:** the choice was informed by the Egyptian (`Alhasan/egyptian-nlu`) and MASSIVE results, so for S4 these are no longer untouched out-of-distribution evidence; the locked native test split is. `calibrated` and `generate` are still reported |
 
 ## References
 
@@ -237,6 +293,6 @@ Ribeiro, Wu, Guestrin & Singh (2020), *Beyond Accuracy: Behavioral Testing of NL
 CheckList*. Gardner et al. (2020), *Evaluating Models' Local Decision Boundaries via Contrast
 Sets*. Guo, Pleiss, Sun & Weinberger (2017), *On Calibration of Modern Neural Networks*.
 Geifman & El-Yaniv (2017), *Selective Classification for Deep Neural Networks*. Mosbach, Andriushchenko & Klakow (2021), *On the Stability of Fine-tuning BERT*.
-Reimers & Gurevych (2017), *Reporting Score Distributions Makes a Difference*. Zhao, Wallace, Feng, Klein & Singh (2021), *Calibrate Before Use*. Wang et al. (2024), *My Answer is C: First-Token Probabilities Do Not Match Text Answers in Instruction-Tuned Language Models*. FitzGerald et al. (2023), *MASSIVE*. Card et al.
+Reimers & Gurevych (2017), *Reporting Score Distributions Makes a Difference*. Zhao, Wallace, Feng, Klein & Singh (2021), *Calibrate Before Use*. Zhou, Wan, Proleev, Mincu, Chen, Heller & Roy (2024), *Batch Calibration: Rethinking Calibration for In-Context Learning and Prompt Engineering* (ICLR). Wang et al. (2024), *My Answer is C: First-Token Probabilities Do Not Match Text Answers in Instruction-Tuned Language Models*. FitzGerald et al. (2023), *MASSIVE*. Card et al.
 (2020), *With Little Power Comes Great Responsibility*. Abdul-Mageed, Elmadany & Nagoudi (2021),
 *ARBERT & MARBERT*. Obeid et al. (2020), *CAMeL Tools*.

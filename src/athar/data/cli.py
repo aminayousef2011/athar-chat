@@ -10,6 +10,8 @@
     athar-data cards     --out contrib                    # contributor kit (docs/contributor_guide.md)
     athar-data import-contrib COLLECTION.csv --cards CARDS.csv --out SHEET.csv
     athar-data build     SHEET.csv --out data/athar.jsonl [--cards CARDS.csv]
+    athar-data form-script --cards CARDS.csv --wave 1 --people 5 --out contrib/make_forms.gs
+    athar-data author-sheet --cards CARDS.csv --out contrib/author_sheet_wave1.xlsx   # needs openpyxl
 
 Exit status is 1 when a check fails, so the commands can gate a commit or a CI job.
 """
@@ -162,7 +164,7 @@ def cmd_cards(a: argparse.Namespace) -> int:
 
 
 def cmd_import(a: argparse.Namespace) -> int:
-    r = contrib.import_contributions(a.collection, a.cards, a.out)
+    r = contrib.import_contributions(a.collection, a.cards, a.out, a.source)
     for s in r["skipped"]:
         print(f"skipped {s}")
     print(f"wrote {a.out}: {r['rows']} requests to label (labels empty; card plans not shown)")
@@ -178,6 +180,19 @@ def cmd_build(a: argparse.Namespace) -> int:
     print(f"wrote {a.out}: {r['items']} items, {len(r['errors'])} rows with errors, "
           f"{len(r['differs_from_card'])} labels differ from their card's plan (check the card or the label)")
     return 1 if r["errors"] else 0
+
+
+def cmd_form_script(a: argparse.Namespace) -> int:
+    n = contrib.form_script(a.cards, a.out, a.wave, a.people)
+    print(f"wrote {a.out}: {n['forms']} Google Forms, {n['requests']} requests (paste into script.google.com, "
+          f"run createForms)")
+    return 0
+
+
+def cmd_author_sheet(a: argparse.Namespace) -> int:
+    n = contrib.author_sheet(a.cards, a.out)
+    print(f"wrote {a.out}: {n['requests']} requests ({n['core']} core = the locked test targets)")
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -233,9 +248,10 @@ def build_parser() -> argparse.ArgumentParser:
     s.set_defaults(func=cmd_cards)
 
     s = sub.add_parser("import-contrib", help="filled collection sheet -> blind labelling sheet")
-    s.add_argument("collection")
+    s.add_argument("collection", help="collection sheet, Google Forms export (.csv) or author workbook (.xlsx)")
     s.add_argument("--cards", required=True)
     s.add_argument("--out", required=True)
+    s.add_argument("--source", choices=["contributor", "author"], default="contributor")
     s.set_defaults(func=cmd_import)
 
     s = sub.add_parser("build", help="labelled sheet -> dataset JSONL (contract-checked)")
@@ -243,6 +259,18 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--out", required=True)
     s.add_argument("--cards", help="report labels that differ from the card's plan")
     s.set_defaults(func=cmd_build)
+
+    s = sub.add_parser("form-script", help="Google Apps Script that creates one Google Form per contributor")
+    s.add_argument("--cards", required=True)
+    s.add_argument("--wave", default="1")
+    s.add_argument("--people", type=int, default=5)
+    s.add_argument("--out", default="contrib/make_forms.gs")
+    s.set_defaults(func=cmd_form_script)
+
+    s = sub.add_parser("author-sheet", help="Excel workbook for the author to write the wave-1 requests in")
+    s.add_argument("--cards", required=True)
+    s.add_argument("--out", default="contrib/author_sheet_wave1.xlsx")
+    s.set_defaults(func=cmd_author_sheet)
     return p
 
 

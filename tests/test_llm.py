@@ -26,7 +26,8 @@ TEMPLATE = ("{% for m in messages %}<{{ m['role'] }}> {{ m['content'] }} </s> {%
 
 def tiny_lm(texts):
     pre = tokenizers.pre_tokenizers.Whitespace()
-    words = {w for t in [llm.SYSTEM_PROMPT, *llm.VERBALIZERS.values(), *llm.CONTENT_FREE, *texts]
+    words = {w for t in [llm.SYSTEM_PROMPT, llm.SYSTEM_PROMPT_NUMBER, *llm.VERBALIZERS.values(),
+                                 *llm.NUMBERS.values(), *llm.CONTENT_FREE, *texts]
              for w, _ in pre.pre_tokenize_str(t)}
     vocab = {w: i for i, w in enumerate(["[UNK]", "</s>", "<system>", "<user>", "<assistant>", "<", ">",
                                          *sorted(words)])}
@@ -130,3 +131,44 @@ def test_lora_finetune_trains_only_adapters_and_lowers_the_loss(pilot_and_lm):
             assert torch.equal(p.detach(), base_before[key]), n  # base weights stay frozen
     preds = llm.LLMIntent(tuned, tok, method="raw").predict([norm(it.text) for it in items])
     assert set(preds) <= set(INTENTS)
+
+
+def test_length_norm_is_the_mean_of_the_same_token_scores(pilot_and_lm):
+    items, model, tok = pilot_and_lm
+    text = norm(items[0].text)
+    summed = llm.LLMIntent(model, tok, method="raw")
+    mean = llm.LLMIntent(model, tok, method="raw", length_norm=True)
+    mean._cache = summed._cache                      # same prompt and answers: one forward pass
+    per_token = summed.token_logprobs(text)
+    assert [len(t) for t in per_token] == [len(summed.label_ids[lab]) for lab in INTENTS]
+    np.testing.assert_allclose(summed.label_logprobs(text), [t.sum() for t in per_token])
+    np.testing.assert_allclose(mean.label_logprobs(text), [t.mean() for t in per_token])
+    assert len(mean.predict([text])) == 1
+
+
+def test_number_answers_are_one_token_and_use_their_own_prompt(pilot_and_lm):
+    items, model, tok = pilot_and_lm
+    num = llm.LLMIntent(model, tok, method="calibrated", answer_format="number",
+                        shots=llm.select_shots(items, per_label=1))
+    assert all(len(ids) == 1 for ids in num.label_ids.values())
+    prompt = num.prompt(norm(items[0].text))
+    assert "رد برقم واحد بس" in prompt and "<assistant> 3 </s>" in prompt   # shots answer with digits
+    assert set(num.predict([norm(it.text) for it in items[:5]])) <= set(INTENTS)
+    with pytest.raises(ValueError):
+        llm.LLMIntent(model, tok, method="generate", answer_format="number")
+    with pytest.raises(ValueError):
+        llm.LLMIntent(model, tok, answer_format="letters")
+
+
+def test_prior_calibration_uses_unlabeled_train_texts(pilot_and_lm):
+    items, model, tok = pilot_and_lm
+    texts = [norm(it.text) for it in items]
+    prior = llm.LLMIntent(model, tok, method="prior", prior_texts=texts[:8])
+    expected = np.mean([llm._softmax(prior.label_logprobs(t)) for t in texts[:8]], axis=0)
+    np.testing.assert_allclose(prior.label_prior(), expected)
+    # dividing by the prior maps the prior texts' average to the uniform distribution
+    adj = expected / prior.label_prior()
+    assert np.allclose(adj / adj.sum(), 1 / 3)
+    assert np.isclose(prior.probabilities(texts[9]).sum(), 1.0)
+    with pytest.raises(ValueError, match="prior_texts"):
+        llm.LLMIntent(model, tok, method="prior")

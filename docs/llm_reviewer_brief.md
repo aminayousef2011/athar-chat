@@ -39,8 +39,13 @@ oracle run (gold intent) gives the ceiling that extraction and policy allow.
 - **No parsing penalty in the primary number.** Labels are scored by the log-likelihood of their
   Arabic verbalizers (`تذكير` / `منبه` / `غير مدعوم`) after the model's own chat template, as
   lm-evaluation-harness `multiple_choice` does. Free generation is reported as well.
-- **Contextual calibration** (Zhao et al. 2021) removes label-prior bias. This is the primary
-  S4 method, fixed in advance, so the best of several variants is not cherry-picked after the fact.
+- **Primary method: `prior`**, calibration with a label prior from 60 unlabeled train requests
+  (after batch calibration, Zhou et al. 2024). Fixed on 2026-10-11, before the test split
+  existed, after two logged changes (pre-registered contextual calibration, then raw). Contextual
+  calibration (Zhao et al. 2021) assumes an empty input deserves a uniform label distribution;
+  with an "unsupported" label an empty input *is* out of scope (Jais 2: 0.99), so it suppressed
+  abstention in every model. `raw`, `calibrated` and `generate` are all still reported.
+- **Few-shot sensitivity is reported**: three exemplar sets, mean ± SD.
 - **Raw and generate-then-parse are reported too.** Chat models' first-token scores and written
   answers can disagree (Wang et al. 2024).
 - **Few-shot exemplars come from train only.** They use a fixed seed, are balanced over labels,

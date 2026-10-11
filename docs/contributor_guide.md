@@ -1,6 +1,7 @@
 # ATHAR Chat: guide for contributors
 
-Thank you for helping. ATHAR Chat is a university NLP project: an assistant that sets **one
+Thank you for helping. (Most contributors get a **Google Form** link instead of the CSV files below; the
+form shows the same cards and rules.) ATHAR Chat is a university NLP project: an assistant that sets **one
 reminder or one alarm** from a message written in **Egyptian Arabic**, asks a question when
 something is missing, and politely declines anything else. To test it fairly, we need requests
 written by **native Egyptian Arabic speakers, in their own words**. Most of the requests come
@@ -72,10 +73,16 @@ row per card and version. Fill in:
 
 ## For the project team: from cards to dataset
 
+**Collect wave 1 first.** Only the locked test split (120 items) must be native-written, so
+wave 1 (90 cards, 150 requests) covers it with margin. Wave 2 is a backup and extra dev data.
+Messages for recruiting, reminders and the instructor: [contrib/messages.md](../contrib/messages.md).
+
 ```bash
-uv run athar-data cards --out contrib                    # 175 cards, 300 requests to write
-# share the cards + sheet; give each contributor a code and a block of cards (~35-40 requests)
-uv run athar-data import-contrib filled.csv --cards contrib/scenario_cards.csv --out runs/labelling/sheet.csv
+uv run athar-data cards --out contrib                    # 175 cards (column `wave`), 300 requests
+uv run athar-data form-script --cards contrib/scenario_cards.csv --wave 1 --people 5 --out contrib/make_forms.gs
+# script.google.com -> New project -> paste make_forms.gs -> Run createForms -> copy the links from the log
+# one form + one contributor code per person; afterwards Responses -> Download responses (.csv)
+uv run athar-data import-contrib form_export.csv --cards contrib/scenario_cards.csv --out runs/labelling/sheet.csv
 # label runs/labelling/sheet.csv with docs/annotation_guide.md (the card plans are not in it)
 uv run athar-data build runs/labelling/sheet.csv --cards contrib/scenario_cards.csv --out data/athar.jsonl
 uv run athar-data validate data/athar.jsonl --strict     # then agreement, kappa, split (guide section 7)

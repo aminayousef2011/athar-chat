@@ -3,16 +3,30 @@
 The LLM predicts only the intent label, like every other system; the route and the arguments
 still come from the shared policy and extractor, so S4 is directly comparable to S1-S6.
 
-Methods (all reported; ``calibrated`` is the primary S4 number, fixed in advance):
+Methods (all reported). ``prior`` is the primary S4 number for the locked test run (protocol
+deviations log, 2026-10-11; before it ``raw``, and the pre-registered ``calibrated``).
+Contextual calibration assumes a content-free input deserves a uniform label distribution,
+which fails for a label set with an abstain class: an empty input *is* out of scope (Jais 2
+gives it 0.99 ``unsupported``), so dividing by it suppresses abstention. ``prior`` estimates
+the label bias from real unlabeled train requests instead.
 - ``raw``: constrained label scoring. The answer is the label whose verbalizer has the highest
   summed log-probability after the chat-formatted prompt (lm-evaluation-harness
   ``multiple_choice``-style scoring; no parsing, no invalid outputs).
 - ``calibrated``: the same scores after contextual calibration (Zhao et al. 2021, "Calibrate
   Before Use"): label probabilities are divided by those the model gives to content-free inputs
   ("N/A", "", "[MASK]") under the same prompt and shots, then renormalized.
+- ``prior``: calibration with a label prior estimated from real, unlabeled inputs instead of
+  content-free ones (batch calibration, Zhou et al. 2024, ICLR), here a fixed sample of *train*
+  texts (``prior_texts``), so no test-time information is used.
 - ``generate``: greedy generation, parsed to a label. Output that names no label is
   ``"invalid"`` and scores as a failure. Reported because first-token scores and generated
   answers of chat models can disagree (Wang et al. 2024, arXiv 2402.14499).
+
+Scoring ablation (protocol deviations log, 2026-10-09; not the pre-registered S4 number): the
+summed score favours short verbalizers, and ``غير مدعوم`` is longer than the in-scope labels
+in the tokenizers checked. ``length_norm=True`` scores the mean log-probability per verbalizer
+token instead; ``answer_format="number"`` numbers the options 1-3 and scores a one-token digit
+answer, so the labels have the same length.
 
 Few-shot exemplars come from the train split only (fixed seed, one per family, balanced over
 labels). The models are loaded at pinned revisions; see notebooks/kaggle_s4_llm.ipynb.
@@ -37,6 +51,8 @@ VERBALIZERS: dict[str, str] = {
     "create_alarm": "منبه",
     "unsupported": "غير مدعوم",
 }
+#: one-token answers for ``answer_format="number"``
+NUMBERS: dict[str, str] = {"create_reminder": "1", "create_alarm": "2", "unsupported": "3"}
 CONTENT_FREE = ("N/A", "", "[MASK]")
 
 SYSTEM_PROMPT = """إنت مساعد بيصنّف طلب المستخدم لأداة تذكيرات ومنبهات. رد بكلمة واحدة بس من دول:
@@ -44,6 +60,12 @@ SYSTEM_PROMPT = """إنت مساعد بيصنّف طلب المستخدم لأد
 منبه: لو عايز منبه أو يصحى في وقت معين، مرة واحدة.
 غير مدعوم: لو الطلب مسح أو تعديل لتذكير أو منبه موجود، أو متكرر (كل يوم، كل أسبوع)، أو لحد تاني، أو فيه أكتر من طلب، أو محتاج أداة تانية (تقويم، إيميل، تايمر، الطقس، مكالمة).
 متكتبش أي حاجة غير الكلمة."""
+
+SYSTEM_PROMPT_NUMBER = """إنت مساعد بيصنّف طلب المستخدم لأداة تذكيرات ومنبهات. رد برقم واحد بس:
+1: تذكير، لو المستخدم عايز تذكير واحد ليه هو بحاجة، مرة واحدة (حتى لو الوقت أو المحتوى ناقص).
+2: منبه، لو عايز منبه أو يصحى في وقت معين، مرة واحدة.
+3: غير مدعوم، لو الطلب مسح أو تعديل لتذكير أو منبه موجود، أو متكرر (كل يوم، كل أسبوع)، أو لحد تاني، أو فيه أكتر من طلب، أو محتاج أداة تانية (تقويم، إيميل، تايمر، الطقس، مكالمة).
+متكتبش أي حاجة غير الرقم."""
 
 
 def select_shots(train: Sequence[GoldItem], per_label: int = 2, seed: int = 0) -> list[tuple[str, str]]:
@@ -71,10 +93,11 @@ def select_shots(train: Sequence[GoldItem], per_label: int = 2, seed: int = 0) -
     return shots
 
 
-def build_messages(text: str, shots: Sequence[tuple[str, str]]) -> list[dict[str, str]]:
-    msgs = [{"role": "system", "content": SYSTEM_PROMPT}]
+def build_messages(text: str, shots: Sequence[tuple[str, str]], answer_format: str = "word") -> list[dict[str, str]]:
+    answers = NUMBERS if answer_format == "number" else VERBALIZERS
+    msgs = [{"role": "system", "content": SYSTEM_PROMPT_NUMBER if answer_format == "number" else SYSTEM_PROMPT}]
     for shot_text, lab in shots:
-        msgs += [{"role": "user", "content": shot_text}, {"role": "assistant", "content": VERBALIZERS[lab]}]
+        msgs += [{"role": "user", "content": shot_text}, {"role": "assistant", "content": answers[lab]}]
     msgs.append({"role": "user", "content": text})
     return msgs
 
@@ -95,20 +118,34 @@ class LLMIntent:
 
     def __init__(self, model: Any, tokenizer: Any, name: str = "S4", *,
                  shots: Sequence[tuple[str, str]] = (), method: str = "calibrated",
-                 template_kwargs: dict[str, Any] | None = None, max_new_tokens: int = 12) -> None:
-        if method not in ("raw", "calibrated", "generate"):
+                 template_kwargs: dict[str, Any] | None = None, max_new_tokens: int = 12,
+                 length_norm: bool = False, answer_format: str = "word",
+                 prior_texts: Sequence[str] = ()) -> None:
+        if method not in ("raw", "calibrated", "prior", "generate"):
             raise ValueError(f"unknown method {method!r}")
+        if answer_format not in ("word", "number"):
+            raise ValueError(f"unknown answer_format {answer_format!r}")
+        if method == "generate" and answer_format != "word":
+            raise ValueError("generate parses words; use answer_format='word'")
+        if method == "prior" and not prior_texts:
+            raise ValueError("method 'prior' needs prior_texts (unlabeled train texts)")
+        self.length_norm, self.answer_format = length_norm, answer_format
+        self.prior_texts = list(prior_texts)
+        self._prior: NDArray[np.float64] | None = None
         self.name, self.model, self.tok = name, model, tokenizer
         self.shots, self.method = list(shots), method
         self.template_kwargs = template_kwargs or {}
         self.max_new_tokens = max_new_tokens
-        self._cache: dict[str, NDArray[np.float64]] = {}
+        # per-token log-probabilities of each answer, by text: instances with the same prompt,
+        # shots and answer format can share it, whatever their method or length_norm
+        self._cache: dict[str, list[NDArray[np.float64]]] = {}
         self._cf: NDArray[np.float64] | None = None
-        self.label_ids = {lab: self.tok(w, add_special_tokens=False)["input_ids"] for lab, w in VERBALIZERS.items()}
+        answers = NUMBERS if answer_format == "number" else VERBALIZERS
+        self.label_ids = {lab: self.tok(w, add_special_tokens=False)["input_ids"] for lab, w in answers.items()}
 
     # -- prompt ---------------------------------------------------------------------------
     def prompt(self, text: str) -> str:
-        return str(self.tok.apply_chat_template(build_messages(text, self.shots), tokenize=False,
+        return str(self.tok.apply_chat_template(build_messages(text, self.shots, self.answer_format), tokenize=False,
                                                 add_generation_prompt=True, **self.template_kwargs))
 
     def _device(self) -> Any:
@@ -116,7 +153,13 @@ class LLMIntent:
 
     # -- constrained scoring -------------------------------------------------------------
     def label_logprobs(self, text: str) -> NDArray[np.float64]:
-        """Summed log-probability of each verbalizer after the prompt, in INTENTS order."""
+        """Log-probability of each answer after the prompt, in INTENTS order: summed over its
+        tokens, or their mean with ``length_norm``."""
+        per_token = self.token_logprobs(text)
+        agg = np.mean if self.length_norm else np.sum
+        return np.array([float(agg(t)) for t in per_token], dtype=np.float64)
+
+    def token_logprobs(self, text: str) -> list[NDArray[np.float64]]:
         if text in self._cache:
             return self._cache[text]
         import torch
@@ -132,10 +175,10 @@ class LLMIntent:
                     raise FloatingPointError(f"{self.name}: non-finite logits (fp16 overflow?); "
                                              f"reload in 4-bit or fp32")
                 lp = torch.log_softmax(logits[len(p_ids) - 1:len(p_ids) - 1 + len(c_ids)], dim=-1)
-                scores.append(float(lp.gather(1, torch.tensor(c_ids, device=lp.device)[:, None]).sum()))
-        out = np.array(scores, dtype=np.float64)
-        self._cache[text] = out
-        return out
+                tok_lp = lp.gather(1, torch.tensor(c_ids, device=lp.device)[:, None])[:, 0]
+                scores.append(np.asarray(tok_lp.cpu().numpy(), dtype=np.float64))
+        self._cache[text] = scores
+        return scores
 
     def content_free(self) -> NDArray[np.float64]:
         if self._cf is None:
@@ -143,10 +186,17 @@ class LLMIntent:
             self._cf = p
         return self._cf
 
+    def label_prior(self) -> NDArray[np.float64]:
+        """Mean label distribution over ``prior_texts`` (batch-calibration prior)."""
+        if self._prior is None:
+            self._prior = np.mean([_softmax(self.label_logprobs(t)) for t in self.prior_texts], axis=0)
+        return self._prior
+
     def probabilities(self, text: str) -> NDArray[np.float64]:
         p = _softmax(self.label_logprobs(text))
-        if self.method == "calibrated":
-            p = p / np.maximum(self.content_free(), 1e-12)
+        if self.method in ("calibrated", "prior"):
+            ref = self.content_free() if self.method == "calibrated" else self.label_prior()
+            p = p / np.maximum(ref, 1e-12)
             p = p / p.sum()
         return p
 

@@ -44,5 +44,5 @@ jobs:
           enable-cache: true
       - name: Install with the neural extra (CPU PyTorch)
         run: uv sync --frozen --extra neural
-      - name: Extended-baseline tests
-        run: uv run pytest tests/test_neural.py
+      - name: Extended-baseline and LLM tests (tiny local models)
+        run: uv run pytest tests/test_neural.py tests/test_llm.py

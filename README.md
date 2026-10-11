@@ -74,7 +74,7 @@ correction, robustness, calibration and a power analysis.
 ```powershell
 uv run athar-eval --manifest data/splits/manifest.json --models models --split dev
 uv run athar-eval --manifest data/splits/manifest.json --models models --split test --unlock-test  # once
-uv run athar-ood --models models --systems S1 S2 S3   # native-written Egyptian out-of-scope check
+uv run athar-ood --models models --systems S1 S2 S3   # native Egyptian evaluation + paired MSA->Egyptian gap
 ```
 
 **Confidence gate.** Each prediction carries a confidence (the probability of the chosen
@@ -89,6 +89,7 @@ Collecting the 300 items from native speakers: [docs/contributor_guide.md](docs/
 
 ```powershell
 uv run athar-data cards --out contrib                         # scenario cards + collection sheet
+uv run --with openpyxl athar-data author-sheet --cards contrib/scenario_cards.csv   # author workbook (120 core)
 uv run athar-data import-contrib filled.csv --cards contrib/scenario_cards.csv --out runs/labelling/sheet.csv
 uv run athar-data build runs/labelling/sheet.csv --cards contrib/scenario_cards.csv --out data/athar.jsonl
 uv run athar-data validate data/athar.jsonl --strict          # schema + dataset checks

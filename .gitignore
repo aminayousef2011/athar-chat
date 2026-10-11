@@ -25,3 +25,6 @@ htmlcov/
 
 # fine-tuned encoder weights (~650 MB per seed); hashes are in models/freeze.json
 models/S6/
+
+# macOS
+.DS_Store
