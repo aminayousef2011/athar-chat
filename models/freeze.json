@@ -1,0 +1,1364 @@
+{
+  "contract_version": "1.1",
+  "manifest": {
+    "path": "data/splits/manifest.json",
+    "sha256": "940beba352ec508c1811f1f7b819ea6a3190fe0b7b91d99b2b5ff1e7c350db50",
+    "n_train": 298,
+    "n_dev": 40
+  },
+  "config": {
+    "seed": 0,
+    "selection_metric": "intent_macro_f1",
+    "common": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1
+    },
+    "S2": {
+      "C": [
+        0.1,
+        0.3,
+        1,
+        3,
+        10,
+        30
+      ],
+      "word_ngram": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    "S3": {
+      "C": [
+        0.1,
+        0.3,
+        1,
+        3,
+        10,
+        30
+      ],
+      "word_ngram": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "char_ngram": [
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ]
+      ]
+    },
+    "gate": {
+      "thresholds": [
+        0.0,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        0.95
+      ],
+      "max_unsafe_execution_rate": 0.02
+    },
+    "S5": {
+      "model": "intfloat/multilingual-e5-small",
+      "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+      "prefix": "query: ",
+      "C": [
+        0.1,
+        0.3,
+        1,
+        3,
+        10,
+        30
+      ],
+      "max_iter": 2000
+    },
+    "S6": {
+      "model": "UBC-NLP/MARBERTv2",
+      "revision": "fe88db9db8ccdb0c4e1627495f405c44a5f89066",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "epochs": 20,
+      "batch_size": 16,
+      "learning_rate": 2e-05,
+      "weight_decay": 0.01,
+      "warmup_ratio": 0.1,
+      "max_length": 64
+    }
+  },
+  "config_sha256": "a6efa9d4fad0a640d21ecd0f8261be634ab4629c71b97feac01d1326b8d822e5",
+  "frozen_sources": {
+    "src/athar/normalize.py": "cd0b5d9a1cafa789a3c6a610e118a57d71b15ca27be780c491515bd52c285662",
+    "src/athar/lexicon.py": "ca7daeab18b17121e004332adb025a341588ca6984d2c369b566bf542b97ce88",
+    "src/athar/timeexpr.py": "4c03f4a8778e04ad94036c8bd057eefec8f28feb69047a6e91d69d02f30db7b0",
+    "src/athar/extract.py": "5cbaef8c6fa4df23af28f1ddd63b8d0e105fa8cbbc5a4d09e3c90c1b55bd9d1a",
+    "src/athar/policy.py": "c3b60496614fe8dcbe5fdd670c0620ccf6ab221b9db9df988bb377871d3a119f",
+    "src/athar/respond.py": "a960a4ad229ba9b94742e2877a47c14600791c58d6132ff8ab631723637c6a6e",
+    "src/athar/schema.py": "f03afe80f577bba00a6a1d2e87bb17471eddcf0e33a8d0aeeea0b6a4b7a73442",
+    "src/athar/pipeline.py": "19e3cce0f1a14b6bd0f713a93a43a5347ddc25ac91d18b3f1d82eec6abad950a",
+    "src/athar/gate.py": "fdcb00f3b885fcbe1a3b83c51c12c0b32306202fdf0a58429169399558f3367c",
+    "src/athar/intent/rules.py": "ffa53ab9764c094e6c1c8bb81daaa76458ca21649b8777fad937ef9d24123f83",
+    "src/athar/intent/models.py": "7f981abcd9efc73fca2fccc58e9c1f3d5bcbeadf97c6466c73dbef58fc712cd9",
+    "src/athar/intent/neural.py": "2282f2eb1fb7c8ae6765d5d651e9038c68ab7386e1ac6d17626d306567f09a24",
+    "src/athar/intent/llm.py": "f0efd9b3dc36c5ad7b989f8d8f59322444513300ff64e8435594e71ce896e315",
+    "src/athar/eval/metrics.py": "9698c69fc8cc60b1f6fd1984843d413719d0400b38239b6aacf3bb8bfa549b51",
+    "src/athar/eval/stats.py": "411734b0afda8f9ffc936dabe2ad0307d091c766526d010a0009d03492c267d9",
+    "src/athar/eval/perturb.py": "f4b477bd3f8968a9e6234cc69cb71fda81273b4774f271f294b68231bdca5d20",
+    "src/athar/eval/harness.py": "78fee152022601b188fd4a1986b70a6c78e5449b5917b638070364d25fc7d308",
+    "docs/task_contract.md": "fbc3f3a0c5753339d573e749010938410d60c9bce72e6d76d89223576bcd464a",
+    "docs/evaluation_protocol.md": "c5002f113e7d073f3127594b4f8c1e250512fc5bafcba313c2b8d2e5dd8dc536",
+    "configs/eval.yaml": "482280d83abab26f2a6c310b45d173b11af2aedc74335734f3dd38993d0cf74e"
+  },
+  "environment": {
+    "python": "3.11.14",
+    "platform": "macOS-26.7-arm64-arm-64bit",
+    "processor": "arm",
+    "cpu_count": 14,
+    "ram_gb": 36.0,
+    "scikit-learn": "1.9.1",
+    "numpy": "2.4.6",
+    "joblib": "1.6.0"
+  },
+  "process_peak_rss_mb": 156.8,
+  "systems": {
+    "S1": {
+      "kind": "keyword rules",
+      "dev": {
+        "intent_macro_f1": 0.7556,
+        "intent_accuracy": 0.8
+      },
+      "predict_ms_per_item": 0.0062
+    },
+    "S2": {
+      "kind": "tf-idf + logistic regression",
+      "params": {
+        "class_weight": "balanced",
+        "max_iter": 2000,
+        "sublinear_tf": true,
+        "min_df": 1,
+        "C": 0.3,
+        "word_ngram": [
+          1,
+          1
+        ]
+      },
+      "dev": {
+        "intent_macro_f1": 0.9306,
+        "intent_accuracy": 0.95
+      },
+      "file": "S2.joblib",
+      "sha256": "5548ae523f298ec3198c31e922def97ea2a7896acf68bebc241b612db7786a01",
+      "files": {
+        "S2.joblib": "5548ae523f298ec3198c31e922def97ea2a7896acf68bebc241b612db7786a01"
+      },
+      "size_kb": 20.4,
+      "n_features": 419,
+      "resources": {
+        "final_fit": {
+          "cpu_seconds": 0.0118,
+          "wall_seconds": 0.0118,
+          "peak_traced_mb": 0.56
+        },
+        "search": {
+          "cpu_seconds": 0.3136,
+          "wall_seconds": 0.3137,
+          "peak_traced_mb": 2.31,
+          "n_fits": 12
+        },
+        "predict_ms_per_item": 0.009
+      },
+      "grid": [
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.1,
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8767,
+            "intent_accuracy": 0.9
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.1,
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8208,
+            "intent_accuracy": 0.875
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.3,
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.9306,
+            "intent_accuracy": 0.95
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.3,
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8208,
+            "intent_accuracy": 0.875
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 1,
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 1,
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8208,
+            "intent_accuracy": 0.875
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 3,
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 3,
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.7753,
+            "intent_accuracy": 0.85
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 10,
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8295,
+            "intent_accuracy": 0.875
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 10,
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.7753,
+            "intent_accuracy": 0.85
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 30,
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8071,
+            "intent_accuracy": 0.85
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 30,
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.7753,
+            "intent_accuracy": 0.85
+          }
+        }
+      ],
+      "gate": {
+        "threshold": 0.0,
+        "max_unsafe_execution_rate": 0.02,
+        "dev_curve": [
+          {
+            "tau": 0.0,
+            "coverage": 0.375,
+            "gated": 0.0,
+            "safe_task_success": 0.95,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": 1.0,
+            "unnecessary_clarification_rate": 0.0
+          },
+          {
+            "tau": 0.4,
+            "coverage": 0.375,
+            "gated": 0.0,
+            "safe_task_success": 0.95,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": 1.0,
+            "unnecessary_clarification_rate": 0.0
+          },
+          {
+            "tau": 0.5,
+            "coverage": 0.225,
+            "gated": 0.15,
+            "safe_task_success": 0.8,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": 1.0,
+            "unnecessary_clarification_rate": 0.375
+          },
+          {
+            "tau": 0.6,
+            "coverage": 0.025,
+            "gated": 0.35,
+            "safe_task_success": 0.6,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": 1.0,
+            "unnecessary_clarification_rate": 0.875
+          },
+          {
+            "tau": 0.7,
+            "coverage": 0.0,
+            "gated": 0.375,
+            "safe_task_success": 0.575,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": null,
+            "unnecessary_clarification_rate": 0.9375
+          },
+          {
+            "tau": 0.8,
+            "coverage": 0.0,
+            "gated": 0.375,
+            "safe_task_success": 0.575,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": null,
+            "unnecessary_clarification_rate": 0.9375
+          },
+          {
+            "tau": 0.9,
+            "coverage": 0.0,
+            "gated": 0.375,
+            "safe_task_success": 0.575,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": null,
+            "unnecessary_clarification_rate": 0.9375
+          },
+          {
+            "tau": 0.95,
+            "coverage": 0.0,
+            "gated": 0.375,
+            "safe_task_success": 0.575,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": null,
+            "unnecessary_clarification_rate": 0.9375
+          }
+        ]
+      }
+    },
+    "S3": {
+      "kind": "tf-idf + logistic regression",
+      "params": {
+        "class_weight": "balanced",
+        "max_iter": 2000,
+        "sublinear_tf": true,
+        "min_df": 1,
+        "C": 0.1,
+        "char_ngram": [
+          2,
+          4
+        ],
+        "word_ngram": [
+          1,
+          1
+        ]
+      },
+      "dev": {
+        "intent_macro_f1": 0.8974,
+        "intent_accuracy": 0.925
+      },
+      "file": "S3.joblib",
+      "sha256": "a86b8baee2349265e6f6b9eec90e5b9b7726717a5775e6ccab4885761b73377e",
+      "files": {
+        "S3.joblib": "a86b8baee2349265e6f6b9eec90e5b9b7726717a5775e6ccab4885761b73377e"
+      },
+      "size_kb": 161.5,
+      "n_features": 3780,
+      "resources": {
+        "final_fit": {
+          "cpu_seconds": 0.0546,
+          "wall_seconds": 0.0546,
+          "peak_traced_mb": 4.57
+        },
+        "search": {
+          "cpu_seconds": 2.8966,
+          "wall_seconds": 2.897,
+          "peak_traced_mb": 7.85,
+          "n_fits": 36
+        },
+        "predict_ms_per_item": 0.0369
+      },
+      "grid": [
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.1,
+            "char_ngram": [
+              2,
+              4
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.1,
+            "char_ngram": [
+              2,
+              4
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.1,
+            "char_ngram": [
+              2,
+              5
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.1,
+            "char_ngram": [
+              2,
+              5
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.1,
+            "char_ngram": [
+              3,
+              5
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.1,
+            "char_ngram": [
+              3,
+              5
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.3,
+            "char_ngram": [
+              2,
+              4
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.3,
+            "char_ngram": [
+              2,
+              4
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.3,
+            "char_ngram": [
+              2,
+              5
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.3,
+            "char_ngram": [
+              2,
+              5
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.3,
+            "char_ngram": [
+              3,
+              5
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 0.3,
+            "char_ngram": [
+              3,
+              5
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 1,
+            "char_ngram": [
+              2,
+              4
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8651,
+            "intent_accuracy": 0.9
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 1,
+            "char_ngram": [
+              2,
+              4
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 1,
+            "char_ngram": [
+              2,
+              5
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 1,
+            "char_ngram": [
+              2,
+              5
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 1,
+            "char_ngram": [
+              3,
+              5
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8722,
+            "intent_accuracy": 0.9
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 1,
+            "char_ngram": [
+              3,
+              5
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 3,
+            "char_ngram": [
+              2,
+              4
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8651,
+            "intent_accuracy": 0.9
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 3,
+            "char_ngram": [
+              2,
+              4
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 3,
+            "char_ngram": [
+              2,
+              5
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8418,
+            "intent_accuracy": 0.875
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 3,
+            "char_ngram": [
+              2,
+              5
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 3,
+            "char_ngram": [
+              3,
+              5
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8198,
+            "intent_accuracy": 0.85
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 3,
+            "char_ngram": [
+              3,
+              5
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 10,
+            "char_ngram": [
+              2,
+              4
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8418,
+            "intent_accuracy": 0.875
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 10,
+            "char_ngram": [
+              2,
+              4
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 10,
+            "char_ngram": [
+              2,
+              5
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8418,
+            "intent_accuracy": 0.875
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 10,
+            "char_ngram": [
+              2,
+              5
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 10,
+            "char_ngram": [
+              3,
+              5
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8198,
+            "intent_accuracy": 0.85
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 10,
+            "char_ngram": [
+              3,
+              5
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8611,
+            "intent_accuracy": 0.9
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 30,
+            "char_ngram": [
+              2,
+              4
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8418,
+            "intent_accuracy": 0.875
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 30,
+            "char_ngram": [
+              2,
+              4
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8974,
+            "intent_accuracy": 0.925
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 30,
+            "char_ngram": [
+              2,
+              5
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8071,
+            "intent_accuracy": 0.85
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 30,
+            "char_ngram": [
+              2,
+              5
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8611,
+            "intent_accuracy": 0.9
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 30,
+            "char_ngram": [
+              3,
+              5
+            ],
+            "word_ngram": [
+              1,
+              1
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.7859,
+            "intent_accuracy": 0.825
+          }
+        },
+        {
+          "params": {
+            "class_weight": "balanced",
+            "max_iter": 2000,
+            "sublinear_tf": true,
+            "min_df": 1,
+            "C": 30,
+            "char_ngram": [
+              3,
+              5
+            ],
+            "word_ngram": [
+              1,
+              2
+            ]
+          },
+          "dev": {
+            "intent_macro_f1": 0.8208,
+            "intent_accuracy": 0.875
+          }
+        }
+      ],
+      "gate": {
+        "threshold": 0.0,
+        "max_unsafe_execution_rate": 0.02,
+        "dev_curve": [
+          {
+            "tau": 0.0,
+            "coverage": 0.375,
+            "gated": 0.0,
+            "safe_task_success": 0.925,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": 1.0,
+            "unnecessary_clarification_rate": 0.0
+          },
+          {
+            "tau": 0.4,
+            "coverage": 0.35,
+            "gated": 0.025,
+            "safe_task_success": 0.9,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": 1.0,
+            "unnecessary_clarification_rate": 0.0625
+          },
+          {
+            "tau": 0.5,
+            "coverage": 0.1,
+            "gated": 0.275,
+            "safe_task_success": 0.65,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": 1.0,
+            "unnecessary_clarification_rate": 0.6875
+          },
+          {
+            "tau": 0.6,
+            "coverage": 0.0,
+            "gated": 0.375,
+            "safe_task_success": 0.55,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": null,
+            "unnecessary_clarification_rate": 0.9375
+          },
+          {
+            "tau": 0.7,
+            "coverage": 0.0,
+            "gated": 0.375,
+            "safe_task_success": 0.55,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": null,
+            "unnecessary_clarification_rate": 0.9375
+          },
+          {
+            "tau": 0.8,
+            "coverage": 0.0,
+            "gated": 0.375,
+            "safe_task_success": 0.55,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": null,
+            "unnecessary_clarification_rate": 0.9375
+          },
+          {
+            "tau": 0.9,
+            "coverage": 0.0,
+            "gated": 0.375,
+            "safe_task_success": 0.55,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": null,
+            "unnecessary_clarification_rate": 0.9375
+          },
+          {
+            "tau": 0.95,
+            "coverage": 0.0,
+            "gated": 0.375,
+            "safe_task_success": 0.55,
+            "unsafe_execution_rate": 0.0,
+            "execution_precision": null,
+            "unnecessary_clarification_rate": 0.9375
+          }
+        ]
+      }
+    }
+  },
+  "freeze_sha256": "9d38bfecc507fb360f8b4c9b36bccd54a7a31d34bdc3279aee249c0b8e19972e"
+}
