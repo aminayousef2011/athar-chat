@@ -1,6 +1,7 @@
 """Contributor kit (athar.data.contrib): cards -> collection -> blind sheet -> labelled dataset."""
 
 import csv
+from pathlib import Path
 
 from athar.data import contrib as C
 from athar.data.cli import main
@@ -148,3 +149,118 @@ def test_author_workbook_round_trip(tmp_path):
     sheet = _rows(tmp_path / "label.csv")
     assert sheet[0]["id"] == f"{first['card_id']}-{first['version'].lower()}" and sheet[0]["source"] == "author"
     assert sheet[0]["code_switched"] == "yes"
+
+
+def test_check_author_flags_the_typing_moment_copies_and_dates_on_out_of_scope(tmp_path):
+    openpyxl = __import__("pytest").importorskip("openpyxl")
+
+    C.write_kit(tmp_path)
+    cards = tmp_path / "scenario_cards.csv"
+    book = tmp_path / "author.xlsx"
+    C.author_sheet(cards, book)
+    wb = openpyxl.load_workbook(book)
+    ws = wb["requests"]
+    header = [c.value for c in ws[1]]
+    assert "you are typing at (NOT the reminder time)" in header and "imagine_it_is_ar" not in header
+    plan = {c["card_id"]: c for c in C.make_cards()}
+    col = header.index("text") + 1
+    rows = list(ws.iter_rows(min_row=2))
+    by = {(r[header.index("card_id")].value, r[header.index("version")].value): r for r in rows}
+    pair = next(cid for (cid, v) in by if v == "B")
+    oos = next(cid for (cid, v) in by if plan[cid]["route_plan"] == "ABSTAIN")
+    from datetime import datetime
+    when = datetime.fromisoformat(plan[pair]["ref_datetime"])
+    copied = f"فكرني أبعت الريبورت يوم {when.day} الساعة {when.hour % 12 or 12}:{when.minute:02d}"
+    by[(pair, "A")][col - 1].value = copied
+    by[(pair, "B")][col - 1].value = copied + " "
+    o_when = datetime.fromisoformat(plan[oos]["ref_datetime"])
+    by[(oos, "A")][col - 1].value = f"شغل مزيكا يوم {o_when.day} الساعة {o_when.hour % 12 or 12}:{o_when.minute:02d}"
+    wb.save(book)
+    r = C.check_author(book, cards)
+    text = "\n".join(r["problems"])
+    assert f"{pair}-A: asks for the typing moment" in text
+    assert f"{pair}-B: almost the same as version A" in text
+    assert f"{oos}-A: out-of-scope request carries the typing moment" in text
+    assert "core row is empty" in text                               # the rest is not written yet
+    # a natural pair (a later time in A, B written from scratch) raises nothing for its card
+    other = next(cid for (cid, v) in by if v == "B" and cid != pair)
+    by[(other, "A")][col - 1].value = "فكرني بكرة الساعة 9 الصبح أكلم العميل"
+    by[(other, "B")][col - 1].value = "ابقى فكرني اكلم العميل بكرة"
+    wb.save(book)
+    assert not [p for p in C.check_author(book, cards)["problems"] if p.startswith(other)]
+
+
+def test_labelling_workbook_keeps_datetimes_as_text_and_builds(tmp_path):
+    openpyxl = __import__("pytest").importorskip("openpyxl")
+
+    C.write_kit(tmp_path)
+    cards = tmp_path / "scenario_cards.csv"
+    book = tmp_path / "author.xlsx"
+    C.author_sheet(cards, book)
+    wb = openpyxl.load_workbook(book)
+    ws = wb["requests"]
+    header = [c.value for c in ws[1]]
+    ws.cell(row=2, column=header.index("text") + 1, value="فكرني بكرة الساعة 9 الصبح اراجع الـ backlog")
+    wb.save(book)
+    lab = tmp_path / "label.xlsx"
+    assert C.import_contributions(book, cards, lab, source="author")["rows"] == 1
+    wb = openpyxl.load_workbook(lab)
+    ws = wb["label"]
+    h = [c.value for c in ws[1]]
+    assert ws.cell(row=2, column=h.index("datetime") + 1).number_format == "@"
+    assert len(ws.data_validations.dataValidation) == 3                    # intent, route, reason
+    ref = ws.cell(row=2, column=h.index("ref_datetime") + 1).value
+    from datetime import datetime, timedelta
+    when = (datetime.fromisoformat(ref) + timedelta(days=1)).replace(hour=9, minute=0)
+    for k, v in {"intent": "create_reminder", "route": "ACT", "datetime": when.strftime("%Y-%m-%d %H:%M"),
+                 "reminder_text": "اراجع الـ backlog"}.items():
+        ws.cell(row=2, column=h.index(k) + 1, value=v)
+    wb.save(lab)
+    r = C.build_dataset(lab, tmp_path / "athar.jsonl")
+    assert r["items"] == 1 and not r["errors"]
+    item = load_items(tmp_path / "athar.jsonl")[0]
+    assert item.source == "author" and item.route == "ACT" and item.args.datetime.hour == 9
+
+
+def test_agreement_sheet_as_xlsx_round_trips_into_kappa(tmp_path):
+    openpyxl = __import__("pytest").importorskip("openpyxl")
+    from athar.data import agreement as ag
+
+    items = load_items(Path(__file__).resolve().parents[1] / "data" / "pilot" / "pilot.jsonl")[:3]
+    sheet = tmp_path / "nested" / "sheet.xlsx"                 # the folder does not exist yet
+    ag.write_sheet(items, sheet)
+    wb = openpyxl.load_workbook(sheet)
+    ws = wb["label"]
+    h = [c.value for c in ws[1]]
+    assert "family_id" not in h and ws.cell(row=2, column=h.index("datetime") + 1).number_format == "@"
+    for i, it in enumerate(items, start=2):                    # the second annotator agrees with gold
+        ws.cell(row=i, column=h.index("intent") + 1, value=it.intent)
+        ws.cell(row=i, column=h.index("route") + 1, value=it.route)
+        ws.cell(row=i, column=h.index("clarify_targets") + 1, value=" ".join(it.clarify_targets))
+        ws.cell(row=i, column=h.index("unsupported_reason") + 1, value=it.unsupported_reason or "")
+        if it.args.datetime:
+            ws.cell(row=i, column=h.index("datetime") + 1,
+                    value=it.args.datetime.astimezone(ag.ZoneInfo(it.timezone)).strftime("%Y-%m-%d %H:%M"))
+        ws.cell(row=i, column=h.index("reminder_text") + 1, value=it.args.reminder_text or "")
+    wb.save(sheet)
+    labels, errors = ag.read_labels(sheet)
+    assert not errors and set(labels) == {it.id for it in items}
+    assert all(labels[it.id] == ag.gold_label(it) for it in items)
+
+
+def test_build_unpairs_versions_that_are_not_a_minimal_pair(tmp_path):
+    cols = (*C.SHEET_COLUMNS, *C.LABEL_EXTRA)
+    base = dict.fromkeys(cols, "")
+    base.update(ref_datetime="2026-10-18T07:40:00+03:00", timezone="Africa/Cairo", family_id="fam-c001",
+                pair_id="pair-c001", source="author", domain="general")
+    a = {**base, "id": "c001-a", "text": "فكرني بكرة الساعة 9 الصبح اشتري عيش", "intent": "create_reminder",
+         "route": "ACT", "datetime": "2026-10-19 09:00", "reminder_text": "اشتري عيش"}
+    b = {**base, "id": "c001-b", "text": "صحيني بكرة", "intent": "create_alarm", "route": "CLARIFY",
+         "clarify_targets": "time"}
+    _write(tmp_path / "s.csv", [a, b])
+    r = C.build_dataset(tmp_path / "s.csv", tmp_path / "out.jsonl")
+    assert r["items"] == 2 and r["unpaired"] == ["pair-c001: different tools (create_reminder / create_alarm)"]
+    items = load_items(tmp_path / "out.jsonl")
+    assert all(it.pair_id is None and it.family_id == "fam-c001" for it in items)   # still one family
+    assert [it.text for it in items] == [a["text"], b["text"]]                       # texts untouched
+    assert "pair dropped" in items[1].notes

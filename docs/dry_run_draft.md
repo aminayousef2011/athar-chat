@@ -190,3 +190,19 @@ What it shows:
 
 - **Inference is exactly reproducible.** All 6,372 diagnostics predictions and all content-free probabilities are identical to the first run; so is every S4 summary row.
 - **S7 fine-tuning is not, even with the same seed** (and cuDNN determinism set): seed 0 gave dev STS 0.825 then 0.875, seed 1 0.950 then 0.875, seed 2 0.900 then 0.950. 4-bit QLoRA training on GPU is not bit-exact, so run-to-run variance is as large as seed-to-seed variance. **S7 is reported pooled over all 6 runs: dev STS 0.896 ± 0.049 (raw; range 0.825-0.950), intent macro-F1 0.81 ± 0.08, unsafe execution 0.025 ± 0.027.**
+
+## LLM paired dialect gap (Kaggle, 2026-10-12, notebook 2026-10-11c)
+
+`runs/s4/diagnostics/msa-*` (not committed). The 192 native Egyptian out-of-scope requests and their Saudi/MSA MASSIVE originals, 3 exemplar sets × 3 methods; exact McNemar per row, Holm over 18 rows. Jais 2 was not run (optional).
+
+| Model | Method | Out-of-scope recall, MSA → Egyptian (mean of 3 sets) | Holm-significant rows |
+|---|---|---|---|
+| Nile-Chat | prior | 0.988 → 0.986 | 0 of 3 |
+| Nile-Chat | raw | 0.694 → 0.672 | 0 of 3 |
+| Nile-Chat | calibrated | 0.186 → 0.194 | 0 of 3 |
+| Qwen3 | prior | 0.979 → 0.964 | 0 of 3 |
+| Qwen3 | raw | 0.974 → 0.957 | 0 of 3 |
+| Qwen3 | calibrated | 0.929 → 0.894 | 0 of 3 |
+
+- **No significant dialect penalty** for either model, with any method. Qwen3 is slightly better on MSA in all 9 rows (1-4 points), a consistent but small direction; Nile-Chat shows none. Out-of-scope failures come from the scoring method (calibration) far more than from the dialect.
+- The content-free probabilities in this run are identical to the first diagnostics run (inference is reproducible).

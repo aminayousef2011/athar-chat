@@ -329,8 +329,76 @@ def import_contributions(collection: str | Path, cards_path: str | Path, out: st
     for row in rows:
         if row["pair_id"] and halves[row["pair_id"]] != 2:
             row["pair_id"] = ""
-    _write_csv(Path(out), (*SHEET_COLUMNS, *LABEL_EXTRA), rows)
+    if Path(out).suffix.lower() == ".xlsx":
+        labelling_workbook(rows, out)
+    else:
+        _write_csv(Path(out), (*SHEET_COLUMNS, *LABEL_EXTRA), rows)
     return {"rows": len(rows), "skipped": skipped}
+
+
+LABEL_HELP = {
+    "intent": "create_reminder / create_alarm / unsupported",
+    "route": "ACT / CLARIFY / ABSTAIN",
+    "clarify_targets": "CLARIFY only, space-separated, from: date time am_pm past reminder_text",
+    "unsupported_reason": "ABSTAIN only: deletion modification recurring other_person multi_action other_tool other",
+    "datetime": "ACT only: the resolved time, as 2026-10-19 08:00 (Cairo local time)",
+    "reminder_text": "ACT reminders: the content, in the user's own spelling",
+}
+
+
+def labelling_workbook(rows: Sequence[dict[str, str]], out: str | Path,
+                       columns: Sequence[str] | None = None) -> None:
+    """The blind labelling sheet as an Excel workbook: every cell is text (Excel cannot rewrite
+    the datetimes), intent / route / reason are drop-down lists, and a help row explains each
+    label column. :func:`build_dataset` reads it directly."""
+    openpyxl = _openpyxl()
+    from openpyxl.styles import (  # type: ignore[import-untyped,unused-ignore]
+        Alignment,
+        Font,
+        PatternFill,
+    )
+    from openpyxl.worksheet.datavalidation import (  # type: ignore[import-untyped,unused-ignore]
+        DataValidation,  # type: ignore[import-untyped,unused-ignore]
+    )
+
+    cols = tuple(columns) if columns is not None else (*SHEET_COLUMNS, *LABEL_EXTRA)
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "label"
+    ws.append(list(cols))
+    for r in rows:
+        ws.append([r.get(c, "") for c in cols])
+    n = len(rows) + 1
+    fill = PatternFill("solid", fgColor="E8F1FF")
+    lists = {"intent": "create_reminder,create_alarm,unsupported", "route": "ACT,CLARIFY,ABSTAIN",
+             "unsupported_reason": "deletion,modification,recurring,other_person,multi_action,other_tool,other"}
+    for j, col in enumerate(cols, start=1):
+        letter = ws.cell(row=1, column=j).column_letter
+        ws.cell(row=1, column=j).font = Font(bold=True)
+        ws.column_dimensions[letter].width = {"text": 55, "ref_local": 30, "notes": 30, "reminder_text": 30,
+                                              "clarify_targets": 18, "datetime": 18}.get(col, 14)
+        for i in range(2, n + 1):
+            cell = ws.cell(row=i, column=j)
+            cell.number_format = "@"
+            if col in LABEL_HELP:
+                cell.fill = fill
+            if col in ("text", "ref_local", "reminder_text"):
+                cell.alignment = Alignment(horizontal="right", readingOrder=2, wrap_text=True, vertical="top")
+        if col in lists:
+            dv = DataValidation(type="list", formula1=f'"{lists[col]}"', allow_blank=True)
+            ws.add_data_validation(dv)
+            dv.add(f"{letter}2:{letter}{n}")
+    ws.freeze_panes = "C2"
+    help_ws = wb.create_sheet("how to label")
+    help_ws.append(["column", "what to enter"])
+    for col, text in LABEL_HELP.items():
+        help_ws.append([col, text])
+    help_ws.append(["rules", "docs/annotation_guide.md section 3: intent, then arguments, then every gap, then route. "
+                             "Use only the request and its reference time (ref_local). Never run a system first."])
+    help_ws.column_dimensions["A"].width = 20
+    help_ws.column_dimensions["B"].width = 110
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+    wb.save(out)
 
 
 def build_dataset(sheet: str | Path, out: str | Path, cards_path: str | Path | None = None) -> dict[str, Any]:
@@ -369,10 +437,40 @@ def build_dataset(sheet: str | Path, out: str | Path, cards_path: str | Path | N
                        else ("ACT" if row["id"].endswith("-a") else "CLARIFY"))
             if (item.intent, item.route) != planned:
                 differs.append(f"{item.id}: labelled {item.intent}/{item.route}, card planned {planned[0]}/{planned[1]}")
+    items, unpaired = _keep_minimal_pairs(items)
     Path(out).parent.mkdir(parents=True, exist_ok=True)
     Path(out).write_text("".join(json.dumps(it.model_dump(mode="json", exclude_defaults=True), ensure_ascii=False)
                                  + "\n" for it in items), encoding="utf-8", newline="\n")
-    return {"items": len(items), "errors": errors, "differs_from_card": differs}
+    return {"items": len(items), "errors": errors, "differs_from_card": differs, "unpaired": unpaired}
+
+
+def _keep_minimal_pairs(items: Sequence[GoldItem]) -> tuple[list[GoldItem], list[str]]:
+    """A card's versions A and B are a pair only if, as written and labelled, they are a minimal
+    pair: the same intent, one ACT and one CLARIFY (annotation guide 2.1). Otherwise the pair link
+    is dropped (the items stay in their family, so they still split together) and the reason is
+    noted. The request texts are never changed to make a pair fit."""
+    by_pair: dict[str, list[GoldItem]] = {}
+    for it in items:
+        if it.pair_id:
+            by_pair.setdefault(it.pair_id, []).append(it)
+    drop: dict[str, str] = {}
+    for pid, members in by_pair.items():
+        if len(members) != 2:
+            reason = "only one version labelled"
+        elif members[0].intent != members[1].intent:
+            reason = f"different tools ({members[0].intent} / {members[1].intent})"
+        elif sorted(m.route for m in members) != ["ACT", "CLARIFY"]:
+            reason = f"not one complete and one incomplete ({' / '.join(sorted(m.route for m in members))})"
+        else:
+            continue
+        drop[pid] = reason
+    out = []
+    for it in items:
+        if it.pair_id in drop:
+            note = f"pair dropped: {drop[it.pair_id]}"
+            it = it.model_copy(update={"pair_id": None, "notes": f"{it.notes} | {note}" if it.notes else note})
+        out.append(it)
+    return out, [f"{pid}: {why}" for pid, why in sorted(drop.items())]
 
 
 # --------------------------------------------------------------------------- Google Forms
@@ -450,23 +548,29 @@ function createForms() {{
 
 
 # --------------------------------------------------------------------------- author workbook
-AUTHOR_COLUMNS = ("order", "core", "card_id", "version", "situation", "imagine_it_is", "imagine_it_is_ar",
-                  "what_to_write", "text", "contributor", "comment")
+AUTHOR_COLUMNS = ("order", "core", "card_id", "version", "situation", "typing_at", "what_to_write", "text",
+                  "contributor", "comment")
+#: header shown in the workbook for each column (the typing moment is NOT the reminder time)
+AUTHOR_HEADERS = {"typing_at": "you are typing at (NOT the reminder time)"}
 CORE_PAIRS, CORE_ABSTAIN = 50, 20      # the locked test targets: 50 ACT + 50 CLARIFY + 20 ABSTAIN
 AUTHOR_GUIDE = [
-    ("How to write (read once, then don't think about it)", ""),
-    ("1", "Write each request the way YOU would really type it to an assistant on your phone: short, Egyptian, quick."),
-    ("2", "Do not look at the draft dataset, the pilot items or any example wording while you write."),
-    ("3", "Do not think about what the system can understand. Write naturally, not to make it easy or hard."),
-    ("4", "Vary naturally, as real people do: English work words, typos, Arabic or Western digits, لو سمحت, word order."),
-    ("5", "Version B: the same request again, leaving out exactly what the card says, the way people really forget it."),
-    ("6", "Out-of-scope cards (one version only): ask for that thing naturally; the assistant is expected to decline."),
-    ("7", "Invented names only. No real phone numbers, clients or private details."),
-    ("8", "Write in 2-3 sittings, in the order given. Rows marked core = 1 come first: 120 requests are the minimum."),
-    ("9", "Leave 'contributor' as author. Use 'comment' if a card is unclear; skip a row rather than force it."),
+    ("How to write (read once)", ""),
+    ("1", "'you are typing at' is the moment you send the message. It is NOT the reminder time. Do not copy it into the request."),
+    ("2", "Version A asks for a time LATER than that moment: later today, tonight, tomorrow, Thursday, the 3rd... "
+          "Say it the way you would (\"بكرة 9 الصبح\", \"الخميس الجاي الساعة 3 العصر\"), not as a full calendar date."),
+    ("3", "Version B is the same wish, typed again from scratch, leaving out what the card says (e.g. no clock time). "
+          "Do not copy A and delete words; write it as you would if you really forgot that detail."),
+    ("4", "Out-of-scope cards: ask for that thing naturally. No date or time unless you would really say one."),
+    ("5", "Type it the way you really type on your phone: no need for shadda, full stops or perfect spelling. "
+          "Best: type each message on your phone (e.g. to yourself on WhatsApp) and paste it here."),
+    ("6", "Your own words only: no ChatGPT or other AI tool, no translation tool, no templates or formulas."),
+    ("7", "Do not look at the draft dataset, the pilot items or any examples while you write."),
+    ("8", "Invented names only. Rows with core = 1 come first: those 120 are the minimum."),
+    ("9", "Before sending: uv run --with openpyxl athar-data check-author <file> --cards contrib/scenario_cards.csv"),
     ("", ""),
-    ("بالعربي", "اكتب كل طلب زي ما إنت فعلاً بتكتبه للمساعد على الموبايل: قصير وبالمصري. متبصش على أي أمثلة أو داتا قبل كده، "
-                "ومتفكرش السيستم هيفهم ولا لأ. في version B شيل الحاجة اللي الكارت بيقول عليها بس. أول 120 سطر (core = 1) هما الأساس."),
+    ("بالعربي", "'you are typing at' ده وقت ما بتكتب الرسالة، مش وقت التذكير: متنقلوش في الطلب. في A اطلب وقت بعد كده "
+                "(بكرة، الخميس، بالليل...) بالطريقة اللي بتقولها عادي. B نفس الطلب مكتوب من الأول من غير الحاجة اللي الكارت "
+                "بيقول عليها. اكتب زي ما بتكتب على الموبايل، بكلامك إنت، من غير أي أداة ذكاء اصطناعي."),
 ]
 
 
@@ -495,13 +599,32 @@ def core_cards(cards: Sequence[dict[str, str]]) -> set[str]:
     return chosen
 
 
-def author_rows(cards: Sequence[dict[str, str]], seed: int = 20261010) -> list[dict[str, str]]:
+def _what_to_write(card: dict[str, str], version: str) -> str:
+    if card["route_plan"] == "ABSTAIN":
+        return ("Ask the ASSISTANT to do this itself, the way you naturally would (not a reminder for you to do "
+                "it). No date or time unless you would really say one.")
+    if version == "A":
+        what = "" if card["intended_intent"] == "create_alarm" else ", and what to be reminded of"
+        return (f"Full request for a time LATER than the moment you are typing: the day, the clock time with "
+                f"morning/evening{what}. Say the day the way you would (tomorrow, Thursday...), not as a calendar date.")
+    gaps = tuple(card["intended_gaps"].split())
+    return (f"The same wish typed again from scratch, but {GAP_INSTRUCTIONS[gaps]}. Not a copy of A with words deleted.")
+
+
+def author_rows(cards: Sequence[dict[str, str]], seed: int = 20261010,
+                reasons: Sequence[str] = ()) -> list[dict[str, str]]:
     """Wave-1 requests for the author: core cards first, each group in a shuffled order (so route
-    types are interleaved), versions A and B of a card next to each other."""
+    types are interleaved), versions A and B of a card next to each other. With ``reasons``:
+    instead, every wave-2 out-of-scope card with those unsupported reasons (all core), to fill a
+    coverage gap."""
     import random
 
-    core = core_cards(cards)
-    w1 = [c for c in cards if c["wave"] == "1"]
+    if reasons:
+        w1 = [c for c in cards if c["wave"] == "2" and c["intended_reason"] in set(reasons)]
+        core = {c["card_id"] for c in w1}
+    else:
+        core = core_cards(cards)
+        w1 = [c for c in cards if c["wave"] == "1"]
     rng = random.Random(seed)
     first = sorted((c for c in w1 if c["card_id"] in core), key=lambda c: c["card_id"])
     rest = sorted((c for c in w1 if c["card_id"] not in core), key=lambda c: c["card_id"])
@@ -512,13 +635,12 @@ def author_rows(cards: Sequence[dict[str, str]], seed: int = 20261010) -> list[d
         for v in ("A", "B") if c["version_b"] else ("A",):
             rows.append({"order": str(len(rows) + 1), "core": "1" if c["card_id"] in core else "0",
                          "card_id": c["card_id"], "version": v, "situation": c["situation"],
-                         "imagine_it_is": c["now_local_en"], "imagine_it_is_ar": c["now_local_ar"],
-                         "what_to_write": c["version_a"] if v == "A" else c["version_b"],
+                         "typing_at": c["now_local_en"], "what_to_write": _what_to_write(c, v),
                          "text": "", "contributor": "author", "comment": ""})
     return rows
 
 
-def author_sheet(cards_path: str | Path, out: str | Path) -> dict[str, int]:
+def author_sheet(cards_path: str | Path, out: str | Path, reasons: Sequence[str] = ()) -> dict[str, int]:
     """An Excel workbook to write the wave-1 requests in: a 'requests' sheet (the ``text`` column
     is right-to-left and wrapped) and a 'how to write' sheet."""
     openpyxl = _openpyxl()
@@ -528,15 +650,15 @@ def author_sheet(cards_path: str | Path, out: str | Path) -> dict[str, int]:
         PatternFill,
     )
 
-    rows = author_rows(_read_csv(cards_path))
+    rows = author_rows(_read_csv(cards_path), reasons=reasons)
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "requests"
-    ws.append(list(AUTHOR_COLUMNS))
+    ws.append([AUTHOR_HEADERS.get(c, c) for c in AUTHOR_COLUMNS])
     for r in rows:
         ws.append([r[c] for c in AUTHOR_COLUMNS])
-    widths = {"order": 7, "core": 6, "card_id": 8, "version": 8, "situation": 48, "imagine_it_is": 26,
-              "imagine_it_is_ar": 30, "what_to_write": 60, "text": 60, "contributor": 12, "comment": 30}
+    widths = {"order": 7, "core": 6, "card_id": 8, "version": 8, "situation": 48, "typing_at": 26,
+              "what_to_write": 60, "text": 60, "contributor": 12, "comment": 30}
     fill = PatternFill("solid", fgColor="FFF4CC")
     for j, col in enumerate(AUTHOR_COLUMNS, start=1):
         letter = ws.cell(row=1, column=j).column_letter
@@ -545,8 +667,8 @@ def author_sheet(cards_path: str | Path, out: str | Path) -> dict[str, int]:
         for i in range(2, len(rows) + 2):
             cell = ws.cell(row=i, column=j)
             cell.alignment = Alignment(wrap_text=True, vertical="top",
-                                       horizontal="right" if col in ("text", "imagine_it_is_ar") else "left",
-                                       readingOrder=2 if col in ("text", "imagine_it_is_ar") else 1)
+                                       horizontal="right" if col == "text" else "left",
+                                       readingOrder=2 if col == "text" else 1)
             if col == "text":
                 cell.fill = fill
     ws.freeze_panes = "E2"
@@ -561,3 +683,54 @@ def author_sheet(cards_path: str | Path, out: str | Path) -> dict[str, int]:
     Path(out).parent.mkdir(parents=True, exist_ok=True)
     wb.save(out)
     return {"requests": len(rows), "core": sum(r["core"] == "1" for r in rows)}
+
+
+# --------------------------------------------------------------------------- author checks
+def _typing_moment_in(text: str, card: dict[str, str]) -> bool:
+    """The card's typing moment (day number and clock time) copied into the request."""
+    when = datetime.fromisoformat(card["ref_datetime"])
+    clock = f"{when.hour % 12 or 12}:{when.minute:02d}"
+    return clock in text and re.search(rf"(?<!\d){when.day}(?!\d)", text) is not None
+
+
+def check_author(path: str | Path, cards_path: str | Path) -> dict[str, Any]:
+    """Writing checks on the author workbook before import: per-row problems (the typing moment
+    used as the reminder time, B copied from A, a date bolted onto an out-of-scope request,
+    duplicates, empty core rows) and style warnings (uniform shadda, full stops, template)."""
+    import difflib
+
+    cards = {c["card_id"]: c for c in _read_csv(cards_path)}
+    rows = [r for r in _read_csv(path) if r.get("card_id")]
+    texts = {(r["card_id"], r["version"]): r.get("text", "").strip() for r in rows}
+    problems: list[str] = []
+    seen: dict[str, str] = {}
+    for r in rows:
+        t, key, card = r.get("text", "").strip(), f"{r['card_id']}-{r['version']}", cards.get(r["card_id"])
+        if card is None:
+            problems.append(f"{key}: unknown card")
+            continue
+        if not t:
+            if r.get("core") == "1":
+                problems.append(f"{key}: core row is empty")
+            continue
+        if t in seen:
+            problems.append(f"{key}: same text as {seen[t]}")
+        seen.setdefault(t, key)
+        if card["route_plan"] == "ABSTAIN":
+            if _typing_moment_in(t, card):
+                problems.append(f"{key}: out-of-scope request carries the typing moment as a date/time")
+        elif r["version"] == "A" and _typing_moment_in(t, card):
+            problems.append(f"{key}: asks for the typing moment itself (not a later time): it would not be ACT")
+        elif r["version"] == "B":
+            a = texts.get((r["card_id"], "A"), "")
+            if a and difflib.SequenceMatcher(None, a, t).ratio() >= 0.9:
+                problems.append(f"{key}: almost the same as version A (write B from scratch)")
+    filled = [t for t in texts.values() if t]
+    n = max(len(filled), 1)
+    style = {"shadda": sum("\u0651" in t for t in filled) / n, "full_stop": sum(t.endswith(".") for t in filled) / n}
+    warnings = []
+    if style["shadda"] > 0.5:
+        warnings.append(f"{style['shadda']:.0%} of requests contain a typed shadda; people rarely type it on a phone")
+    if style["full_stop"] > 0.8:
+        warnings.append(f"{style['full_stop']:.0%} end with a full stop; real messages vary")
+    return {"rows": len(rows), "filled": len(filled), "problems": problems, "warnings": warnings, "style": style}

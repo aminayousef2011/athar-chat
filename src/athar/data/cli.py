@@ -12,6 +12,7 @@
     athar-data build     SHEET.csv --out data/athar.jsonl [--cards CARDS.csv]
     athar-data form-script --cards CARDS.csv --wave 1 --people 5 --out contrib/make_forms.gs
     athar-data author-sheet --cards CARDS.csv --out contrib/author_sheet_wave1.xlsx   # needs openpyxl
+    athar-data check-author SHEET.xlsx --cards CARDS.csv     # writing checks before import
 
 Exit status is 1 when a check fails, so the commands can gate a commit or a CI job.
 """
@@ -177,8 +178,11 @@ def cmd_build(a: argparse.Namespace) -> int:
         print(f"ERROR {e}")
     for d in r["differs_from_card"]:
         print(f"check {d}")
+    for u in r.get("unpaired", []):
+        print(f"unpaired {u}")
     print(f"wrote {a.out}: {r['items']} items, {len(r['errors'])} rows with errors, "
-          f"{len(r['differs_from_card'])} labels differ from their card's plan (check the card or the label)")
+          f"{len(r['differs_from_card'])} labels differ from their card's plan (check the card or the label), "
+          f"{len(r.get('unpaired', []))} pairs are not minimal pairs and were unpaired")
     return 1 if r["errors"] else 0
 
 
@@ -190,9 +194,20 @@ def cmd_form_script(a: argparse.Namespace) -> int:
 
 
 def cmd_author_sheet(a: argparse.Namespace) -> int:
-    n = contrib.author_sheet(a.cards, a.out)
+    n = contrib.author_sheet(a.cards, a.out, a.reasons)
     print(f"wrote {a.out}: {n['requests']} requests ({n['core']} core = the locked test targets)")
     return 0
+
+
+def cmd_check_author(a: argparse.Namespace) -> int:
+    r = contrib.check_author(a.sheet, a.cards)
+    for p in r["problems"]:
+        print(f"PROBLEM {p}")
+    for w in r["warnings"]:
+        print(f"WARNING {w}")
+    print(f"{a.sheet}: {r['filled']} of {r['rows']} rows written, {len(r['problems'])} problems, "
+          f"{len(r['warnings'])} style warnings")
+    return 1 if r["problems"] else 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -270,7 +285,13 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("author-sheet", help="Excel workbook for the author to write the wave-1 requests in")
     s.add_argument("--cards", required=True)
     s.add_argument("--out", default="contrib/author_sheet_wave1.xlsx")
+    s.add_argument("--reasons", nargs="+", default=[], help="only the unused out-of-scope cards with these reasons")
     s.set_defaults(func=cmd_author_sheet)
+
+    s = sub.add_parser("check-author", help="writing checks on the author workbook before import")
+    s.add_argument("sheet")
+    s.add_argument("--cards", required=True)
+    s.set_defaults(func=cmd_check_author)
     return p
 
 

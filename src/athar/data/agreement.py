@@ -100,7 +100,17 @@ def sample_items(items: Sequence[GoldItem], n: int, seed: int) -> list[GoldItem]
 
 
 def write_sheet(items: Sequence[GoldItem], path: str | Path) -> None:
-    """Blind annotation sheet: request and reference time only, label columns empty."""
+    """Blind annotation sheet: request and reference time only, label columns empty. A ``.xlsx``
+    path writes an Excel workbook with text cells and drop-down lists (Excel cannot rewrite the
+    datetimes the second annotator types); any other path writes a CSV."""
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    if Path(path).suffix.lower() == ".xlsx":
+        from athar.data.contrib import labelling_workbook
+
+        labelling_workbook([{"id": it.id, "text": it.text, "ref_datetime": it.ref_datetime.isoformat(),
+                             "ref_local": describe_datetime(it.ref_datetime.astimezone(ZoneInfo(it.timezone))),
+                             "timezone": it.timezone} for it in items], path, columns=SHEET_COLUMNS)
+        return
     with Path(path).open("w", encoding="utf-8-sig", newline="") as f:  # BOM: Excel shows Arabic
         w = csv.DictWriter(f, fieldnames=SHEET_COLUMNS)
         w.writeheader()
@@ -149,16 +159,21 @@ def _label(row: dict[str, Any], tz: str) -> Label:
 
 
 def read_labels(path: str | Path) -> tuple[dict[str, Label], list[str]]:
-    """Second-annotator labels from the CSV sheet or a JSONL file; returns (labels, errors)."""
+    """Second-annotator labels from the sheet (.xlsx or .csv) or a JSONL file; returns (labels, errors)."""
     p = Path(path)
-    if p.suffix.lower() == ".csv":
+    rows: list[dict[str, Any]]
+    if p.suffix.lower() == ".xlsx":
+        from athar.data.contrib import _read_xlsx
+
+        rows = list(_read_xlsx(p))
+    elif p.suffix.lower() == ".csv":
         with p.open(encoding="utf-8-sig", newline="") as f:
-            rows: list[dict[str, Any]] = list(csv.DictReader(f))
+            rows = list(csv.DictReader(f))
     else:
         rows = [json.loads(line) for line in p.read_text(encoding="utf-8-sig").splitlines() if line.strip()]
     labels: dict[str, Label] = {}
     errors = []
-    for i, row in enumerate(rows, start=2 if p.suffix.lower() == ".csv" else 1):
+    for i, row in enumerate(rows, start=2 if p.suffix.lower() in (".csv", ".xlsx") else 1):
         iid = _cell(row, "id")
         if not iid:
             errors.append(f"row {i}: no id")
