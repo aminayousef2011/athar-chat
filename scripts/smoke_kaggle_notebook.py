@@ -71,7 +71,7 @@ def install_fakes(vocab_texts: list[str], calls: dict[str, list]) -> None:  # ty
     import huggingface_hub
 
     huggingface_hub.login = lambda token=None: None
-    huggingface_hub.hf_hub_download = lambda repo_id, filename, token=None: f"/fake/{repo_id}/{filename}"
+    huggingface_hub.hf_hub_download = lambda repo_id, filename, token=None, revision=None: f"/fake/{repo_id}/{filename}"
 
     class HfApi:
         def model_info(self, model_id: str, token: str | None = None):  # type: ignore[no-untyped-def]
@@ -93,11 +93,18 @@ def install_fakes(vocab_texts: list[str], calls: dict[str, list]) -> None:  # ty
 
     model, tok = tiny_lm(vocab_texts)
 
-    def load_llm(model_id: str, precision: str = "fp16", token: str | None = None, revision: str | None = None):  # type: ignore[no-untyped-def]
-        calls["load_llm"].append((model_id, precision, revision))
+    def load_llm(model_id: str, precision: str = "fp16", token: str | None = None, revision: str | None = None,  # type: ignore[no-untyped-def]
+                 trust_remote_code: bool = False):
+        calls["load_llm"].append((model_id, precision, revision, trust_remote_code))
         return model, tok
 
+    def load_tokenizer(model_id: str, token: str | None = None, revision: str | None = None,  # type: ignore[no-untyped-def]
+                       trust_remote_code: bool = False):
+        calls["load_tokenizer"].append((model_id, revision, trust_remote_code))
+        return tok
+
     llm.load_llm = load_llm
+    llm.load_tokenizer = load_tokenizer
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -125,7 +132,7 @@ def main(argv: list[str] | None = None) -> int:
 
     vocab_texts = [norm(_json.loads(line)["text"]) for line in
                    (ROOT / "data" / "draft" / "athar_draft.jsonl").read_text(encoding="utf-8").splitlines()]
-    calls: dict[str, list] = {"load_llm": []}  # type: ignore[type-arg]
+    calls: dict[str, list] = {"load_llm": [], "load_tokenizer": []}  # type: ignore[type-arg]
     install_fakes(vocab_texts, calls)
 
     nb = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
@@ -135,13 +142,17 @@ def main(argv: list[str] | None = None) -> int:
             continue
         src = "".join(cell["source"])
         src = "\n".join(line for line in src.splitlines() if not line.lstrip().startswith("!"))
-        src = src.replace("/kaggle/input", str(kaggle_in)).replace("/kaggle/working", str(kaggle_out))
+        # forward slashes: a Windows path inside a string literal would read as escapes ("\U...")
+        src = src.replace("/kaggle/input", kaggle_in.as_posix()).replace("/kaggle/working", kaggle_out.as_posix())
         print(f"--- cell {i}", flush=True)
         exec(compile(src, f"cell {i}", "exec"), ns)  # noqa: S102 (our own notebook)
-        if "RUN_S4" in src and "PRIMARY" in src and i == 1 and a.flags == "all":
-            ns.update(RUN_S4=True, RUN_S7_QLORA=True, S7_SEEDS=[0], RUN_MASSIVE_OOD=True, RUN_SCORING_ABLATION=True,
-                      RUN_S4_DIAGNOSTICS=True, DIAG_MODELS=[], DIAG_SETS=("dev", "egyptian", "msa"),
-                      RUN_EGYPTIAN_OOD=True)
+        if "RUN_S4" in src and "PRIMARY" in src and i == 1:
+            ns.update(S8_MAX_NEW_TOKENS=4, S8_SEEDS=[0, 1])   # the tiny model has 2048 positions
+            if a.flags == "all":
+                ns.update(RUN_PROMPT_CHECK=True, RUN_S4=True, RUN_S7_QLORA=True, S7_SEEDS=[0], RUN_MASSIVE_OOD=True,
+                          RUN_SCORING_ABLATION=True, RUN_S4_DIAGNOSTICS=True, DIAG_MODELS=[],
+                          DIAG_SETS=("dev", "egyptian", "msa"), RUN_EGYPTIAN_OOD=True, RUN_S8=True,
+                          RUN_S8_EGYPTIAN=True, RUN_SHOT_STYLE=True, RUN_MODELS=[])
         if "CFG = yaml.safe_load" in src:
             ns["CFG"].update(resamples=50, permutations=50)  # type: ignore[union-attr]
 
@@ -165,9 +176,45 @@ def check(out: Path, ns: dict[str, object], calls: dict[str, list], flags: str) 
     if not (out / "environment.json").exists():
         problems.append("environment.json not written")
     revs = ns["REVISIONS"]
-    for model_id, _precision, revision in calls["load_llm"]:
+    from athar.intent import llm
+
+    for model_id, _precision, revision, remote in calls["load_llm"]:
         if revision != revs.get(model_id):  # type: ignore[attr-defined]
             problems.append(f"{model_id} loaded at revision {revision!r}, not the pinned one")
+        if remote != llm.chat_profile(model_id).trust_remote_code:
+            problems.append(f"{model_id} loaded with trust_remote_code={remote}")
+    for model_id, revision, _remote in calls["load_tokenizer"]:
+        if revision != revs.get(model_id):  # type: ignore[attr-defined]
+            problems.append(f"{model_id} tokenizer at revision {revision!r}, not the pinned one")
+    if ns.get("RUN_PROMPT_CHECK"):
+        for key, *_ in ns["MODELS"]:  # type: ignore[attr-defined]
+            if not (out / f"prompt_{key}.txt").exists():
+                problems.append(f"prompt_{key}.txt not written")
+        if not (out / "verbalizer_tokens.csv").exists():
+            problems.append("verbalizer_tokens.csv not written")
+    if ns.get("RUN_S8"):
+        s8 = pd.read_csv(out / "s8_summary.csv")
+        diag = pd.read_csv(out / "s8_diagnostics.csv")
+        n_runs = len(ns["S8_MODELS"]) * len(ns["S8_SEEDS"])  # type: ignore[arg-type]
+        if len(s8) != n_runs or len(diag) != n_runs:
+            problems.append(f"S8: {len(s8)} summary rows and {len(diag)} diagnostics rows, expected {n_runs}")
+        for key, *_ in ns["S8_MODELS"]:  # type: ignore[attr-defined]
+            rep = json.loads((out / f"s8_{key}.json").read_text(encoding="utf-8"))
+            if f"S8-{key}" not in rep["seed_summaries"]:
+                problems.append(f"S8 {key}: no seed summary")
+            if ns.get("RUN_S8_EGYPTIAN") and not (out / f"egyptian_ood_s8_{key}.json").exists():
+                problems.append(f"S8 {key}: native Egyptian check not written")
+        if len(list(out.glob("s8_trace_*.jsonl"))) != n_runs:
+            problems.append("S8: one trace per seed expected")
+    if ns.get("RUN_SHOT_STYLE"):
+        ss = pd.read_csv(out / "shot_style.csv")
+        if set(ss.shot_style) != {"turns", "inline"} or ss.groupby(["model", "shot_style"]).ngroups != 2 * len(
+                [m for m in ns["MODELS"] if m[0] in ns["SHOT_STYLE_MODELS"]]):  # type: ignore[attr-defined,operator]
+            problems.append("shot_style.csv does not have both styles for every model")
+    if ns.get("RUN_EGYPTIAN_OOD") and ns.get("PAIRED"):
+        paired = pd.read_csv(out / "egyptian_paired.csv")
+        if len(paired) != len(ns["PAIRED"]):  # type: ignore[arg-type]
+            problems.append("egyptian_paired.csv: a pair is missing")
     if ns.get("RUN_S4"):
         for key, *_ in ns["MODELS"]:  # type: ignore[attr-defined]
             rep = json.loads((out / f"{key}.json").read_text(encoding="utf-8"))

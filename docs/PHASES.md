@@ -12,9 +12,13 @@ HLD: [hld.html](hld.html) (published at https://claude.ai/artifact/RXeHV9e9ctgry
 | P4 | Locked-test evaluation: one run of `docs/evaluation_protocol.md` (`athar-eval --split test --unlock-test`) | 6 | one run, results JSON + tables | harness **done**; one locked run once the author-written test split exists |
 | P5 | Error analysis (<=30 coded failures) + Streamlit demo | 7-8 | tables + working demo | planned |
 | P6 | Report + presentation | 8 | submitted | planned |
-| P7 | LLM baselines on Kaggle GPUs: S4 Jais 2 8B / Nile-Chat 4B / Qwen3 8B (0- and 6-shot; raw label scoring (primary), calibrated, train-prior, generate; 3 exemplar sets), S7 Jais 2 + QLoRA, MASSIVE ar out-of-distribution check; reported separately | 5-6 | results JSON per model, with model revision | **dry run on the draft data done** (S4 x3, S7; see `docs/dry_run_draft.md`); MASSIVE check to rerun; real run waits for the native-speaker split |
+| P7 | LLM baselines on GPUs: S4 Jais 2 8B (proposal) / **Jais-3-7B, Jais-3-3.7B** (added 2026-10-15) / Nile-Chat 4B / Qwen3 8B (0- and 6-shot; raw, calibrated, train-prior (primary), generate; 3 exemplar sets), S7 Jais 2 + QLoRA, **S8 Jais-3-7B end-to-end tool calling**, MASSIVE and native Egyptian out-of-distribution checks; reported separately | 5-6 | results JSON per model, with model revision and precision | **dry run on the draft data done** (S4 x3, S7; `docs/dry_run_draft.md`). **Jais 3 + S8 code, tests and notebook 2026-10-15a done** (`docs/jais3.md`); GPU runs on the real split next (run plan in `docs/jais3.md` section 7) |
 
 ## Notes
+- **Jais 3 (2026-10-15).** The proposal's LLM baseline is Jais 2 8B. Jais 3 was released after the
+  freeze and before the test split was opened. It is added beside Jais 2 (S4) and as an end-to-end
+  tool-calling system (S8), logged in the protocol (section 10, 2026-10-15), followed by a re-freeze
+  that leaves S1-S3 unchanged. Design and claims: [jais3.md](jais3.md).
 - The 300 dataset items are written and reviewed by native Egyptian Arabic speakers, as the
   proposal states. Tooling never generates them. Any assistant-drafted pilot item is marked
   `source: assistant_draft` and stays out of the test split.

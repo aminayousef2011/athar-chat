@@ -47,11 +47,12 @@ SYSTEMS = ("S1", *LEARNED)
 PKG = Path(athar.__file__).resolve().parent
 REPO = PKG.parents[1]
 #: repo-relative files frozen before the test split is opened: everything shared by all
-#: systems, S1's rules and the S2/S3 builders, the scoring/statistics code, and the documents
-#: and settings that pre-register the evaluation
+#: systems, S1's rules and the S2/S3 builders, the LLM scoring (S4/S7) and tool-calling (S8)
+#: code, the scoring/statistics code, and the documents and settings that pre-register the
+#: evaluation
 FROZEN_SOURCES = tuple(
     [f"src/athar/{m}.py" for m in ("normalize", "lexicon", "timeexpr", "extract", "policy",
-                                   "respond", "schema", "pipeline", "gate")]
+                                   "respond", "schema", "pipeline", "gate", "agent")]
     + [f"src/athar/intent/{m}.py" for m in ("rules", "models", "neural", "llm")]
     + [f"src/athar/eval/{m}.py" for m in ("metrics", "stats", "perturb", "harness")]
     + ["docs/task_contract.md", "docs/evaluation_protocol.md", "configs/eval.yaml"]

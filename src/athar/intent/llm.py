@@ -30,13 +30,26 @@ answer, so the labels have the same length.
 
 Few-shot exemplars come from the train split only (fixed seed, one per family, balanced over
 labels). The models are loaded at pinned revisions; see notebooks/kaggle_s4_llm.ipynb.
+
+Chat profiles (protocol deviations log, 2026-10-15). Reasoning models need two things the
+older chat models did not, so each model id maps to a :class:`ChatProfile`:
+- Jais 3 (``inception42/Jais-3-*``) opens a thinking block in its generation prompt
+  (``<ifm|think>``) and requires a thinking field on every assistant turn. Its profile gives
+  each few-shot answer an empty thinking field and scores the label after ``</ifm|think>``, so
+  the scored text is exactly how the template renders an answer with no reasoning.
+- Qwen3 turns thinking off through its template (``enable_thinking=False``), as before.
+The default profile adds nothing, so Jais 2, Nile-Chat and Qwen3 prompts are byte-identical to
+the runs before 2026-10-15 (tested).
+``shot_style="inline"`` (a prompt-format check for Jais 2's few-shot instability) puts the
+exemplars in the user message instead of as earlier chat turns; ``"turns"`` stays the primary.
 """
 
 from __future__ import annotations
 
 import random
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, field
 from typing import Any
 
 import numpy as np
@@ -93,13 +106,67 @@ def select_shots(train: Sequence[GoldItem], per_label: int = 2, seed: int = 0) -
     return shots
 
 
-def build_messages(text: str, shots: Sequence[tuple[str, str]], answer_format: str = "word") -> list[dict[str, str]]:
+#: ``shot_style="inline"``: the exemplars as one block in the user message
+INLINE_HEADER = "أمثلة:"
+INLINE_REQUEST = "الطلب:"
+INLINE_ANSWER = "الرد:"
+
+
+def build_messages(text: str, shots: Sequence[tuple[str, str]], answer_format: str = "word", *,
+                   shot_style: str = "turns",
+                   assistant_fields: Mapping[str, str] | None = None) -> list[dict[str, str]]:
+    """Chat messages for one request. ``turns``: each exemplar is a user/assistant exchange;
+    ``inline``: the exemplars are listed in the user message (no shots: both are the same).
+    ``assistant_fields`` are added to every assistant turn (Jais 3: an empty thinking field)."""
+    if shot_style not in ("turns", "inline"):
+        raise ValueError(f"unknown shot_style {shot_style!r}")
     answers = NUMBERS if answer_format == "number" else VERBALIZERS
     msgs = [{"role": "system", "content": SYSTEM_PROMPT_NUMBER if answer_format == "number" else SYSTEM_PROMPT}]
+    if shot_style == "inline" and shots:
+        blocks = "\n\n".join(f"{INLINE_REQUEST} {shot_text}\n{INLINE_ANSWER} {answers[lab]}" for shot_text, lab in shots)
+        msgs.append({"role": "user", "content": f"{INLINE_HEADER}\n\n{blocks}\n\n{INLINE_REQUEST} {text}"})
+        return msgs
     for shot_text, lab in shots:
-        msgs += [{"role": "user", "content": shot_text}, {"role": "assistant", "content": answers[lab]}]
+        msgs += [{"role": "user", "content": shot_text},
+                 {"role": "assistant", "content": answers[lab], **(assistant_fields or {})}]
     msgs.append({"role": "user", "content": text})
     return msgs
+
+
+@dataclass(frozen=True)
+class ChatProfile:
+    """How a model's chat template is driven (see the module docstring)."""
+
+    template_kwargs: Mapping[str, Any] = field(default_factory=dict)
+    #: appended to the rendered generation prompt before the label is scored or generated
+    answer_prefix: str = ""
+    #: added to every few-shot assistant turn
+    assistant_fields: Mapping[str, str] = field(default_factory=dict)
+    trust_remote_code: bool = False
+
+    def intent_kwargs(self) -> dict[str, Any]:
+        """Keyword arguments for :class:`LLMIntent`."""
+        return {"template_kwargs": dict(self.template_kwargs), "answer_prefix": self.answer_prefix,
+                "assistant_fields": dict(self.assistant_fields)}
+
+
+#: Jais 3 renders an answer with no reasoning as ``<ifm|think>\n</ifm|think>answer``; its
+#: generation prompt (reasoning_effort "high") ends with ``<ifm|think>\n``
+JAIS3_THINK_CLOSE = "</ifm|think>"
+CHAT_PROFILES: dict[str, ChatProfile] = {
+    "inception42/Jais-3-": ChatProfile(template_kwargs={"reasoning_effort": "high"},
+                                       answer_prefix=JAIS3_THINK_CLOSE,
+                                       assistant_fields={"reasoning_content": ""}, trust_remote_code=True),
+    "Qwen/Qwen3-": ChatProfile(template_kwargs={"enable_thinking": False}),
+}
+
+
+def chat_profile(model_id: str) -> ChatProfile:
+    """The profile whose key is a prefix of ``model_id``; the empty default otherwise."""
+    for prefix, profile in CHAT_PROFILES.items():
+        if model_id.startswith(prefix):
+            return profile
+    return ChatProfile()
 
 
 def parse_label(generated: str) -> str:
@@ -120,7 +187,10 @@ class LLMIntent:
                  shots: Sequence[tuple[str, str]] = (), method: str = "calibrated",
                  template_kwargs: dict[str, Any] | None = None, max_new_tokens: int = 12,
                  length_norm: bool = False, answer_format: str = "word",
-                 prior_texts: Sequence[str] = ()) -> None:
+                 prior_texts: Sequence[str] = (), answer_prefix: str = "",
+                 assistant_fields: Mapping[str, str] | None = None, shot_style: str = "turns") -> None:
+        if shot_style not in ("turns", "inline"):
+            raise ValueError(f"unknown shot_style {shot_style!r}")
         if method not in ("raw", "calibrated", "prior", "generate"):
             raise ValueError(f"unknown method {method!r}")
         if answer_format not in ("word", "number"):
@@ -135,6 +205,8 @@ class LLMIntent:
         self.name, self.model, self.tok = name, model, tokenizer
         self.shots, self.method = list(shots), method
         self.template_kwargs = template_kwargs or {}
+        self.answer_prefix, self.shot_style = answer_prefix, shot_style
+        self.assistant_fields = dict(assistant_fields or {})
         self.max_new_tokens = max_new_tokens
         # per-token log-probabilities of each answer, by text: instances with the same prompt,
         # shots and answer format can share it, whatever their method or length_norm
@@ -145,8 +217,11 @@ class LLMIntent:
 
     # -- prompt ---------------------------------------------------------------------------
     def prompt(self, text: str) -> str:
-        return str(self.tok.apply_chat_template(build_messages(text, self.shots, self.answer_format), tokenize=False,
-                                                add_generation_prompt=True, **self.template_kwargs))
+        """The exact text the label is scored (or generated) after."""
+        msgs = build_messages(text, self.shots, self.answer_format, shot_style=self.shot_style,
+                              assistant_fields=self.assistant_fields)
+        return str(self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True,
+                                                **self.template_kwargs)) + self.answer_prefix
 
     def _device(self) -> Any:
         return next(self.model.parameters()).device
@@ -205,8 +280,9 @@ class LLMIntent:
         import torch
 
         enc = self.tok(self.prompt(text), add_special_tokens=False, return_tensors="pt").to(self._device())
-        with torch.no_grad():
-            out = self.model.generate(**enc, max_new_tokens=self.max_new_tokens, do_sample=False,
+        with torch.no_grad():  # input ids and mask only: some remote-code models reject token_type_ids
+            out = self.model.generate(input_ids=enc["input_ids"], attention_mask=enc["attention_mask"],
+                                      max_new_tokens=self.max_new_tokens, do_sample=False,
                                       pad_token_id=self.tok.pad_token_id or self.tok.eos_token_id)
         return str(self.tok.decode(out[0, enc["input_ids"].shape[1]:], skip_special_tokens=True))
 
@@ -230,16 +306,60 @@ def _softmax(z: NDArray[np.float64]) -> NDArray[np.float64]:
 
 
 # --------------------------------------------------------------------------- loading
-def load_llm(model_id: str, precision: str = "fp16", token: str | None = None,
-             revision: str | None = None) -> tuple[Any, Any]:
-    """Load a chat LLM for scoring. ``precision``: fp16 / bf16 / fp32 (sharded over the visible
-    GPUs with ``device_map="auto"``), nf4 (bitsandbytes 4-bit, fp16 compute) or nf4-fp32 (4-bit
-    weights, fp32 compute: no fp16 overflow, and it fits an 8B model on T4s where fp32 does not)."""
-    import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer
+PRECISIONS = ("fp16", "bf16", "fp32", "nf4", "nf4-fp32")
 
-    tok = AutoTokenizer.from_pretrained(model_id, token=token, revision=revision)
-    kw: dict[str, Any] = {"device_map": "auto", "token": token, "revision": revision}
+
+def native_bf16() -> bool:
+    """True when every visible GPU computes bf16 natively (compute capability 8.0+: A100, L4,
+    H100, ...). T4s (7.5) do not, which is why the Kaggle runs need fp16/fp32/4-bit."""
+    import torch
+
+    if not torch.cuda.is_available() or torch.cuda.device_count() == 0:
+        return False
+    return all(torch.cuda.get_device_capability(i) >= (8, 0) for i in range(torch.cuda.device_count()))
+
+
+def resolve_precision(precision: str) -> str:
+    """``auto:<fallback>`` -> bf16 on GPUs with native bf16 (the precision the models were
+    released in), else the fallback; a plain precision is returned unchanged."""
+    if precision.startswith("auto:"):
+        fallback = precision.removeprefix("auto:")
+        if fallback not in PRECISIONS:
+            raise ValueError(f"unknown fallback precision {fallback!r}")
+        return "bf16" if native_bf16() else fallback
+    if precision not in PRECISIONS:
+        raise ValueError(f"unknown precision {precision!r}")
+    return precision
+
+
+def load_tokenizer(model_id: str, token: str | None = None, revision: str | None = None,
+                   trust_remote_code: bool = False) -> Any:
+    """The tokenizer (and chat template) alone: enough to render and inspect prompts."""
+    from transformers import AutoTokenizer
+
+    return AutoTokenizer.from_pretrained(model_id, token=token, revision=revision, trust_remote_code=trust_remote_code)
+
+
+def verbalizer_lengths(tokenizer: Any, answer_format: str = "word") -> dict[str, int]:
+    """Tokens per label answer: the summed score favours short answers (protocol log 2026-10-09)."""
+    answers = NUMBERS if answer_format == "number" else VERBALIZERS
+    return {lab: len(tokenizer(w, add_special_tokens=False)["input_ids"]) for lab, w in answers.items()}
+
+
+def load_llm(model_id: str, precision: str = "fp16", token: str | None = None,
+             revision: str | None = None, trust_remote_code: bool = False) -> tuple[Any, Any]:
+    """Load a chat LLM for scoring. ``precision``: fp16 / bf16 / fp32 (sharded over the visible
+    GPUs with ``device_map="auto"``), nf4 (bitsandbytes 4-bit, fp16 compute), nf4-fp32 (4-bit
+    weights, fp32 compute: no fp16 overflow, and it fits an 8B model on T4s where fp32 does not),
+    or ``auto:<fallback>`` (:func:`resolve_precision`). ``trust_remote_code`` runs the model's
+    own code from the Hub (Jais 3); pin ``revision`` so that code cannot change."""
+    import torch
+    from transformers import AutoModelForCausalLM
+
+    precision = resolve_precision(precision)
+    tok = load_tokenizer(model_id, token=token, revision=revision, trust_remote_code=trust_remote_code)
+    kw: dict[str, Any] = {"device_map": "auto", "token": token, "revision": revision,
+                          "trust_remote_code": trust_remote_code}
     if precision in ("nf4", "nf4-fp32"):
         from transformers import BitsAndBytesConfig
 

@@ -160,6 +160,7 @@ def test_perturbations_preserve_labels_and_change_text():
     items = load_items(DRAFT)
     copies = perturbed_copies(items)
     assert set(copies) == set(PERTURBATIONS)
+    assert perturbed_copies(items, []) == {}   # an empty list switches robustness off
     for kind, cs in copies.items():
         assert cs, kind
         for c in cs[:20]:

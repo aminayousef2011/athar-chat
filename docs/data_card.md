@@ -93,8 +93,8 @@ evaluation (`load_split(..., unlock_test=True)`).
 
 | | Value |
 |---|---|
-| Manifest SHA-256 | _TBD_ |
-| Dataset SHA-256 | _TBD_ |
+| Manifest SHA-256 | `940beba352ec508c1811f1f7b819ea6a3190fe0b7b91d99b2b5ff1e7c350db50` |
+| Dataset SHA-256 | `c2c7cfe4c6ae64613de0b90c00e1c211a89bd133cf0b471cf8bc2fba6420ba37` (`data/athar.jsonl`) |
 
 ## Statistics
 

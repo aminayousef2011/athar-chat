@@ -172,3 +172,173 @@ def test_prior_calibration_uses_unlabeled_train_texts(pilot_and_lm):
     assert np.isclose(prior.probabilities(texts[9]).sum(), 1.0)
     with pytest.raises(ValueError, match="prior_texts"):
         llm.LLMIntent(model, tok, method="prior")
+
+
+# --------------------------------------------------------------------------- Jais 3 / profiles
+JAIS3_TEMPLATE = Path(__file__).resolve().parent / "fixtures" / "jais3_chat_template.jinja"
+JAIS3_SHA256 = "38964d6fc5e411718d88f7a5c1b3664b3d97208c6ac93160b6c9eadc63c14057"
+JAIS3_TAGS = ["<|ifm|endoftext|>", "<|ifm|im_start|>", "<|ifm|im_end|>", "<ifm|think>", "</ifm|think>"]
+
+
+def jais3_tokenizer(texts):
+    """A word-level tokenizer that renders prompts with the real (pinned) Jais 3 chat template."""
+    import hashlib
+
+    assert hashlib.sha256(JAIS3_TEMPLATE.read_bytes()).hexdigest() == JAIS3_SHA256
+    _, tok = tiny_lm(texts)
+    tok.add_special_tokens({"bos_token": "<|ifm|begin_of_text|>", "additional_special_tokens": JAIS3_TAGS})
+    tok.chat_template = JAIS3_TEMPLATE.read_text(encoding="utf-8")
+    return tok
+
+
+def test_default_profile_keeps_the_earlier_prompts_byte_identical(pilot_and_lm):
+    items, model, tok = pilot_and_lm
+    shots = llm.select_shots(items, per_label=1)
+    text = norm(items[0].text)
+    # the message list the runs before 2026-10-15 used
+    old = [{"role": "system", "content": llm.SYSTEM_PROMPT}]
+    for s, lab in shots:
+        old += [{"role": "user", "content": s}, {"role": "assistant", "content": llm.VERBALIZERS[lab]}]
+    old.append({"role": "user", "content": text})
+    assert llm.build_messages(text, shots) == old
+    expected = tok.apply_chat_template(old, tokenize=False, add_generation_prompt=True)
+    for model_id in ("inception42/Jais-2-8B-Chat", "MBZUAI-Paris/Nile-Chat-4B"):
+        r = llm.LLMIntent(model, tok, shots=shots, **llm.chat_profile(model_id).intent_kwargs())
+        assert r.prompt(text) == expected
+
+
+def test_chat_profiles():
+    jais3 = llm.chat_profile("inception42/Jais-3-7B")
+    assert jais3 is llm.chat_profile("inception42/Jais-3-3.7B") and jais3.trust_remote_code
+    assert jais3.answer_prefix == "</ifm|think>" and jais3.assistant_fields == {"reasoning_content": ""}
+    assert llm.chat_profile("Qwen/Qwen3-8B").intent_kwargs()["template_kwargs"] == {"enable_thinking": False}
+    assert llm.chat_profile("inception42/Jais-2-8B-Chat") == llm.ChatProfile()
+
+
+def test_jais3_scores_the_label_exactly_where_its_template_writes_an_answer(pilot_and_lm):
+    items, model, _ = pilot_and_lm
+    tok = jais3_tokenizer([norm(it.text) for it in items])
+    shots = llm.select_shots(items, per_label=1)
+    text = norm(items[0].text)
+    prof = llm.chat_profile("inception42/Jais-3-7B")
+    r = llm.LLMIntent(model, tok, shots=shots, **prof.intent_kwargs())
+    prompt = r.prompt(text)
+    assert prompt.startswith("<|ifm|begin_of_text|><|ifm|im_start|>system\n" + llm.SYSTEM_PROMPT)
+    assert prompt.endswith("<|ifm|im_start|>assistant\n<ifm|think>\n</ifm|think>")
+    # every exemplar answer is rendered as "empty thinking, then the label"
+    assert prompt.count("<ifm|think>\n</ifm|think>") == len(shots) + 1
+    # scoring "prompt + label" == the template rendering a finished answer with no reasoning
+    msgs = llm.build_messages(text, shots, assistant_fields=prof.assistant_fields)
+    done = msgs + [{"role": "assistant", "content": llm.VERBALIZERS["create_alarm"], "reasoning_content": ""}]
+    rendered = tok.apply_chat_template(done, tokenize=False, **prof.template_kwargs)
+    assert rendered == prompt + llm.VERBALIZERS["create_alarm"] + "<|ifm|im_end|>"
+
+
+def test_jais3_template_rejects_shots_without_a_thinking_field(pilot_and_lm):
+    items, model, _ = pilot_and_lm
+    tok = jais3_tokenizer([norm(it.text) for it in items])
+    r = llm.LLMIntent(model, tok, shots=llm.select_shots(items, per_label=1))   # default profile
+    with pytest.raises(Exception, match="thinking field"):
+        r.prompt("فكرني")
+    zero = llm.LLMIntent(model, tok, **llm.chat_profile("inception42/Jais-3-7B").intent_kwargs())
+    assert zero.prompt("فكرني").count("<|ifm|im_start|>user\n") == 1
+
+
+def test_inline_shots_put_the_exemplars_in_the_user_message(pilot_and_lm):
+    items, model, tok = pilot_and_lm
+    shots = llm.select_shots(items, per_label=1)
+    msgs = llm.build_messages("فكرني", shots, shot_style="inline")
+    assert [m["role"] for m in msgs] == ["system", "user"]
+    content = msgs[1]["content"]
+    assert content.startswith(llm.INLINE_HEADER) and content.endswith(f"{llm.INLINE_REQUEST} فكرني")
+    assert content.count(llm.INLINE_ANSWER) == len(shots)
+    assert llm.build_messages("فكرني", [], shot_style="inline") == llm.build_messages("فكرني", [])
+    r = llm.LLMIntent(model, tok, shots=shots, shot_style="inline", method="raw")
+    assert r.prompt("فكرني").count("<user>") == 1 and len(r.predict(["فكرني"])) == 1
+    with pytest.raises(ValueError):
+        llm.build_messages("x", shots, shot_style="table")
+    with pytest.raises(ValueError):
+        llm.LLMIntent(model, tok, shot_style="table")
+
+
+def test_answer_prefix_is_used_by_scoring_and_generation(pilot_and_lm):
+    items, model, tok = pilot_and_lm
+    r = llm.LLMIntent(model, tok, method="generate", answer_prefix="تذكير", max_new_tokens=2)
+    assert r.prompt("فكرني").endswith("<assistant> تذكير")
+    assert r.predict(["فكرني"])[0] in (*INTENTS, "invalid")
+
+
+def test_precision_resolution(monkeypatch):
+    assert llm.resolve_precision("fp16") == "fp16"
+    monkeypatch.setattr(llm, "native_bf16", lambda: False)
+    assert llm.resolve_precision("auto:nf4-fp32") == "nf4-fp32"
+    monkeypatch.setattr(llm, "native_bf16", lambda: True)
+    assert llm.resolve_precision("auto:fp32") == "bf16"
+    for bad in ("fp8", "auto:int3"):
+        with pytest.raises(ValueError):
+            llm.resolve_precision(bad)
+
+
+def test_native_bf16_needs_every_gpu_at_compute_capability_8(monkeypatch):
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+    assert llm.native_bf16() is False
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(torch.cuda, "device_count", lambda: 2)
+    monkeypatch.setattr(torch.cuda, "get_device_capability", lambda i: (7, 5) if i else (8, 0))
+    assert llm.native_bf16() is False          # one T4 is enough to rule bf16 out
+    monkeypatch.setattr(torch.cuda, "get_device_capability", lambda i: (9, 0))
+    assert llm.native_bf16() is True
+
+
+def test_load_llm_passes_revision_precision_and_remote_code(monkeypatch):
+    seen = {}
+
+    class Fake:
+        def eval(self):
+            return self
+
+    def tok_from(model_id, **kw):
+        seen["tok"] = kw
+        return "tok"
+
+    def model_from(model_id, **kw):
+        seen["model"] = kw
+        return Fake()
+
+    monkeypatch.setattr(transformers.AutoTokenizer, "from_pretrained", tok_from)
+    monkeypatch.setattr(transformers.AutoModelForCausalLM, "from_pretrained", model_from)
+    monkeypatch.setattr(llm, "native_bf16", lambda: True)
+    llm.load_llm("inception42/Jais-3-7B", "auto:nf4-fp32", revision="abc", trust_remote_code=True)
+    assert seen["tok"]["trust_remote_code"] and seen["tok"]["revision"] == "abc"
+    assert seen["model"]["dtype"] == torch.bfloat16 and seen["model"]["trust_remote_code"]
+    llm.load_llm("Qwen/Qwen3-8B", "fp32")
+    assert seen["model"]["dtype"] == torch.float32 and not seen["model"]["trust_remote_code"]
+    llm.load_llm("inception42/Jais-2-8B-Chat", "nf4-fp32")
+    assert seen["model"]["quantization_config"].bnb_4bit_compute_dtype == torch.float32
+
+
+def test_verbalizer_lengths(pilot_and_lm):
+    _, _, tok = pilot_and_lm
+    assert llm.verbalizer_lengths(tok) == {"create_reminder": 1, "create_alarm": 1, "unsupported": 2}
+    assert set(llm.verbalizer_lengths(tok, "number").values()) == {1}
+
+
+def test_hf_tool_backend_renders_jais3_tools_and_generates(pilot_and_lm):
+    from athar import agent
+    from athar.timeexpr import cairo
+
+    items, model, _ = pilot_and_lm
+    tok = jais3_tokenizer([norm(it.text) for it in items])
+    msgs = agent.build_messages(items[0].text, cairo("2026-10-07T10:00"))
+    for fmt, marker in (("json", '{"name": <function-name>'), ("xml", "<ifm|arg_key>$PARAMETER_NAME")):
+        backend = agent.HFToolBackend(model, tok, template_kwargs={"reasoning_effort": "high", "tool_call_format": fmt})
+        rendered = backend.render(msgs)
+        assert rendered.startswith("<|ifm|begin_of_text|><|ifm|im_start|>system\n# Tools\n")
+        assert all(name in rendered for name in agent.TOOL_NAMES) and marker in rendered
+        assert "Wednesday 2026-10-07 at 10:00" in rendered and rendered.endswith("assistant\n<ifm|think>\n")
+    _, plain_tok = tiny_lm([norm(it.text) for it in items])
+    gen = agent.HFToolBackend(model, plain_tok, max_new_tokens=3, batch_size=2)
+    out = gen.complete([agent.build_messages(it.text, it.ref_datetime) for it in items[:3]])
+    assert len(out) == 3 and all(c.n_tokens <= 3 and c.finish_reason in ("stop", "length") for c in out)
+    sampled = agent.HFToolBackend(model, plain_tok, max_new_tokens=2, sampling={"temperature": 0.7, "top_k": 20})
+    assert len(sampled.complete([agent.build_messages(items[0].text, items[0].ref_datetime)])) == 1

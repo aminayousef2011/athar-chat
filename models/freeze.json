@@ -125,29 +125,30 @@
     "src/athar/schema.py": "f03afe80f577bba00a6a1d2e87bb17471eddcf0e33a8d0aeeea0b6a4b7a73442",
     "src/athar/pipeline.py": "19e3cce0f1a14b6bd0f713a93a43a5347ddc25ac91d18b3f1d82eec6abad950a",
     "src/athar/gate.py": "fdcb00f3b885fcbe1a3b83c51c12c0b32306202fdf0a58429169399558f3367c",
+    "src/athar/agent.py": "052a7da3133e6dbd3d4641903d8455b8758e6fcf2c821b6a9504d4700badca3c",
     "src/athar/intent/rules.py": "ffa53ab9764c094e6c1c8bb81daaa76458ca21649b8777fad937ef9d24123f83",
     "src/athar/intent/models.py": "7f981abcd9efc73fca2fccc58e9c1f3d5bcbeadf97c6466c73dbef58fc712cd9",
     "src/athar/intent/neural.py": "2282f2eb1fb7c8ae6765d5d651e9038c68ab7386e1ac6d17626d306567f09a24",
-    "src/athar/intent/llm.py": "f0efd9b3dc36c5ad7b989f8d8f59322444513300ff64e8435594e71ce896e315",
+    "src/athar/intent/llm.py": "8df7ac8c42209e929c5185f513b039e3dc41409dc0b4d42afd799f56442d2715",
     "src/athar/eval/metrics.py": "9698c69fc8cc60b1f6fd1984843d413719d0400b38239b6aacf3bb8bfa549b51",
     "src/athar/eval/stats.py": "411734b0afda8f9ffc936dabe2ad0307d091c766526d010a0009d03492c267d9",
-    "src/athar/eval/perturb.py": "f4b477bd3f8968a9e6234cc69cb71fda81273b4774f271f294b68231bdca5d20",
-    "src/athar/eval/harness.py": "78fee152022601b188fd4a1986b70a6c78e5449b5917b638070364d25fc7d308",
+    "src/athar/eval/perturb.py": "00085b38ffecca712194f10d06ea3246cfa152561e17dece51037dafe945d21c",
+    "src/athar/eval/harness.py": "c14c075bad720a6c76a648e2e2723198793d1e0fba37c24536d0887f87951b48",
     "docs/task_contract.md": "fbc3f3a0c5753339d573e749010938410d60c9bce72e6d76d89223576bcd464a",
-    "docs/evaluation_protocol.md": "c5002f113e7d073f3127594b4f8c1e250512fc5bafcba313c2b8d2e5dd8dc536",
+    "docs/evaluation_protocol.md": "b43b14baa69a76a6ddec47532bfe3b8827bff089eac50768918a5453d61b9187",
     "configs/eval.yaml": "482280d83abab26f2a6c310b45d173b11af2aedc74335734f3dd38993d0cf74e"
   },
   "environment": {
-    "python": "3.11.14",
-    "platform": "macOS-26.7-arm64-arm-64bit",
-    "processor": "arm",
-    "cpu_count": 14,
-    "ram_gb": 36.0,
+    "python": "3.11.15",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel",
+    "cpu_count": 12,
+    "ram_gb": 31.6,
     "scikit-learn": "1.9.1",
     "numpy": "2.4.6",
     "joblib": "1.6.0"
   },
-  "process_peak_rss_mb": 156.8,
+  "process_peak_rss_mb": 140.9,
   "systems": {
     "S1": {
       "kind": "keyword rules",
@@ -155,7 +156,7 @@
         "intent_macro_f1": 0.7556,
         "intent_accuracy": 0.8
       },
-      "predict_ms_per_item": 0.0062
+      "predict_ms_per_item": 0.0135
     },
     "S2": {
       "kind": "tf-idf + logistic regression",
@@ -175,25 +176,25 @@
         "intent_accuracy": 0.95
       },
       "file": "S2.joblib",
-      "sha256": "5548ae523f298ec3198c31e922def97ea2a7896acf68bebc241b612db7786a01",
+      "sha256": "a1f478d7a2cda53291f703abd85978380883d48d9e775d1454b5204340a73e50",
       "files": {
-        "S2.joblib": "5548ae523f298ec3198c31e922def97ea2a7896acf68bebc241b612db7786a01"
+        "S2.joblib": "a1f478d7a2cda53291f703abd85978380883d48d9e775d1454b5204340a73e50"
       },
       "size_kb": 20.4,
       "n_features": 419,
       "resources": {
         "final_fit": {
-          "cpu_seconds": 0.0118,
-          "wall_seconds": 0.0118,
-          "peak_traced_mb": 0.56
+          "cpu_seconds": 0.0469,
+          "wall_seconds": 0.0368,
+          "peak_traced_mb": 0.57
         },
         "search": {
-          "cpu_seconds": 0.3136,
-          "wall_seconds": 0.3137,
+          "cpu_seconds": 0.6875,
+          "wall_seconds": 0.6879,
           "peak_traced_mb": 2.31,
           "n_fits": 12
         },
-        "predict_ms_per_item": 0.009
+        "predict_ms_per_item": 0.0567
       },
       "grid": [
         {
@@ -502,25 +503,25 @@
         "intent_accuracy": 0.925
       },
       "file": "S3.joblib",
-      "sha256": "a86b8baee2349265e6f6b9eec90e5b9b7726717a5775e6ccab4885761b73377e",
+      "sha256": "2579e18632d09ae23b1393cc5733e37c3005ea23a3dff106204126d93d3af54c",
       "files": {
-        "S3.joblib": "a86b8baee2349265e6f6b9eec90e5b9b7726717a5775e6ccab4885761b73377e"
+        "S3.joblib": "2579e18632d09ae23b1393cc5733e37c3005ea23a3dff106204126d93d3af54c"
       },
       "size_kb": 161.5,
       "n_features": 3780,
       "resources": {
         "final_fit": {
-          "cpu_seconds": 0.0546,
-          "wall_seconds": 0.0546,
-          "peak_traced_mb": 4.57
+          "cpu_seconds": 0.375,
+          "wall_seconds": 0.3654,
+          "peak_traced_mb": 4.56
         },
         "search": {
-          "cpu_seconds": 2.8966,
-          "wall_seconds": 2.897,
-          "peak_traced_mb": 7.85,
+          "cpu_seconds": 18.7812,
+          "wall_seconds": 18.9098,
+          "peak_traced_mb": 7.84,
           "n_fits": 36
         },
-        "predict_ms_per_item": 0.0369
+        "predict_ms_per_item": 0.3394
       },
       "grid": [
         {
@@ -1360,5 +1361,5 @@
       }
     }
   },
-  "freeze_sha256": "9d38bfecc507fb360f8b4c9b36bccd54a7a31d34bdc3279aee249c0b8e19972e"
+  "freeze_sha256": "8699bed551b0cc06e6dfe443fccd60a208281105f53b20221e938feb67be5fca"
 }

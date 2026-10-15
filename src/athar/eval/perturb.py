@@ -98,9 +98,10 @@ PERTURBATIONS: dict[str, Callable[[str], str | None]] = {
 
 
 def perturbed_copies(items: Sequence[GoldItem], kinds: Sequence[str] | None = None) -> dict[str, list[GoldItem]]:
-    """For each perturbation, copies of the items it applies to (ids suffixed ``--kind``)."""
+    """For each perturbation, copies of the items it applies to (ids suffixed ``--kind``).
+    ``kinds`` None = all; an empty list = none (it used to mean all, protocol log 2026-10-15)."""
     out: dict[str, list[GoldItem]] = {}
-    for kind in kinds or PERTURBATIONS:
+    for kind in PERTURBATIONS if kinds is None else kinds:
         fn = PERTURBATIONS[kind]
         copies = []
         for it in items:

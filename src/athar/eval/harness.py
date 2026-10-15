@@ -14,10 +14,10 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import UTC
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 import yaml
 
@@ -54,12 +54,31 @@ class Oracle:
     name = "oracle"
 
 
-def run(recognizer: IntentRecognizer | Oracle, items: Sequence[GoldItem]) -> list[Response | None]:
+class ResponseSystem(Protocol):
+    """A system that answers whole items itself instead of predicting an intent for the shared
+    pipeline (S8, ``athar.agent``). None = no valid response, which scores as a failure."""
+
+    name: str
+
+    def respond_items(self, items: Sequence[GoldItem]) -> list[Response | None]: ...
+
+
+System = IntentRecognizer | Oracle | ResponseSystem
+
+
+def run(recognizer: System, items: Sequence[GoldItem]) -> list[Response | None]:
     """Runtime path for every item. A recognizer answer outside the three intent labels (an
     LLM that produced no parseable label) yields no response, which scores as a failure."""
+    respond = getattr(recognizer, "respond_items", None)
+    if respond is not None:
+        outputs: list[Response | None] = list(respond(items))
+        if len(outputs) != len(items):
+            raise ValueError(f"{recognizer.name} returned {len(outputs)} responses for {len(items)} items")
+        return outputs
     if isinstance(recognizer, Oracle):
         recognizer = FixedIntent([it.intent for it in items])
-    intents = recognizer.predict([norm(it.text) for it in items])
+    assert not isinstance(recognizer, Oracle)
+    intents = cast(IntentRecognizer, recognizer).predict([norm(it.text) for it in items])
     if len(intents) != len(items):
         raise ValueError(f"{recognizer.name} returned {len(intents)} labels for {len(items)} items")
     return [respond_with_intent(i, it.text, it.ref_datetime, it.timezone, recognizer.name)
@@ -112,7 +131,7 @@ def _with_ci(scores: Sequence[Any], cfg: dict[str, Any]) -> tuple[dict[str, Any]
                                for m in CI_METRICS}
 
 
-def _gate(recognizer: IntentRecognizer | Oracle, items: Sequence[GoldItem], outputs: Sequence[Response | None],
+def _gate(recognizer: System, items: Sequence[GoldItem], outputs: Sequence[Response | None],
           cfg: dict[str, Any], tau: float | None) -> dict[str, Any] | None:
     """Confidence-gate analysis (protocol 6.4), secondary to the ungated pre-registered metrics:
     the risk-coverage table, the threshold the dev rule would pick on *this* split (meaningful on
@@ -134,7 +153,7 @@ def _gate(recognizer: IntentRecognizer | Oracle, items: Sequence[GoldItem], outp
     return out
 
 
-def evaluate_system(recognizer: IntentRecognizer | Oracle, items: Sequence[GoldItem], cfg: dict[str, Any],
+def evaluate_system(recognizer: System, items: Sequence[GoldItem], cfg: dict[str, Any],
                     gate_threshold: float | None = None) -> dict[str, Any]:
     outputs = run(recognizer, items)
     scores = score_all(items, outputs)
@@ -219,10 +238,10 @@ def seed_summaries(reports: dict[str, dict[str, Any]]) -> dict[str, Any]:
     return out
 
 
-def evaluate(recognizers: dict[str, IntentRecognizer], items: Sequence[GoldItem], cfg: dict[str, Any],
-             gate_thresholds: dict[str, float] | None = None) -> dict[str, Any]:
+def evaluate(recognizers: Mapping[str, IntentRecognizer | ResponseSystem], items: Sequence[GoldItem],
+             cfg: dict[str, Any], gate_thresholds: dict[str, float] | None = None) -> dict[str, Any]:
     """``gate_thresholds``: per-system confidence-gate thresholds frozen on dev (athar.gate)."""
-    systems: dict[str, IntentRecognizer | Oracle] = dict(recognizers)
+    systems: dict[str, System] = dict(recognizers)
     if cfg.get("oracle", True):
         systems["oracle"] = Oracle()
     taus = gate_thresholds or {}

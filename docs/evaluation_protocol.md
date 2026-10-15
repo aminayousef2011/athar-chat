@@ -1,4 +1,4 @@
-# ATHAR Chat evaluation protocol (pre-registered, v1.0 draft)
+# ATHAR Chat evaluation protocol (pre-registered v1.0; amendments in section 10)
 
 This document fixes, **before any system is trained on the annotated data**, what will be
 measured, how uncertainty is quantified, which comparisons are tested and how results are
@@ -38,15 +38,19 @@ over H1-H3. Secondary analyses (section 6) are descriptive and carry no signific
 | S2 | word TF-IDF (1-2 g) + logistic regression | train | core |
 | S3 | S2 + character `char_wb` n-grams | train | core |
 | Oracle | gold intent + the shared pipeline | gold labels | ceiling: isolates extractor/policy error |
-| S4 | instruction-tuned LLMs, intent only: `inception42/Jais-2-8B-Chat` (primary), `MBZUAI-Paris/Nile-Chat-4B` (Egyptian), `Qwen/Qwen3-8B` (multilingual reference); 0-shot and 6-shot | few-shot exemplars from train | extended, reported separately |
+| S4 | instruction-tuned LLMs, intent only: `inception42/Jais-2-8B-Chat` (primary, as proposed), `inception42/Jais-3-7B` and `inception42/Jais-3-3.7B` (added 2026-10-15, section 10), `MBZUAI-Paris/Nile-Chat-4B` (Egyptian), `Qwen/Qwen3-8B` (multilingual reference); 0-shot and 6-shot | few-shot exemplars from train | extended, reported separately |
 | S7 | Jais 2 8B + QLoRA (r 16, α 32, 3 epochs, LR 2e-4, fixed) | train | exploratory |
+| S8 | `inception42/Jais-3-7B` end to end through native tool calling (`athar.agent`): tool, moment, reminder text, clarification targets and abstention, with no shared extractor or policy. Reasoning effort high; sampled decoding as the model card recommends (T 0.7, top-p 0.95, top-k 20), seeds 0-2 | nothing (a summary of the task contract is in the prompt) | exploratory (added 2026-10-15), reported separately |
 | S5 | frozen `intfloat/multilingual-e5-small` embeddings (revision `614241f`) + logistic regression | train | extended, reported separately |
 | S6 | `UBC-NLP/MARBERTv2` (revision `fe88db9`) fine-tuned with a 3-way head, 5 seeds | train | extended, reported separately |
 
-Every system predicts **only** the intent label (`create_reminder`, `create_alarm`,
-`unsupported`). The route always comes from the shared deterministic policy. The extended
-systems answer the question a reviewer will ask ("would a pretrained model do better?").
-They are outside H1-H3 and get no significance tests against the core systems.
+Every system except S8 predicts **only** the intent label (`create_reminder`, `create_alarm`,
+`unsupported`). For them the route always comes from the shared deterministic policy. S8
+produces the whole response itself and is scored with the same metrics; an output that is not
+exactly one valid tool call scores as a failure (section 3), with its cause recorded. The
+extended systems answer the question a reviewer will ask ("would a pretrained model do
+better?"). They are outside H1-H3 and get no significance tests against the core systems.
+Design and claims for Jais 3 and S8: [jais3.md](jais3.md).
 
 **Model selection (dev only).** S2/S3: grid over C ∈ {0.1, 0.3, 1, 3, 10, 30}, word n-gram
 upper bound ∈ {1, 2}, (S3) character n-gram range ∈ {2-4, 2-5, 3-5}. The winner has the highest
@@ -69,9 +73,14 @@ contextual calibration with content-free inputs (`calibrated`, Zhao et al. 2021)
 because first-token scores and generated answers of chat models can disagree (Wang et al.
 2024). Few-shot sensitivity is reported over three exemplar sets (shot seeds `seed`, `seed+1`,
 `seed+2`, all from train) as mean ± SD; the primary number uses the first. A generated answer that names no label is a
-failure. The models run on Kaggle T4 GPUs (`notebooks/kaggle_s4_llm.ipynb`) with the same
-`athar` scoring code, in fp16, or fp32 / 4-bit NF4 (fp32 compute) when fp16 overflows, and the model revision
-is recorded with each result.
+failure. The models run in `notebooks/kaggle_s4_llm.ipynb` with the same `athar` scoring code.
+From 2026-10-15 (section 10) every model runs in **bf16 on GPUs with native bf16** (A100, L4,
+H100: the precision the models were released in), and on Kaggle T4s in fp16, or fp32 / 4-bit
+NF4 (fp32 compute) when fp16 overflows. The precision and model revision are recorded with
+each result; a comparison between models run at different precisions states it. Each model's
+chat template is driven by its profile (`athar.intent.llm.chat_profile`): Jais 3 few-shot
+answers carry an empty thinking field and the label is scored after `</ifm|think>`, where the
+template writes an answer without reasoning; Qwen3 runs with thinking off.
 
 S6 has no dev search. Every setting is fixed in `configs/train.yaml` before training, following
 the small-data recipe of Mosbach et al. (2021): AdamW with learning rate 2e-5 and weight decay
@@ -243,6 +252,14 @@ Consequences, fixed in advance:
   original, exact McNemar on the paired out-of-scope outcomes (section 4.1).
 - **Subgroups.** STS for code-switched vs Arabic-only items, and for reminders vs alarms, with
   CIs. Subgroups are small, so these are descriptive only.
+- **S8 failure breakdown** (`athar.agent.diagnose`, descriptive): invalid outputs by cause
+  (no call, several calls, invalid arguments, truncated), truncation rate, output length,
+  decline-reason accuracy on gold ABSTAIN items, and executions with the gold tool and moment
+  but a reminder text other than gold. STS and the section 3 metrics are reported as mean ± SD
+  over the three decoding seeds; the per-seed values with CIs are in the results.
+- **Jais 2 vs Jais 3, native** (descriptive): exact McNemar on out-of-scope recall over the 192
+  native Egyptian out-of-scope requests (4.1), Jais-2-8B vs Jais-3-7B and Nile-Chat-4B vs
+  Jais-3-3.7B, with the precision each ran at.
 - **Resources.** CPU time and peak memory for training and per-item prediction latency, from
   `models/freeze.json`.
 
@@ -278,11 +295,12 @@ their agreement is reported.
 |---|---|---|---|
 | 2026-10-08 | Added the confidence-gate analysis (section 6) and contract v1.1 `confirm` target | Avoid executing on uncertain intents; report the safety/helpfulness trade-off | Before: no native-speaker data and no test split exist yet; H1-H3 unchanged |
 | 2026-10-09 | S4 scoring ablation: summed vs length-normalised (mean per token) verbalizer scores vs one-token number answers (`llm.LLMIntent(length_norm=..., answer_format=...)`), each raw and calibrated, on dev, native Egyptian and MASSIVE | On the draft dry run the LLMs took most out-of-scope requests as in scope, and `غير مدعوم` has more tokens than `منبه` in the tokenizers checked, so the summed score may favour the in-scope labels | Before: run on the draft data only. The primary S4 number stays the summed calibrated score unless a change is decided and logged here before the native-speaker data exist |
-| 2026-10-12 | **Dataset split** (`data/splits/manifest.json`, `940beba352ec`): test = 120 author-written items (50/50/20, all six unsupported reasons); 8 extra out-of-scope requests (`other_tool`, `other_person`) were written before the split to cover reasons missing from the first 150; 19 A/B versions that were not minimal pairs were unpaired by rule, texts unchanged | A version in which 18 request texts had been edited after labelling (to make A and B use the same tool) was discarded: test items must be the text as written (`data/raw/private/`, not committed) | Before any system was run on the split. The second-annotator agreement check is pending; if adjudication changes labels, the split is rebuilt and logged here before the test run |
-| 2026-10-11 | **Primary S4 method for the test run: `raw` → `prior`. Final: no further change.** | *A priori:* `prior` takes the label bias from real in-domain requests, so it does not inherit contextual calibration's failure on an abstain label. *Diagnostics* (`docs/dry_run_draft.md`; 3 models × 3 exemplar sets, paired): on the 192 native out-of-scope items `prior` abstained wherever `raw` did, in all 9 cells, and more often (significant after Holm for Nile-Chat in 3/3 sets, +31 points on average, and Jais 2 in 2/3; Qwen3 at ceiling); no dev STS difference was significant (40 items). The empty-input distribution confirms the calibration failure: Jais 2 puts 0.99 on `unsupported` | Before the test split exists. **Disclosure:** the second change of the S4 primary method, chosen with the Egyptian and draft-dev results, so only the locked author-written test split is unbiased evidence for it; `raw`, `calibrated` and `generate` are reported beside it |
-| 2026-10-10 | **Test data written by the project author** (section 4.2), a native Egyptian Arabic speaker: 120 core requests from the wave-1 cards (`source: author`) instead of contributor data; H1-H3 tested on that split once complete | No contributor data could be collected in time; author-written items are allowed by the annotation guide | Before: the test split does not exist yet. One writer, who knows the system: stated as threats in 4.2 |
 | 2026-10-10 | **Native-speaker dataset not collected; H1-H3 not tested.** Evaluation moves to section 4.1: drafts for development only; native evaluation on the human-written `Alhasan/egyptian-nlu` test split (intent level) plus a paired Saudi/MSA → Egyptian dialect gap | Recruiting native contributors was not possible in the time available; a form export submitted as native data was found to repeat the assistant-generated set (97% identical texts) and was excluded (`data/raw/private/`, not committed) | No native test split exists, so no locked test run is possible. The external native set had been inspected before this decision (stated in 4.1) |
+| 2026-10-10 | **Test data written by the project author** (section 4.2), a native Egyptian Arabic speaker: 120 core requests from the wave-1 cards (`source: author`) instead of contributor data; H1-H3 tested on that split once complete | No contributor data could be collected in time; author-written items are allowed by the annotation guide | Before: the test split does not exist yet. One writer, who knows the system: stated as threats in 4.2 |
 | 2026-10-10 | **Primary S4 method: `calibrated` → `raw`** (summed, word verbalizers). Added `prior` (label prior from 60 unlabeled train texts) and three exemplar sets as secondary analyses; S7 over seeds 0-2 (mean ± SD) | *A priori:* contextual calibration assumes a content-free input deserves a uniform label distribution; with an abstain label (`unsupported`) an empty input is genuinely out of scope, so the assumption fails for this label set. *Observed* (draft dry run, `docs/dry_run_draft.md`): calibration lowered native Egyptian out-of-scope recall in 9 of 9 model × variant cells and MASSIVE F1 in 9 of 9, and raised dev STS once by one item; length normalisation and one-token answers did not help consistently. S7 dev STS varied 0.93 → 1.00 between two runs with the same seed | Before: no native-speaker data or test split exist. **Disclosure:** the choice was informed by the Egyptian (`Alhasan/egyptian-nlu`) and MASSIVE results, so for S4 these are no longer untouched out-of-distribution evidence; the locked native test split is. `calibrated` and `generate` are still reported |
+| 2026-10-11 | **Primary S4 method for the test run: `raw` → `prior`. Final: no further change.** | *A priori:* `prior` takes the label bias from real in-domain requests, so it does not inherit contextual calibration's failure on an abstain label. *Diagnostics* (`docs/dry_run_draft.md`; 3 models × 3 exemplar sets, paired): on the 192 native out-of-scope items `prior` abstained wherever `raw` did, in all 9 cells, and more often (significant after Holm for Nile-Chat in 3/3 sets, +31 points on average, and Jais 2 in 2/3; Qwen3 at ceiling); no dev STS difference was significant (40 items). The empty-input distribution confirms the calibration failure: Jais 2 puts 0.99 on `unsupported` | Before the test split exists. **Disclosure:** the second change of the S4 primary method, chosen with the Egyptian and draft-dev results, so only the locked author-written test split is unbiased evidence for it; `raw`, `calibrated` and `generate` are reported beside it |
+| 2026-10-12 | **Dataset split** (`data/splits/manifest.json`, `940beba352ec`): test = 120 author-written items (50/50/20, all six unsupported reasons); 8 extra out-of-scope requests (`other_tool`, `other_person`) were written before the split to cover reasons missing from the first 150; 19 A/B versions that were not minimal pairs were unpaired by rule, texts unchanged | A version in which 18 request texts had been edited after labelling (to make A and B use the same tool) was discarded: test items must be the text as written (`data/raw/private/`, not committed) | Before any system was run on the split. The second-annotator agreement check is pending; if adjudication changes labels, the split is rebuilt and logged here before the test run |
+| 2026-10-15 | **Jais 3 added (S4); S8 added; precision policy; prompt-format check; robustness switch fixed; re-freeze.** (1) S4 gains `inception42/Jais-3-7B` (revision `a9097a3e2318`) and `inception42/Jais-3-3.7B` (`e664b9e1c555`), scored exactly like the other S4 models (same prompt, shots, prior texts; primary `prior`) through the chat profile Jais 3's template requires (section 2). Jais 2 8B stays the pre-registered S4 model. (2) New exploratory S8: Jais-3-7B does the whole task through native tool calling (`athar.agent`), scored with Safe Task Success, mean ± SD over decoding seeds 0-2, no significance tests (section 6). (3) bf16 on GPUs with native bf16, T4 fallbacks otherwise; precision recorded per result (section 2). (4) Dev-only check of the few-shot format (exemplars as chat turns vs inline) for Jais 2's instability; chat turns stay the S4 format. (5) `perturbed_copies(items, [])` returned *all* perturbations, so cells that switched robustness off still ran it; fixed, regression-tested; it changed run time only, no reported number. (6) `athar-train fit --force` re-froze the models with the amended protocol and `agent.py` among the frozen sources. Against the previous freeze (`9d38bfecc507`, made on macOS), S1-S3 have the same selected settings, search grids, dev scores and gate thresholds and curves; the re-serialised S2/S3 files differ in bytes only (coefficients and probabilities within 4.4e-16, identical predictions on all 658 train, dev, draft and pilot texts) | Jais 3 was released on 2026-10-15 with native tool calling; the proposal's Jais 2 baseline could not test end-to-end LLM routing, and the expert review asked for precision parity and a prompt-format check | Before: the test split has not been opened (no `results/`). H1-H3, the core systems, the metrics, the data and the S4 primary method are unchanged |
 
 ## References
 

@@ -18,11 +18,40 @@ No real reminders or alarms are created.
 regression; S3: S2 + character n-grams) improve *Safe Task Success* over keyword rules (S1) when
 all systems share the same normalizer, argument extractor, execution policy and templates?
 
+## From the proposal (Jais 2) to Jais 3
+
+The proposal named **Jais 2 8B** as the Arabic LLM baseline, and it remains the pre-registered
+S4 model. On **2026-10-15**, after the models were frozen but before the test split was opened,
+MBZUAI's Institute of Foundation Models, Inception42 and Cerebras released **Jais 3**, with native
+tool calling and selectable reasoning. The LLM track was extended to use it. The core comparison
+(H1-H3), the data and the metrics did not change:
+
+- **Jais 3 as an intent recognizer (S4).** Jais-3-7B and Jais-3-3.7B are scored with exactly the
+  prompt, exemplars and calibration used for Jais 2. This allows a like-for-like Jais 2 → Jais 3
+  comparison, and a size-matched comparison of general Arabic Jais-3-3.7B with Egyptian Nile-Chat-4B.
+  Jais 3's chat template needs a thinking field on every assistant turn and opens a reasoning block
+  in its generation prompt. The integration handles both and is tested against the real (pinned)
+  template.
+- **Jais 3 doing the whole task (S8, new).** Jais-3-7B routes each request on its own through native
+  tool calling: it decides whether to `create_reminder`, `create_alarm`, `ask_clarification` (and
+  what is missing) or `decline` (and why), and fills in the arguments. Its output is scored with the
+  same Safe Task Success as every other system. This tests the developers' agentic claims on
+  Egyptian Arabic, a dialect their release does not name.
+- **Fairer LLM comparisons.**
+  - All models run in bf16 where the GPU supports it, with the precision recorded per result.
+  - A prompt-format check addresses Jais 2's few-shot instability.
+  - The prompt each model scores is printed.
+  - Jais 2 and Jais 3 are compared, paired, on 192 native out-of-scope Egyptian requests.
+
+Design, integration details and what can be claimed: [docs/jais3.md](docs/jais3.md). Protocol
+entry: [evaluation_protocol.md](docs/evaluation_protocol.md), section 10, 2026-10-15.
+
 ## Layout
 
 ```
 docs/            HLD, task contract, annotation guide, data card
-src/athar/       shared core: normalizer, time/argument extractor, policy, responses, schema
+src/athar/       shared core: normalizer, time/argument extractor, policy, responses, schema;
+                 agent.py = S8 end-to-end tool calling (Jais 3)
 src/athar/data/  dataset tooling (`athar-data` CLI): validator, splitter, agreement, stats
 src/athar/intent/ S1 keyword rules, S2/S3 classifiers, search + freeze (`athar-train` CLI)
 src/athar/eval/  scoring, family-level statistics, robustness suite, harness (`athar-eval` CLI)
@@ -52,18 +81,26 @@ uv run pre-commit install            # same gates + data validation on every com
 
 CI (`.github/workflows/ci.yml`) runs them on Linux and Windows from the frozen lockfile.
 
-## LLM baselines on Kaggle GPUs (S4 / S7)
+## LLM baselines on GPUs (S4 / S7 / S8)
 
-Jais 2 8B, Nile-Chat 4B and Qwen3 8B (S4), and Jais 2 + QLoRA (S7), run in
-[notebooks/kaggle_s4_llm.ipynb](notebooks/kaggle_s4_llm.ipynb) on Kaggle's T4 x2 GPUs, using the
-same `athar` scoring code (`athar.intent.llm`, tested offline in `tests/test_llm.py`):
+| System | Models | Code |
+|---|---|---|
+| S4: LLM intent recognizer, shared pipeline | Jais-3-7B, Jais-3-3.7B, Jais 2 8B (proposal), Nile-Chat 4B, Qwen3 8B | `athar.intent.llm` |
+| S7: QLoRA fine-tuned | Jais 2 8B | `athar.intent.llm` |
+| S8: end-to-end tool calling | Jais-3-7B | `athar.agent` |
+
+All three run in [notebooks/kaggle_s4_llm.ipynb](notebooks/kaggle_s4_llm.ipynb), on Kaggle's T4 x2
+GPUs or any bf16 GPU, with the same `athar` scoring code (tested offline in `tests/test_llm.py`
+and `tests/test_agent.py`, with the real Jais 3 chat template as a fixture):
 
 ```powershell
 uv run python scripts/build_kaggle_kit.py   # -> dist/athar-chat-kit.zip: upload as a Kaggle Dataset
+uv run --extra neural --with pandas python scripts/smoke_kaggle_notebook.py   # whole notebook on CPU, tiny models
 ```
 
-Then accept the Jais 2 terms on Hugging Face, add an `HF_TOKEN` Kaggle secret, choose GPU T4 x2
-with internet on, attach the dataset and run all. The notebook explains each step.
+Then accept the Jais 2 terms on Hugging Face (Jais 3 is not gated) and add an `HF_TOKEN` Kaggle
+secret. Choose GPU T4 x2 with internet on, attach the dataset, and set the `RUN_*` flags for the run
+(the run plan is in the configuration cell and [docs/jais3.md](docs/jais3.md)).
 
 ## Evaluation
 
