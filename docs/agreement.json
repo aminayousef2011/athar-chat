@@ -1,0 +1,284 @@
+{
+  "annotator": "Ibrahim (second annotator, independent first pass)",
+  "date": "2026-10-15",
+  "sheet": "data/raw/private/agreement/sheet_Ibrahim_2026-10-15T1503_first_pass.csv",
+  "n_compared": 60,
+  "unknown_ids": [],
+  "intent": {
+    "n": 60,
+    "agreement": 0.95,
+    "kappa": 0.9164733178654292,
+    "reading": "almost perfect",
+    "labels": [
+      "create_reminder",
+      "create_alarm",
+      "unsupported"
+    ],
+    "confusion": [
+      [
+        31,
+        3,
+        0
+      ],
+      [
+        0,
+        15,
+        0
+      ],
+      [
+        0,
+        0,
+        11
+      ]
+    ]
+  },
+  "route": {
+    "n": 60,
+    "agreement": 1.0,
+    "kappa": 1.0,
+    "reading": "almost perfect",
+    "labels": [
+      "ACT",
+      "CLARIFY",
+      "ABSTAIN"
+    ],
+    "confusion": [
+      [
+        23,
+        0,
+        0
+      ],
+      [
+        0,
+        26,
+        0
+      ],
+      [
+        0,
+        0,
+        11
+      ]
+    ]
+  },
+  "targets_exact_set": {
+    "n": 26,
+    "agreement": 0.9230769230769231
+  },
+  "targets_kappa": {
+    "date": {
+      "n": 60,
+      "agreement": 1.0,
+      "kappa": 1.0,
+      "reading": "almost perfect",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          59
+        ]
+      ]
+    },
+    "time": {
+      "n": 60,
+      "agreement": 0.9833333333333333,
+      "kappa": 0.9462365591397848,
+      "reading": "almost perfect",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          11,
+          0
+        ],
+        [
+          1,
+          48
+        ]
+      ]
+    },
+    "am_pm": {
+      "n": 60,
+      "agreement": 1.0,
+      "kappa": 1.0,
+      "reading": "almost perfect",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          9,
+          0
+        ],
+        [
+          0,
+          51
+        ]
+      ]
+    },
+    "past": {
+      "n": 60,
+      "agreement": 1.0,
+      "kappa": 1.0,
+      "reading": "almost perfect",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          3,
+          0
+        ],
+        [
+          0,
+          57
+        ]
+      ]
+    },
+    "reminder_text": {
+      "n": 60,
+      "agreement": 0.9666666666666667,
+      "kappa": 0.8153846153846155,
+      "reading": "almost perfect",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          5,
+          2
+        ],
+        [
+          0,
+          53
+        ]
+      ]
+    }
+  },
+  "unsupported_reason": {
+    "n": 11,
+    "agreement": 1.0,
+    "kappa": 1.0,
+    "reading": "almost perfect",
+    "labels": [
+      "deletion",
+      "recurring",
+      "other_person",
+      "multi_action",
+      "other_tool",
+      "modification",
+      "other"
+    ],
+    "confusion": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        4,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  "datetime_same_instant": {
+    "n": 23,
+    "agreement": 1.0
+  },
+  "reminder_text_same": {
+    "n": 15,
+    "agreement": 1.0
+  },
+  "disagreements": [
+    {
+      "id": "c005-b",
+      "gold": "create_reminder/CLARIFY/reminder_text",
+      "annotator": "create_reminder/CLARIFY/time"
+    },
+    {
+      "id": "c011-b",
+      "gold": "create_reminder/CLARIFY/past",
+      "annotator": "create_alarm/CLARIFY/past"
+    },
+    {
+      "id": "c021-b",
+      "gold": "create_reminder/CLARIFY/time",
+      "annotator": "create_alarm/CLARIFY/time"
+    },
+    {
+      "id": "c121-b",
+      "gold": "create_reminder/CLARIFY/am_pm",
+      "annotator": "create_alarm/CLARIFY/am_pm"
+    },
+    {
+      "id": "c153-a",
+      "gold": "create_reminder/CLARIFY/time,reminder_text",
+      "annotator": "create_reminder/CLARIFY/time"
+    }
+  ]
+}

@@ -202,7 +202,7 @@ def test_default_profile_keeps_the_earlier_prompts_byte_identical(pilot_and_lm):
     old.append({"role": "user", "content": text})
     assert llm.build_messages(text, shots) == old
     expected = tok.apply_chat_template(old, tokenize=False, add_generation_prompt=True)
-    for model_id in ("inception42/Jais-2-8B-Chat", "MBZUAI-Paris/Nile-Chat-4B"):
+    for model_id in ("MBZUAI-Paris/Nile-Chat-4B", "some-org/any-other-model"):
         r = llm.LLMIntent(model, tok, shots=shots, **llm.chat_profile(model_id).intent_kwargs())
         assert r.prompt(text) == expected
 
@@ -212,7 +212,40 @@ def test_chat_profiles():
     assert jais3 is llm.chat_profile("inception42/Jais-3-3.7B") and jais3.trust_remote_code
     assert jais3.answer_prefix == "</ifm|think>" and jais3.assistant_fields == {"reasoning_content": ""}
     assert llm.chat_profile("Qwen/Qwen3-8B").intent_kwargs()["template_kwargs"] == {"enable_thinking": False}
-    assert llm.chat_profile("inception42/Jais-2-8B-Chat") == llm.ChatProfile()
+    assert llm.chat_profile("inception42/Jais-2-8B-Chat") == llm.ChatProfile(assistant_role="ai")
+    assert llm.chat_profile("MBZUAI-Paris/Nile-Chat-4B") == llm.ChatProfile()
+
+
+#: a Jais 2-style template, reconstructed from the 2026-10-15 Kaggle prompt check (the real one
+#: is gated): each role written literally, and the answer opened under the role "ai"
+JAIS2_STYLE = ("{{ bos_token }}{% for m in messages %}<|start_header_id|>{{ m['role'] }}<|end_header_id|>"
+               "{{ m['content'] }}<|eot_id|>{% endfor %}"
+               "{% if add_generation_prompt %}<|start_header_id|>ai<|end_header_id|>{% endif %}")
+
+
+def test_jais2_few_shot_answers_use_the_role_its_template_answers_with(pilot_and_lm):
+    items, model, _ = pilot_and_lm
+    _, tok = tiny_lm([norm(it.text) for it in items])
+    tok.chat_template = JAIS2_STYLE
+    shots = llm.select_shots(items, per_label=2)
+    text = norm(items[0].text)
+    prof = llm.chat_profile("inception42/Jais-2-8B-Chat")
+    fixed = llm.LLMIntent(model, tok, shots=shots, **prof.intent_kwargs()).prompt(text)
+    old = llm.LLMIntent(model, tok, shots=shots).prompt(text)        # the format used up to 2026-10-12
+    header = "<|start_header_id|>{}<|end_header_id|>"
+    assert fixed.count(header.format("ai")) == len(shots) + 1 and header.format("assistant") not in fixed
+    assert old.count(header.format("assistant")) == len(shots) and old.count(header.format("ai")) == 1
+    assert llm.answer_consistent(tok, prof) and not llm.answer_consistent(tok, llm.ChatProfile())
+    # zero-shot prompts (and S7, trained on them) were never affected
+    assert llm.LLMIntent(model, tok, **prof.intent_kwargs()).prompt(text) == llm.LLMIntent(model, tok).prompt(text)
+
+
+def test_answer_consistency_holds_for_the_other_templates(pilot_and_lm):
+    items, _, tok = pilot_and_lm
+    assert llm.answer_consistent(tok, llm.chat_profile("MBZUAI-Paris/Nile-Chat-4B"))
+    j3 = jais3_tokenizer([norm(it.text) for it in items])
+    assert llm.answer_consistent(j3, llm.chat_profile("inception42/Jais-3-7B"))
+    assert not llm.answer_consistent(j3, llm.ChatProfile(assistant_fields={"reasoning_content": ""}))
 
 
 def test_jais3_scores_the_label_exactly_where_its_template_writes_an_answer(pilot_and_lm):

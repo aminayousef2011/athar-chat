@@ -140,6 +140,38 @@ def _cell(row: dict[str, Any], key: str) -> str:
     return str(v).strip()
 
 
+_DAY_MONTH = re.compile(r"(\d{1,2})/(\d{1,2})/(\d{4})(?:[ T](\d{1,2}):(\d{2}))?")
+EXCEL_DATE = ("Excel stored the datetime as a date, so day and month may be swapped (3/11 read as "
+              "11 March); type it as text: 2026-11-03 17:00 or 3/11/2026 17:00")
+
+
+def parse_when(value: str, tz: str) -> datetime:
+    """ISO (``2026-11-03 17:00``) or day/month text (``3/11/2026 17:00``, contract 4.1)."""
+    v = value.strip()
+    if m := _DAY_MONTH.fullmatch(v):
+        d, mo, y, hh, mm = m.groups()
+        return datetime(int(y), int(mo), int(d), int(hh or 0), int(mm or 0), tzinfo=ZoneInfo(tz))
+    return cairo(v.replace(" ", "T"), tz)
+
+
+def _xlsx_rows(path: Path) -> list[dict[str, Any]]:
+    """Sheet rows as strings, keeping one fact the strings would lose: whether Excel turned the
+    ``datetime`` cell into a date (then day and month may have been swapped)."""
+    from athar.data.contrib import _openpyxl
+
+    ws = _openpyxl().load_workbook(path, read_only=True, data_only=True).worksheets[0]
+    raw = list(ws.iter_rows(values_only=True))
+    header = [str(h).strip() if h is not None else "" for h in raw[0]]
+    rows = []
+    for r in raw[1:]:
+        if any(v not in (None, "") for v in r):
+            cells = dict(zip(header, r, strict=False))
+            row: dict[str, Any] = {h: ("" if v is None else str(v)).strip() for h, v in cells.items() if h}
+            row["_excel_date"] = isinstance(cells.get("datetime"), datetime)
+            rows.append(row)
+    return rows
+
+
 def _label(row: dict[str, Any], tz: str) -> Label:
     intent, route = _cell(row, "intent"), _cell(row, "route").upper()
     if intent not in INTENTS:
@@ -152,9 +184,12 @@ def _label(row: dict[str, Any], tz: str) -> Label:
     reason = _cell(row, "unsupported_reason") or None
     if reason is not None and reason not in REASONS:
         raise ValueError(f"unsupported_reason {reason!r} not in {REASONS}")
-    when = _cell(row, "datetime")
-    return Label(intent, route, targets, reason,
-                 cairo(when.replace(" ", "T"), tz) if when else None,
+    # the moment is compared on ACT items only; a date written on another route is ignored,
+    # so it can never make the row unreadable and drop it from the comparison
+    when = _cell(row, "datetime") if route == "ACT" else ""
+    if when and row.get("_excel_date"):
+        raise ValueError(EXCEL_DATE)
+    return Label(intent, route, targets, reason, parse_when(when, tz) if when else None,
                  _cell(row, "reminder_text") or None)
 
 
@@ -163,9 +198,7 @@ def read_labels(path: str | Path) -> tuple[dict[str, Label], list[str]]:
     p = Path(path)
     rows: list[dict[str, Any]]
     if p.suffix.lower() == ".xlsx":
-        from athar.data.contrib import _read_xlsx
-
-        rows = list(_read_xlsx(p))
+        rows = _xlsx_rows(p)
     elif p.suffix.lower() == ".csv":
         with p.open(encoding="utf-8-sig", newline="") as f:
             rows = list(csv.DictReader(f))

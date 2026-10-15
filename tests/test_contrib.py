@@ -247,6 +247,16 @@ def test_agreement_sheet_as_xlsx_round_trips_into_kappa(tmp_path):
     assert not errors and set(labels) == {it.id for it in items}
     assert all(labels[it.id] == ag.gold_label(it) for it in items)
 
+    # Excel turned a typed "3/11/2026 17:00" into 11 March: refused, never read as a wrong date
+    import datetime as dt
+
+    act = next(i for i, it in enumerate(items, start=2) if it.route == "ACT")
+    ws.cell(row=act, column=h.index("datetime") + 1, value=dt.datetime(2026, 3, 11, 17, 0))
+    wb.save(sheet)
+    labels, errors = ag.read_labels(sheet)
+    assert len(errors) == 1 and "day and month may be swapped" in errors[0]
+    assert items[act - 2].id not in labels
+
 
 def test_build_unpairs_versions_that_are_not_a_minimal_pair(tmp_path):
     cols = (*C.SHEET_COLUMNS, *C.LABEL_EXTRA)

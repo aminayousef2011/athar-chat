@@ -37,11 +37,16 @@ older chat models did not, so each model id maps to a :class:`ChatProfile`:
   (``<ifm|think>``) and requires a thinking field on every assistant turn. Its profile gives
   each few-shot answer an empty thinking field and scores the label after ``</ifm|think>``, so
   the scored text is exactly how the template renders an answer with no reasoning.
+- Jais 2 (``inception42/Jais-2-*``): its template writes each message's role literally but
+  opens the answer as ``<|start_header_id|>ai<|end_header_id|>``, so few-shot answers sent
+  with role ``assistant`` appeared under a header the model is never asked to answer under
+  (seen in the 2026-10-15 prompt check). Its profile sends the few-shot answers with role
+  ``ai``, the template's own answer role. Before this fix (all Jais 2 runs up to 2026-10-12)
+  the few-shot prompts mixed the two; zero-shot prompts and S7 were unaffected.
 - Qwen3 turns thinking off through its template (``enable_thinking=False``), as before.
-The default profile adds nothing, so Jais 2, Nile-Chat and Qwen3 prompts are byte-identical to
-the runs before 2026-10-15 (tested).
-``shot_style="inline"`` (a prompt-format check for Jais 2's few-shot instability) puts the
-exemplars in the user message instead of as earlier chat turns; ``"turns"`` stays the primary.
+Nile-Chat and Qwen3 prompts are byte-identical to the runs before 2026-10-15 (tested).
+``shot_style="inline"`` (a prompt-format check) puts the exemplars in the user message instead
+of as earlier chat turns; ``"turns"`` stays the primary.
 """
 
 from __future__ import annotations
@@ -113,11 +118,12 @@ INLINE_ANSWER = "الرد:"
 
 
 def build_messages(text: str, shots: Sequence[tuple[str, str]], answer_format: str = "word", *,
-                   shot_style: str = "turns",
-                   assistant_fields: Mapping[str, str] | None = None) -> list[dict[str, str]]:
+                   shot_style: str = "turns", assistant_fields: Mapping[str, str] | None = None,
+                   assistant_role: str = "assistant") -> list[dict[str, str]]:
     """Chat messages for one request. ``turns``: each exemplar is a user/assistant exchange;
     ``inline``: the exemplars are listed in the user message (no shots: both are the same).
-    ``assistant_fields`` are added to every assistant turn (Jais 3: an empty thinking field)."""
+    ``assistant_fields`` are added to every assistant turn (Jais 3: an empty thinking field);
+    ``assistant_role`` is the role those turns carry (Jais 2: ``ai``)."""
     if shot_style not in ("turns", "inline"):
         raise ValueError(f"unknown shot_style {shot_style!r}")
     answers = NUMBERS if answer_format == "number" else VERBALIZERS
@@ -128,7 +134,7 @@ def build_messages(text: str, shots: Sequence[tuple[str, str]], answer_format: s
         return msgs
     for shot_text, lab in shots:
         msgs += [{"role": "user", "content": shot_text},
-                 {"role": "assistant", "content": answers[lab], **(assistant_fields or {})}]
+                 {"role": assistant_role, "content": answers[lab], **(assistant_fields or {})}]
     msgs.append({"role": "user", "content": text})
     return msgs
 
@@ -142,12 +148,14 @@ class ChatProfile:
     answer_prefix: str = ""
     #: added to every few-shot assistant turn
     assistant_fields: Mapping[str, str] = field(default_factory=dict)
+    #: the role few-shot answers carry: the one the template opens the answer with
+    assistant_role: str = "assistant"
     trust_remote_code: bool = False
 
     def intent_kwargs(self) -> dict[str, Any]:
         """Keyword arguments for :class:`LLMIntent`."""
         return {"template_kwargs": dict(self.template_kwargs), "answer_prefix": self.answer_prefix,
-                "assistant_fields": dict(self.assistant_fields)}
+                "assistant_fields": dict(self.assistant_fields), "assistant_role": self.assistant_role}
 
 
 #: Jais 3 renders an answer with no reasoning as ``<ifm|think>\n</ifm|think>answer``; its
@@ -157,6 +165,7 @@ CHAT_PROFILES: dict[str, ChatProfile] = {
     "inception42/Jais-3-": ChatProfile(template_kwargs={"reasoning_effort": "high"},
                                        answer_prefix=JAIS3_THINK_CLOSE,
                                        assistant_fields={"reasoning_content": ""}, trust_remote_code=True),
+    "inception42/Jais-2-": ChatProfile(assistant_role="ai"),
     "Qwen/Qwen3-": ChatProfile(template_kwargs={"enable_thinking": False}),
 }
 
@@ -167,6 +176,20 @@ def chat_profile(model_id: str) -> ChatProfile:
         if model_id.startswith(prefix):
             return profile
     return ChatProfile()
+
+
+def answer_consistent(tokenizer: Any, profile: ChatProfile, text: str = "فكرني بكرة",
+                      answer: str = VERBALIZERS["create_reminder"]) -> bool:
+    """True when "prompt + answer" is how the model's own template writes a finished answer
+    turn, i.e. the label is scored where the template puts an answer, and few-shot answers
+    (built the same way) look like the model's own turns. Template-agnostic: run it on every
+    model's real template (the notebook's prompt check does)."""
+    kw = dict(profile.template_kwargs)
+    msgs = build_messages(text, [], assistant_fields=profile.assistant_fields, assistant_role=profile.assistant_role)
+    prompt = str(tokenizer.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, **kw))
+    turn = {"role": profile.assistant_role, "content": answer, **profile.assistant_fields}
+    done = str(tokenizer.apply_chat_template(msgs + [turn], tokenize=False, **kw))
+    return done.startswith(prompt + profile.answer_prefix + answer)
 
 
 def parse_label(generated: str) -> str:
@@ -188,7 +211,8 @@ class LLMIntent:
                  template_kwargs: dict[str, Any] | None = None, max_new_tokens: int = 12,
                  length_norm: bool = False, answer_format: str = "word",
                  prior_texts: Sequence[str] = (), answer_prefix: str = "",
-                 assistant_fields: Mapping[str, str] | None = None, shot_style: str = "turns") -> None:
+                 assistant_fields: Mapping[str, str] | None = None, shot_style: str = "turns",
+                 assistant_role: str = "assistant") -> None:
         if shot_style not in ("turns", "inline"):
             raise ValueError(f"unknown shot_style {shot_style!r}")
         if method not in ("raw", "calibrated", "prior", "generate"):
@@ -206,7 +230,7 @@ class LLMIntent:
         self.shots, self.method = list(shots), method
         self.template_kwargs = template_kwargs or {}
         self.answer_prefix, self.shot_style = answer_prefix, shot_style
-        self.assistant_fields = dict(assistant_fields or {})
+        self.assistant_fields, self.assistant_role = dict(assistant_fields or {}), assistant_role
         self.max_new_tokens = max_new_tokens
         # per-token log-probabilities of each answer, by text: instances with the same prompt,
         # shots and answer format can share it, whatever their method or length_norm
@@ -219,7 +243,7 @@ class LLMIntent:
     def prompt(self, text: str) -> str:
         """The exact text the label is scored (or generated) after."""
         msgs = build_messages(text, self.shots, self.answer_format, shot_style=self.shot_style,
-                              assistant_fields=self.assistant_fields)
+                              assistant_fields=self.assistant_fields, assistant_role=self.assistant_role)
         return str(self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True,
                                                 **self.template_kwargs)) + self.answer_prefix
 

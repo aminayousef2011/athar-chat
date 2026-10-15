@@ -3,7 +3,8 @@
 Status: **split and frozen 2026-10-12** (`data/splits/manifest.json`, manifest
 `940beba352ec`). 458 items: 158 written by the author, a native Egyptian Arabic speaker
 (`source: author`), and the 300 assistant-drafted items (`source: assistant_draft`), which are
-kept out of test. The second-annotator agreement check is pending.
+kept out of test. Second-annotator agreement (2026-10-15): intent κ 0.92, route κ 1.00
+([agreement.md](agreement.md)).
 
 ## Summary
 
@@ -16,7 +17,7 @@ kept out of test. The second-annotator agreement check is pending.
 | Labels | intent, route, clarification targets, unsupported reason, resolved datetime, reminder text |
 | Format | JSONL, one item per line, schema `athar.schema.GoldItem` |
 | Splits | by scenario family: train 298, dev 40, **test 120 (50 ACT / 50 CLARIFY / 20 ABSTAIN), all author-written** |
-| Authors | Amina Yousef (author, native speaker); second annotator _TBD_ |
+| Authors | Amina Yousef (author, native speaker); second annotator: Ibrahim (native speaker, 60-item agreement sample) |
 | Contract | [task_contract.md](task_contract.md) v1.1 (annotation rules frozen at v1.0, 2026-10-07) |
 | Licence | _TBD_ |
 
@@ -71,15 +72,21 @@ so the requests are written for this project.
 
 | | |
 |---|---|
-| Sample | 60 items, route-stratified, one per family where possible |
-| Second annotation | _TBD: second annotator, or dated self-review (≥ 7 days later)_ |
-| Intent κ | _TBD_ |
-| Route κ | _TBD_ |
-| Target-set agreement (both CLARIFY) | _TBD_ |
-| Report | `docs/agreement.md` / `docs/agreement.json` (from `athar-data kappa`) |
+| Sample | 60 author-written items, route-stratified (23 ACT / 26 CLARIFY / 11 ABSTAIN), one per family where possible |
+| Second annotation | Ibrahim, native Egyptian Arabic speaker, independent, 2026-10-15 (first pass) |
+| Intent κ | **0.916** (95.0% agreement) |
+| Route κ | **1.000** (100%) |
+| Target-set agreement (both CLARIFY) | 92.3% (24 of 26); per-target κ 0.82-1.00 |
+| Unsupported reason (both ABSTAIN) | 100% (11 of 11) |
+| Moment / reminder text (both ACT) | 100% (23 of 23) / 100% (15 of 15) |
+| Report | [agreement.md](agreement.md) / `docs/agreement.json` (from `athar-data kappa`) |
 
-κ is reported before adjudication. Disagreements are then adjudicated and the gold corrected
-before the split is made.
+κ is reported on the annotator's first, independent pass, before any discussion. The split was
+made before the second annotation (2026-10-12), as the protocol allowed ("if adjudication changes
+labels, the split is rebuilt"). No gold label was changed: the five disagreements are kept and
+discussed in [agreement.md](agreement.md). Two of them expose a genuine ambiguity of the contract,
+«فكرني … اصحى» ("remind me … to wake up"), which stays a reminder in gold and is listed under
+limitations below.
 
 ## Splits
 
@@ -149,6 +156,9 @@ Regenerate with
 - **Address form**: replies are gender-neutral (contract v1.0); many requests are written in
   the masculine, as people type them.
 - **Script**: Arabizi is excluded, though many Egyptian users write it.
+- **Reminder or alarm**: «فكرني … اصحى» ("remind me … to wake up") is a reminder by its verb and an
+  alarm by its purpose. Gold follows the verb (reminder); the second annotator chose alarm on both
+  such items in the agreement sample (c021-b, c121-b; [agreement.md](agreement.md)).
 
 ## Maintenance
 

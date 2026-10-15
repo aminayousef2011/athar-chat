@@ -208,9 +208,15 @@ def check(out: Path, ns: dict[str, object], calls: dict[str, list], flags: str) 
             problems.append("S8: one trace per seed expected")
     if ns.get("RUN_SHOT_STYLE"):
         ss = pd.read_csv(out / "shot_style.csv")
-        if set(ss.shot_style) != {"turns", "inline"} or ss.groupby(["model", "shot_style"]).ngroups != 2 * len(
-                [m for m in ns["MODELS"] if m[0] in ns["SHOT_STYLE_MODELS"]]):  # type: ignore[attr-defined,operator]
-            problems.append("shot_style.csv does not have both styles for every model")
+        want = {m[0]: {"turns", "inline"} | ({"turns-old-role"} if llm.chat_profile(m[1]).assistant_role != "assistant" else set())
+                for m in ns["MODELS"] if m[0] in ns["SHOT_STYLE_MODELS"]}  # type: ignore[attr-defined,operator]
+        got = {k: set(g.shot_style) for k, g in ss.groupby("model")}
+        if got != want:
+            problems.append(f"shot_style.csv formats {got}, expected {want}")
+    if ns.get("RUN_PROMPT_CHECK"):
+        vt = pd.read_csv(out / "verbalizer_tokens.csv")
+        if "answer_consistent" not in vt.columns or set(vt.model) != {m[0] for m in ns["MODELS"]}:  # type: ignore[attr-defined]
+            problems.append("verbalizer_tokens.csv lacks the answer-consistency check")
     if ns.get("RUN_EGYPTIAN_OOD") and ns.get("PAIRED"):
         paired = pd.read_csv(out / "egyptian_paired.csv")
         if len(paired) != len(ns["PAIRED"]):  # type: ignore[arg-type]

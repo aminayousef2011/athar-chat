@@ -113,7 +113,7 @@ The other models' prompts are **byte-identical** to the earlier runs (tested).
 
 | Item | Change |
 |---|---|
-| Jais 2 few-shot instability (dev STS 0.375-0.85 across exemplar sets) | Dev-only prompt-format check. The same three exemplar sets are given as chat turns (`turns`, the reported format) or listed in the user message (`inline`). `RUN_PROMPT_CHECK` prints the exact prompt each model scores. |
+| Jais 2 few-shot instability (dev STS 0.375-0.85 across exemplar sets) | **Cause found by the prompt check** (Kaggle, 2026-10-15). Jais 2's template opens the answer under the role `ai`, but the few-shot answers were sent as `assistant`, so the model saw six answers under a header it is never asked to answer under. Its chat profile now sends them as `ai`, and `llm.answer_consistent` verifies every model's real template. The dev-only format check scores `turns` (fixed), `turns-old-role` (as before) and `inline` on three exemplar sets, to measure how much the mismatch mattered. |
 | Precision confound | bf16 policy (section 2). |
 | Robustness switch | `perturbed_copies(items, [])` meant *all* perturbations. Cells that switched robustness off still ran it. No reported number changed, only run time. Fixed, with a regression test. |
 | Native comparison Jais 2 vs Jais 3 | Paired exact McNemar on the 192 native out-of-scope Egyptian requests (`PAIRED` in the notebook). |

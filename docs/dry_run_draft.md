@@ -92,6 +92,10 @@ Machine: Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, 12 logical CPUs, 3
 
 ## P7 dry run: LLM baselines on Kaggle (S4, S7), same draft dev split
 
+> **Note (2026-10-15).** Every Jais 2 *few-shot* number in this file used a prompt whose example answers
+> carried the role `assistant` while Jais 2 answers under `ai` (found by the prompt check; protocol log
+> 2026-10-15). They are superseded; zero-shot Jais 2 and S7 were not affected.
+
 Run on Kaggle 2x T4, 2026-10-08, `notebooks/kaggle_s4_llm.ipynb`; outputs in `runs/s4/draft-dev/` (not committed). Same 40 dev items as above, so the same caveats apply: these are integration-test numbers, not results. Jais 2 overflowed in fp16 and ran in `nf4-fp32` (revision `da0e1639cd92`); Nile-Chat ran in fp32, Qwen3 in fp16.
 
 | System | STS [95% CI] | intent macro-F1 | unsafe exec. | ECE | PM STS (n=32) | PM intent F1 |

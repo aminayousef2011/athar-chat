@@ -22,6 +22,7 @@ from athar.data.split import (
 )
 from athar.data.stats import END, START, stats_markdown, write_into_card
 from athar.data.validate import validate_records
+from athar.timeexpr import cairo
 
 PILOT = Path(__file__).resolve().parents[1] / "data" / "pilot" / "pilot.jsonl"
 REF = "2026-10-07T10:00:00+03:00"
@@ -278,6 +279,24 @@ def test_sheet_roundtrip_and_report(tmp_path):
     assert [d["id"] for d in rep["disagreements"]] == [flipped]
     md = ag.report_markdown(rep, "self-review", "2026-10-07")
     assert "| intent | 12 | 100.0% | 1.000 | almost perfect |" in md
+
+
+def test_read_labels_reads_day_month_dates_and_ignores_dates_off_act(tmp_path):
+    sheet = tmp_path / "s.csv"
+    rows = [{"id": "a", "intent": "create_alarm", "route": "ACT", "datetime": "3/11/2026 17:00"},
+            {"id": "b", "intent": "create_alarm", "route": "ACT", "datetime": "24/10/2026 8:05"},
+            {"id": "c", "intent": "create_alarm", "route": "CLARIFY", "clarify_targets": "am_pm",
+             "datetime": "22/10/2026"},                 # a date on a CLARIFY row: ignored, row kept
+            {"id": "d", "intent": "create_alarm", "route": "ACT", "datetime": "2026-11-03 17:00"}]
+    with sheet.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=ag.SHEET_COLUMNS)
+        w.writeheader()
+        w.writerows(rows)
+    labels, errs = ag.read_labels(sheet)
+    assert not errs
+    assert labels["a"].datetime == labels["d"].datetime == cairo("2026-11-03T17:00")   # 3/11 = 3 November
+    assert labels["b"].datetime == cairo("2026-10-24T08:05")
+    assert labels["c"].datetime is None and labels["c"].targets == {"am_pm"}
 
 
 def test_read_labels_rejects_values_outside_the_contract(tmp_path):
