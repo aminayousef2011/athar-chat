@@ -47,9 +47,11 @@ Items compared: 60
 - **Who.** Ibrahim, a native Egyptian Arabic speaker, labelled the 60-item, route-stratified sample
   (`athar-data agreement-sheet`; author-written items only, one per family where possible) on his
   own, from the blind sheet and `docs/annotation_guide.md`, without the gold labels.
-- **Which pass.** κ is computed on his **first, independent pass** (the sheet as returned at 15:03 on
-  2026-10-15). Later revisions of the sheet, made after the disagreements were known, are kept as
-  adjudication input only (`data/raw/private/agreement/`, not committed) and are not used here.
+- **Which pass.** κ is computed on his **first, independent pass**: the sheet as returned at 15:03 on
+  2026-10-15, preserved in git as `sheet_Ibrahim.xlsx` at commit `5fba0c9` (SHA-256
+  `b6b7cd3de4761dc9a789e7aa984bbbabb3f1a730715ad638d35d038dabe6ca9b`). Re-running `athar-data kappa` on it (after the date conversion
+  below) reproduces every number above. Later revisions of the sheet, made after the
+  disagreements were known, are adjudication input only and are not used here.
 - **Dates.** He wrote dates day/month, as the task contract does. Excel turned the entries with a day
   of 12 or less into dates with day and month swapped (3/11 → 11 March). The only change made to the
   sheet was converting that column back, mechanically and without reference to the gold labels. All

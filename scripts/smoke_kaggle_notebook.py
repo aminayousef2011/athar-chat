@@ -13,6 +13,11 @@ cell runs, every flag combination writes its files, and the files have the expec
 
 ``--flags all`` (default) switches every RUN_* flag on with all diagnostics sets; ``as-is``
 keeps the flags as they are in the notebook, i.e. exactly the next Kaggle run.
+
+``--split test`` rehearses the locked test run (SPLIT="test", UNLOCK_TEST, GATE_TAU, only the
+test-run systems) **without reading the test split**: ``load_split(..., "test")`` returns the dev
+items. It checks the test-only code paths: the guards, S7 scoring dev and test with the same
+weights, and gated columns only for systems with a dev tau.
 """
 
 from __future__ import annotations
@@ -32,6 +37,9 @@ KIT_ZIP = ROOT / "dist" / "athar-chat-kit.zip"
 EGY = ROOT / "data" / "external" / "egyptian-nlu"
 TEMPLATE = ("{% for m in messages %}<{{ m['role'] }}> {{ m['content'] }} </s> {% endfor %}"
             "{% if add_generation_prompt %}<assistant> {% endif %}")
+# Jais 2 writes roles literally but answers under "ai" (tests/test_llm.py JAIS2_STYLE): the stand-in
+# does the same for Jais 2 ids, so its chat profile (assistant_role "ai") is consistent, as on Kaggle
+JAIS2_TEMPLATE = TEMPLATE.replace("<assistant> {% endif %}", "<ai> {% endif %}")
 
 
 def tiny_lm(texts: list[str]):  # type: ignore[no-untyped-def]
@@ -92,25 +100,49 @@ def install_fakes(vocab_texts: list[str], calls: dict[str, list]) -> None:  # ty
     sys.modules["datasets"] = datasets
 
     model, tok = tiny_lm(vocab_texts)
+    import copy
+
+    tok_jais2 = copy.deepcopy(tok)
+    tok_jais2.chat_template = JAIS2_TEMPLATE
+
+    def tokenizer_for(model_id: str):  # type: ignore[no-untyped-def]
+        return tok_jais2 if model_id.startswith("inception42/Jais-2-") else tok
 
     def load_llm(model_id: str, precision: str = "fp16", token: str | None = None, revision: str | None = None,  # type: ignore[no-untyped-def]
                  trust_remote_code: bool = False):
         calls["load_llm"].append((model_id, precision, revision, trust_remote_code))
-        return model, tok
+        return model, tokenizer_for(model_id)
 
     def load_tokenizer(model_id: str, token: str | None = None, revision: str | None = None,  # type: ignore[no-untyped-def]
                        trust_remote_code: bool = False):
         calls["load_tokenizer"].append((model_id, revision, trust_remote_code))
-        return tok
+        return tokenizer_for(model_id)
 
     llm.load_llm = load_llm
     llm.load_tokenizer = load_tokenizer
+
+
+def stand_in_for_test() -> None:
+    """``load_split(..., "test")`` returns the dev items: the rehearsal never opens the test split."""
+    from athar.data import split
+
+    real = split.load_split
+
+    def load_split(manifest, name, unlock_test=False):  # type: ignore[no-untyped-def]
+        if name == "test":
+            assert unlock_test, "the notebook must pass unlock_test=True for the test split"
+            return real(manifest, "dev")
+        return real(manifest, name)
+
+    split.load_split = load_split  # type: ignore[assignment]
 
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--flags", choices=["all", "as-is"], default="all")
     p.add_argument("--keep", action="store_true", help="keep the temporary folder")
+    p.add_argument("--split", choices=["dev", "test"], default="dev",
+                   help="test: rehearse the locked test run on dev items")
     a = p.parse_args(argv)
     if not KIT_ZIP.exists():
         sys.exit("dist/athar-chat-kit.zip is missing: run `uv run python scripts/build_kaggle_kit.py` first")
@@ -134,6 +166,8 @@ def main(argv: list[str] | None = None) -> int:
                    (ROOT / "data" / "draft" / "athar_draft.jsonl").read_text(encoding="utf-8").splitlines()]
     calls: dict[str, list] = {"load_llm": [], "load_tokenizer": []}  # type: ignore[type-arg]
     install_fakes(vocab_texts, calls)
+    if a.split == "test":
+        stand_in_for_test()
 
     nb = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
     ns: dict[str, object] = {"__name__": "__notebook__"}
@@ -153,12 +187,20 @@ def main(argv: list[str] | None = None) -> int:
                           RUN_SCORING_ABLATION=True, RUN_S4_DIAGNOSTICS=True, DIAG_MODELS=[],
                           DIAG_SETS=("dev", "egyptian", "msa"), RUN_EGYPTIAN_OOD=True, RUN_S8=True,
                           RUN_S8_EGYPTIAN=True, RUN_SHOT_STYLE=True, RUN_MODELS=[])
+            if a.split == "test":   # the test-run commits: only the pre-registered systems
+                ns.update(SPLIT="test", UNLOCK_TEST=True, RUN_PROMPT_CHECK=False, RUN_SHOT_STYLE=False,
+                          RUN_SCORING_ABLATION=False, RUN_S4_DIAGNOSTICS=False, RUN_MASSIVE_OOD=False,
+                          RUN_EGYPTIAN_OOD=False, RUN_S8_EGYPTIAN=False, RUN_S4=True, RUN_S7_QLORA=True,
+                          S7_SEEDS=[0], RUN_S8=True,
+                          GATE_TAU={f"S4-{k}-6shot-{ns['PRIMARY']}": 0.5 for k, *_ in ns["MODELS"]})  # type: ignore[attr-defined]
         if "CFG = yaml.safe_load" in src:
             ns["CFG"].update(resamples=50, permutations=50)  # type: ignore[union-attr]
 
     files = sorted(f.name for f in out.iterdir())
     print("\nwrote:", files)
     problems = check(out, ns, calls, a.flags)
+    if a.split == "test":
+        problems += check_test_run(out, ns)
     for msg in problems:
         print("PROBLEM:", msg)
     if a.keep:
@@ -230,11 +272,18 @@ def check(out: Path, ns: dict[str, object], calls: dict[str, list], flags: str) 
                     problems.append(f"{key}: no 6-shot {method} system")
             if not all("gate" in s for n, s in rep["systems"].items() if not n.endswith("generate")):
                 problems.append(f"{key}: gate analysis missing")
+            if ns.get("S4_INLINE") and f"S4-{key}-6shot-inline-prior" not in names:
+                problems.append(f"{key}: no 6-shot inline secondary system")
         summary = pd.read_csv(out / "summary.csv")
         if summary.STS.isna().any():
             problems.append("summary.csv has empty STS")
-    if ns.get("RUN_S7_QLORA") and not (out / "s7_seeds.csv").exists():
-        problems.append("s7_seeds.csv not written")
+        if ns.get("S4_INLINE"):
+            inline = pd.read_csv(out / "s4_inline_vs_turns.csv")
+            n_models, n_confirm = len(ns["MODELS"]), len(ns["INLINE_CONFIRM"])  # type: ignore[arg-type]
+            if len(inline) != n_models or inline.p_holm_this_run.notna().sum() != n_confirm:
+                problems.append("s4_inline_vs_turns.csv: a model or a Holm value is missing")
+    if ns.get("RUN_S7_QLORA"):
+        problems += check_s7(out, ns)
     if ns.get("RUN_MASSIVE_OOD") and not (out / "massive_ood.csv").exists():
         problems.append("massive_ood.csv not written")
     if ns.get("RUN_EGYPTIAN_OOD"):
@@ -255,6 +304,60 @@ def check(out: Path, ns: dict[str, object], calls: dict[str, list], flags: str) 
                 problems.append(f"diagnostics: {len(m)} MSA rows, expected {n_models * 9 * 196}")
         if not (out / "s4_diag_content_free.csv").exists():
             problems.append("content-free probabilities not written")
+    return problems
+
+
+def check_s7(out: Path, ns: dict[str, object]) -> list[str]:
+    import pandas as pd
+
+    problems = []
+    seeds, splits = list(ns["S7_SEEDS"]), ["dev"] + (["test"] if ns["SPLIT"] == "test" else [])  # type: ignore[call-overload]
+    rows = pd.read_csv(out / "s7_seeds.csv")
+    got = {(s, sp, n.rsplit("-", 1)[-1]) for s, sp, n in zip(rows.seed, rows.split, rows.system, strict=True)}
+    want = {(s, sp, m) for s in seeds for sp in splits for m in ns["S7_METHODS"]}  # type: ignore[attr-defined]
+    if got != want:
+        problems.append(f"s7_seeds.csv rows {sorted(got)}, expected {sorted(want)}")
+    training = pd.read_csv(out / "s7_training.csv")
+    if len(training) != len(seeds) * ns["S7_RECIPE"]["epochs"] or not training.loss.notna().all():  # type: ignore[index]
+        problems.append("s7_training.csv: an epoch record is missing")
+    for s in seeds:
+        for sp in splits:
+            if not (out / f"s7_jais2_qlora_s{s}_{sp}.json").exists():
+                problems.append(f"S7 seed {s}: no {sp} report")
+        if ns.get("S7_SAVE_ADAPTERS") and not (Path(str(ns["ADAPTERS"])) / f"s{s}" / "adapter_config.json").exists():
+            problems.append(f"S7 seed {s}: adapter not saved")
+    if ns.get("S7_EGYPTIAN") and len(pd.read_csv(out / "egyptian_ood_s7.csv")) != len(seeds):
+        problems.append("egyptian_ood_s7.csv: a seed is missing")
+    return problems
+
+
+def check_test_run(out: Path, ns: dict[str, object]) -> list[str]:
+    """Test rehearsal: tau never picked on test; S7 dev and test describe the same weights."""
+    import pandas as pd
+
+    problems = []
+    env = json.loads((out / "environment.json").read_text(encoding="utf-8"))
+    if env["split"] != "test":
+        problems.append("environment.json does not record the test split")
+    summary = pd.read_csv(out / "summary.csv")
+    tau = ns["GATE_TAU"]
+    gated = summary[summary.gate_tau.notna()] if "gate_tau" in summary else summary.iloc[:0]
+    if set(gated.system) - set(tau):  # type: ignore[arg-type]
+        problems.append(f"gated columns on test for systems without a dev tau: {sorted(set(gated.system) - set(tau))}")  # type: ignore[arg-type]
+    if not (gated.gate_tau == gated.system.map(tau)).all():  # type: ignore[arg-type]
+        problems.append("a test row is gated at a tau other than its dev tau")
+    s7 = pd.read_csv(out / "s7_seeds.csv")
+    test_rows = s7[s7.split == "test"]
+    for _, row in test_rows.iterrows():
+        dev = json.loads((out / f"s7_jais2_qlora_s{row.seed}_dev.json").read_text(encoding="utf-8"))
+        rule = dev["systems"][row.system]["gate"]["rule_threshold_on_this_split"]
+        if row.gate_tau != rule:
+            problems.append(f"{row.system}: test tau {row.gate_tau} is not its dev tau {rule}")
+    for s in ns["S7_SEEDS"]:  # type: ignore[attr-defined]
+        dev = json.loads((out / f"s7_jais2_qlora_s{s}_dev.json").read_text(encoding="utf-8"))
+        test = json.loads((out / f"s7_jais2_qlora_s{s}_test.json").read_text(encoding="utf-8"))
+        if dev["model"]["training"] != test["model"]["training"]:
+            problems.append(f"S7 seed {s}: dev and test reports come from different training runs")
     return problems
 
 

@@ -51,8 +51,10 @@ of as earlier chat turns; ``"turns"`` stays the primary.
 
 from __future__ import annotations
 
+import math
 import random
 import re
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -397,14 +399,38 @@ def load_llm(model_id: str, precision: str = "fp16", token: str | None = None,
 
 
 # --------------------------------------------------------------------------- S7 (exploratory)
-def lora_examples(tokenizer: Any, train: Sequence[GoldItem]) -> list[tuple[list[int], list[int]]]:
-    """(input ids, labels) per training item: the zero-shot chat prompt followed by the label's
-    verbalizer and EOS. The prompt is masked (-100), so the loss covers the answer tokens only."""
-    helper = LLMIntent(_NoModel(), tokenizer, shots=())
+def answer_suffix(tokenizer: Any, profile: ChatProfile | None = None) -> str:
+    """What the model's own template writes after an answer to close the turn (Jais 2:
+    ``<|eot_id|>``), so a fine-tuned answer ends the way the template ends one. That is not
+    always the tokenizer's EOS. Trailing whitespace is dropped."""
+    profile = profile or ChatProfile()
+    kw = dict(profile.template_kwargs)
+    msgs = build_messages("فكرني بكرة", [], assistant_fields=profile.assistant_fields,
+                          assistant_role=profile.assistant_role)
+    prompt = str(tokenizer.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, **kw))
+    answer = profile.answer_prefix + VERBALIZERS["create_reminder"]
+    turn = {"role": profile.assistant_role, "content": VERBALIZERS["create_reminder"], **profile.assistant_fields}
+    done = str(tokenizer.apply_chat_template(msgs + [turn], tokenize=False, **kw))
+    if not done.startswith(prompt + answer):
+        raise ValueError("the template does not write 'prompt + answer' as a finished turn "
+                         "(see answer_consistent): the training target would not match scoring")
+    return done[len(prompt + answer):].rstrip()
+
+
+def lora_examples(tokenizer: Any, train: Sequence[GoldItem],
+                  profile: ChatProfile | None = None) -> list[tuple[list[int], list[int]]]:
+    """(input ids, labels) per training item: the zero-shot prompt that S7 is scored after, the
+    label's verbalizer, then the template's end of turn (``answer_suffix``; EOS if it writes none).
+    The prompt is masked (-100), so the loss covers the answer tokens only."""
+    profile = profile or ChatProfile()
+    helper = LLMIntent(_NoModel(), tokenizer, shots=(), **profile.intent_kwargs())
+    end = tokenizer(answer_suffix(tokenizer, profile), add_special_tokens=False)["input_ids"]
+    if not end and tokenizer.eos_token_id is not None:
+        end = [tokenizer.eos_token_id]
     out = []
     for it in train:
         p_ids = tokenizer(helper.prompt(norm(it.text)), add_special_tokens=False)["input_ids"]
-        c_ids = helper.label_ids[it.intent] + ([tokenizer.eos_token_id] if tokenizer.eos_token_id is not None else [])
+        c_ids = helper.label_ids[it.intent] + end
         out.append((p_ids + c_ids, [-100] * len(p_ids) + c_ids))
     return out
 
@@ -413,17 +439,33 @@ class _NoModel:
     """Placeholder model for prompt construction only."""
 
 
+def class_weights(train: Sequence[GoldItem]) -> dict[str, float]:
+    """Balanced class weights n / (K * n_c), as ``class_weight="balanced"`` in S2/S3 and S6."""
+    counts = Counter(it.intent for it in train)
+    return {lab: len(train) / (len(counts) * n) for lab, n in counts.items()}
+
+
 def lora_finetune(model: Any, tokenizer: Any, train: Sequence[GoldItem], *, epochs: int = 3,
                   learning_rate: float = 2e-4, r: int = 16, alpha: int = 32, dropout: float = 0.05,
+                  batch_size: int = 16, warmup_ratio: float = 0.1, max_grad_norm: float = 1.0,
+                  weight_decay: float = 0.01, class_balanced: bool = True, profile: ChatProfile | None = None,
                   seed: int = 0, target_modules: Sequence[str] | str = "all-linear",
-                  log: Any = print) -> Any:
-    """LoRA on the zero-shot prompt -> verbalizer task, loss on the verbalizer tokens only.
-    Returns the adapted model (use it with ``LLMIntent(..., shots=())``)."""
+                  log: Any = print, history: list[dict[str, float]] | None = None) -> Any:
+    """LoRA on the zero-shot prompt -> verbalizer task, loss on the answer tokens only. Returns the
+    adapted model (use it with ``LLMIntent(..., shots=())`` and the same ``profile``).
+
+    The adapter settings (r, alpha, dropout, epochs, LR) are pre-registered. The optimisation follows
+    the protocol's S6 small-data recipe: AdamW with weight decay, batches of ``batch_size`` (gradient
+    accumulation, one unpadded sequence at a time), linear warm-up over ``warmup_ratio`` of the steps
+    then linear decay, gradient clipping, and a class-balanced loss (each item's answer loss weighted
+    by ``class_weights``, a weighted mean per batch as in ``CrossEntropyLoss(weight=...)``).
+    ``batch_size=1, warmup_ratio=0, class_balanced=False`` with no clipping is the loop of the
+    2026-10-17 run 6. ``history`` receives one record per epoch (loss, LR, gradient norms)."""
     import torch
     from peft import LoraConfig, get_peft_model
 
     torch.manual_seed(seed)
-    random.seed(seed)
+    rng = random.Random(seed)
     if getattr(model, "is_loaded_in_4bit", False):
         from peft import prepare_model_for_kbit_training
 
@@ -431,18 +473,41 @@ def lora_finetune(model: Any, tokenizer: Any, train: Sequence[GoldItem], *, epoc
     modules = target_modules if isinstance(target_modules, str) else list(target_modules)
     model = get_peft_model(model, LoraConfig(r=r, lora_alpha=alpha, lora_dropout=dropout, bias="none",
                                              task_type="CAUSAL_LM", target_modules=modules))
-    examples = lora_examples(tokenizer, train)
-    opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=learning_rate)
+    examples = [(ids, labels, it.intent)
+                for (ids, labels), it in zip(lora_examples(tokenizer, train, profile), train, strict=True)]
+    weight = class_weights(train) if class_balanced else dict.fromkeys(INTENTS, 1.0)
+    params = [p for p in model.parameters() if p.requires_grad]
+    opt = torch.optim.AdamW(params, lr=learning_rate, weight_decay=weight_decay)
+    steps = epochs * math.ceil(len(examples) / batch_size)
+    warmup = int(warmup_ratio * steps) if warmup_ratio > 0 else 0
+    sched = torch.optim.lr_scheduler.LambdaLR(
+        opt, lambda s: (s + 1) / warmup if s < warmup else max(0.0, (steps - s) / max(1, steps - warmup))
+        if warmup else 1.0)
     device = next(model.parameters()).device
     model.train()
     for epoch in range(epochs):
-        random.shuffle(examples)
-        total = 0.0
-        for ids, labels in examples:
-            out = model(input_ids=torch.tensor([ids], device=device), labels=torch.tensor([labels], device=device))
-            out.loss.backward()
+        rng.shuffle(examples)
+        total, norms, lrs = 0.0, [], []
+        for start in range(0, len(examples), batch_size):
+            batch = examples[start:start + batch_size]
+            wsum = sum(weight[lab] for *_, lab in batch)
+            for ids, labels, lab in batch:
+                out = model(input_ids=torch.tensor([ids], device=device),
+                            labels=torch.tensor([labels], device=device))
+                if not torch.isfinite(out.loss):
+                    raise FloatingPointError(f"non-finite LoRA loss at epoch {epoch + 1}")
+                (out.loss * (weight[lab] / wsum)).backward()
+                total += out.loss.item()
+            lrs.append(sched.get_last_lr()[0])
+            norms.append(float(torch.nn.utils.clip_grad_norm_(params, max_grad_norm or float("inf"))))
             opt.step()
+            sched.step()
             opt.zero_grad()
-            total += out.loss.item()
-        log(f"  LoRA epoch {epoch + 1}/{epochs} loss {total / len(examples):.4f}")
+        rec: dict[str, float] = {"epoch": epoch + 1, "loss": float(total) / len(examples), "steps": len(norms),
+                                 "lr_first": float(lrs[0]), "lr_last": float(lrs[-1]),
+                                 "grad_norm_mean": float(np.mean(norms)), "grad_norm_max": float(max(norms))}
+        if history is not None:
+            history.append(rec)
+        log(f"  LoRA epoch {epoch + 1}/{epochs}: {len(norms)} steps, lr {lrs[0]:.1e}->{lrs[-1]:.1e}, "
+            f"grad norm max {max(norms):.2f}, loss {rec['loss']:.4f}")
     return model.eval()

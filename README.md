@@ -39,9 +39,14 @@ tool calling and selectable reasoning. The LLM track was extended to use it. The
   Egyptian Arabic, a dialect their release does not name.
 - **Fairer LLM comparisons.**
   - All models run in bf16 where the GPU supports it, with the precision recorded per result.
-  - The prompt each model scores is printed and checked against its own chat template. This check
-    found why Jais 2 was unstable with few-shot prompts: its examples were labelled with a different
-    role from the one it answers with. Fixed before any real-split run.
+  - The prompt each model scores is printed and checked against its own chat template. The check
+    found that Jais 2's examples carried a different role from the one it answers with; this was
+    fixed before any real-split run. A follow-up experiment showed that the role made no measurable
+    difference. What hurts both Jais models is giving the examples as earlier chat turns: listing
+    them in the user message instead raised dev Safe Task Success by 8-17 points in every exemplar set
+    ([docs/jais3.md](docs/jais3.md), section 10). Because this was found on dev, it is not adopted. It
+    was declared as a secondary analysis, with its own paired test, before the test split was opened,
+    and the locked test run checks it.
   - Jais 2 and Jais 3 are compared, paired, on 192 native out-of-scope Egyptian requests.
 
 Design, integration details and what can be claimed: [docs/jais3.md](docs/jais3.md). Protocol

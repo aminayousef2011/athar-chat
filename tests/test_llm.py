@@ -133,6 +133,57 @@ def test_lora_finetune_trains_only_adapters_and_lowers_the_loss(pilot_and_lm):
     assert set(preds) <= set(INTENTS)
 
 
+def test_lora_finetune_follows_the_s6_recipe_and_records_history(pilot_and_lm):
+    pytest.importorskip("peft")
+    items, _, _ = pilot_and_lm
+    model, tok = tiny_lm([norm(it.text) for it in items])
+    history, epochs, bs, lr = [], 2, 4, 1e-3
+    llm.lora_finetune(model, tok, items, epochs=epochs, learning_rate=lr, batch_size=bs, r=4, alpha=8,
+                      target_modules=["c_attn"], log=lambda s: None, history=history)
+    per_epoch = -(-len(items) // bs)
+    steps, warmup = epochs * per_epoch, int(0.1 * epochs * per_epoch)
+    assert [h["steps"] for h in history] == [per_epoch] * epochs
+    assert history[0]["lr_first"] == pytest.approx(lr / warmup)                  # linear warm-up ...
+    assert history[-1]["lr_last"] == pytest.approx(lr / (steps - warmup))        # ... then decay to ~0
+    assert all(np.isfinite(h["loss"]) and h["grad_norm_max"] >= h["grad_norm_mean"] > 0 for h in history)
+    # the run-6 loop (one step per item, constant LR, unweighted) is still expressible
+    old = []
+    llm.lora_finetune(tiny_lm([norm(it.text) for it in items])[0], tok, items, epochs=1, learning_rate=lr,
+                      batch_size=1, warmup_ratio=0, class_balanced=False, r=4, alpha=8,
+                      target_modules=["c_attn"], log=lambda s: None, history=old)
+    assert old[0]["steps"] == len(items) and old[0]["lr_first"] == old[0]["lr_last"] == pytest.approx(lr)
+
+
+def test_class_weights_are_balanced(pilot_and_lm):
+    items, _, _ = pilot_and_lm
+    w = llm.class_weights(items)
+    assert sum(w[it.intent] for it in items) == pytest.approx(len(items))   # mean weight 1
+    counts = {lab: sum(it.intent == lab for it in items) for lab in w}
+    assert len({round(w[lab] * counts[lab], 9) for lab in w}) == 1           # each class weighs the same
+
+
+def test_s7_answers_end_with_the_templates_end_of_turn_not_eos(pilot_and_lm):
+    items, _, _ = pilot_and_lm
+    _, tok = tiny_lm([norm(it.text) for it in items])
+    tok.add_special_tokens({"bos_token": "<|begin_of_text|>"})
+    tok.add_tokens(["<|start_header_id|>", "<|end_header_id|>", "<|eot_id|>"], special_tokens=True)
+    tok.chat_template = JAIS2_STYLE
+    prof = llm.chat_profile("inception42/Jais-2-8B-Chat")
+    assert llm.answer_suffix(tok, prof) == "<|eot_id|>"
+    eot = tok.convert_tokens_to_ids("<|eot_id|>")
+    assert eot != tok.eos_token_id
+    for (ids, labels), it in zip(llm.lora_examples(tok, items[:5], prof), items[:5], strict=True):
+        answer = [x for x in labels if x != -100]
+        assert answer == tok(llm.VERBALIZERS[it.intent], add_special_tokens=False)["input_ids"] + [eot]
+        # the prompt is exactly the one S7 is scored after
+        prompt = llm.LLMIntent(None, tok, **prof.intent_kwargs()).prompt(norm(it.text))
+        assert ids[: len(ids) - len(answer)] == tok(prompt, add_special_tokens=False)["input_ids"]
+    j3 = jais3_tokenizer([norm(it.text) for it in items])
+    assert llm.answer_suffix(j3, llm.chat_profile("inception42/Jais-3-7B")) == "<|ifm|im_end|>"
+    with pytest.raises(ValueError, match="finished turn"):   # no answer prefix: label not where answers go
+        llm.answer_suffix(j3, llm.ChatProfile(assistant_fields={"reasoning_content": ""}))
+
+
 def test_length_norm_is_the_mean_of_the_same_token_scores(pilot_and_lm):
     items, model, tok = pilot_and_lm
     text = norm(items[0].text)
@@ -216,16 +267,20 @@ def test_chat_profiles():
     assert llm.chat_profile("MBZUAI-Paris/Nile-Chat-4B") == llm.ChatProfile()
 
 
-#: a Jais 2-style template, reconstructed from the 2026-10-15 Kaggle prompt check (the real one
-#: is gated): each role written literally, and the answer opened under the role "ai"
-JAIS2_STYLE = ("{{ bos_token }}{% for m in messages %}<|start_header_id|>{{ m['role'] }}<|end_header_id|>"
-               "{{ m['content'] }}<|eot_id|>{% endfor %}"
-               "{% if add_generation_prompt %}<|start_header_id|>ai<|end_header_id|>{% endif %}")
+#: the chat template of inception42/Jais-2-8B-Chat at revision da0e1639cd92 (gated on the Hub;
+#: printed by the Kaggle prompt check, notebook 2026-10-15b): each role written literally, and
+#: the answer opened under the role "ai"
+JAIS2_STYLE = ("{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = "
+               "'<|start_header_id|>' + message['role'] + '<|end_header_id|>' + message['content'] | trim + "
+               "'<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}"
+               "{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>ai<|end_header_id|>' }}"
+               "{% endif %}")
 
 
 def test_jais2_few_shot_answers_use_the_role_its_template_answers_with(pilot_and_lm):
     items, model, _ = pilot_and_lm
     _, tok = tiny_lm([norm(it.text) for it in items])
+    tok.add_special_tokens({"bos_token": "<|begin_of_text|>"})
     tok.chat_template = JAIS2_STYLE
     shots = llm.select_shots(items, per_label=2)
     text = norm(items[0].text)
