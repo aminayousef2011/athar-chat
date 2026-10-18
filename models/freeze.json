@@ -129,13 +129,13 @@
     "src/athar/intent/rules.py": "ffa53ab9764c094e6c1c8bb81daaa76458ca21649b8777fad937ef9d24123f83",
     "src/athar/intent/models.py": "7f981abcd9efc73fca2fccc58e9c1f3d5bcbeadf97c6466c73dbef58fc712cd9",
     "src/athar/intent/neural.py": "2282f2eb1fb7c8ae6765d5d651e9038c68ab7386e1ac6d17626d306567f09a24",
-    "src/athar/intent/llm.py": "e805e9d61f7bf2b53d287db8f3f4787ccf7dbd449110c00559e1b6c3ede2b8ad",
+    "src/athar/intent/llm.py": "e119613a217d6b7d1348b43b839ec786e023517d947d6fb51ec3ea5745b534b5",
     "src/athar/eval/metrics.py": "9698c69fc8cc60b1f6fd1984843d413719d0400b38239b6aacf3bb8bfa549b51",
     "src/athar/eval/stats.py": "411734b0afda8f9ffc936dabe2ad0307d091c766526d010a0009d03492c267d9",
     "src/athar/eval/perturb.py": "00085b38ffecca712194f10d06ea3246cfa152561e17dece51037dafe945d21c",
     "src/athar/eval/harness.py": "c14c075bad720a6c76a648e2e2723198793d1e0fba37c24536d0887f87951b48",
     "docs/task_contract.md": "fbc3f3a0c5753339d573e749010938410d60c9bce72e6d76d89223576bcd464a",
-    "docs/evaluation_protocol.md": "3b1b7767bd21033f64ab6f819ab2e74b160890bb820edd7afff47d3dd08bf039",
+    "docs/evaluation_protocol.md": "a71d3bdc014199f5148aa3075d0ebc696b279806fec6f064b6d29cbfc06ac2f0",
     "configs/eval.yaml": "482280d83abab26f2a6c310b45d173b11af2aedc74335734f3dd38993d0cf74e"
   },
   "environment": {
@@ -148,7 +148,7 @@
     "numpy": "2.4.6",
     "joblib": "1.6.0"
   },
-  "process_peak_rss_mb": 140.6,
+  "process_peak_rss_mb": 141.0,
   "systems": {
     "S1": {
       "kind": "keyword rules",
@@ -156,7 +156,7 @@
         "intent_macro_f1": 0.7556,
         "intent_accuracy": 0.8
       },
-      "predict_ms_per_item": 0.0115
+      "predict_ms_per_item": 0.0122
     },
     "S2": {
       "kind": "tf-idf + logistic regression",
@@ -176,25 +176,25 @@
         "intent_accuracy": 0.95
       },
       "file": "S2.joblib",
-      "sha256": "cfa43f0a48135ab3af7196c5deaec45f49be53cb24eba553957629f199087a46",
+      "sha256": "b325837a3a7d816d4d4c34e322d89af6e4565624e4bfc13a1a615ffd854c86b2",
       "files": {
-        "S2.joblib": "cfa43f0a48135ab3af7196c5deaec45f49be53cb24eba553957629f199087a46"
+        "S2.joblib": "b325837a3a7d816d4d4c34e322d89af6e4565624e4bfc13a1a615ffd854c86b2"
       },
       "size_kb": 20.4,
       "n_features": 419,
       "resources": {
         "final_fit": {
           "cpu_seconds": 0.0312,
-          "wall_seconds": 0.0418,
+          "wall_seconds": 0.029,
           "peak_traced_mb": 0.57
         },
         "search": {
-          "cpu_seconds": 0.8438,
-          "wall_seconds": 0.8422,
-          "peak_traced_mb": 2.32,
+          "cpu_seconds": 0.7188,
+          "wall_seconds": 0.7333,
+          "peak_traced_mb": 2.31,
           "n_fits": 12
         },
-        "predict_ms_per_item": 0.0318
+        "predict_ms_per_item": 0.0258
       },
       "grid": [
         {
@@ -503,25 +503,25 @@
         "intent_accuracy": 0.925
       },
       "file": "S3.joblib",
-      "sha256": "b8e68f6160b2a3e391573414dff59b807214b13d32b844d29502d8724381bd31",
+      "sha256": "cb99838b9793ae894bd35a6258eeef7d4b8ae2d01f3180fa22ad49fdd759abac",
       "files": {
-        "S3.joblib": "b8e68f6160b2a3e391573414dff59b807214b13d32b844d29502d8724381bd31"
+        "S3.joblib": "cb99838b9793ae894bd35a6258eeef7d4b8ae2d01f3180fa22ad49fdd759abac"
       },
       "size_kb": 161.5,
       "n_features": 3780,
       "resources": {
         "final_fit": {
-          "cpu_seconds": 0.125,
-          "wall_seconds": 0.1256,
+          "cpu_seconds": 0.1562,
+          "wall_seconds": 0.1988,
           "peak_traced_mb": 4.57
         },
         "search": {
-          "cpu_seconds": 11.0938,
-          "wall_seconds": 10.7529,
+          "cpu_seconds": 7.4844,
+          "wall_seconds": 7.1549,
           "peak_traced_mb": 7.85,
           "n_fits": 36
         },
-        "predict_ms_per_item": 0.0881
+        "predict_ms_per_item": 0.1745
       },
       "grid": [
         {
@@ -1361,5 +1361,5 @@
       }
     }
   },
-  "freeze_sha256": "11a6f3d5ee12b67224710dbad5dc7dddb482636711788a8c4cc834145794cc19"
+  "freeze_sha256": "d9bc40cf9473adfa1a1248f172885f075dc0f703f583316907337febf3069c72"
 }

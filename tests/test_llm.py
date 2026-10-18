@@ -154,6 +154,22 @@ def test_lora_finetune_follows_the_s6_recipe_and_records_history(pilot_and_lm):
     assert old[0]["steps"] == len(items) and old[0]["lr_first"] == old[0]["lr_last"] == pytest.approx(lr)
 
 
+def test_frozen_lora_loads_only_with_its_hash_and_scores_like_the_trained_one(pilot_and_lm, tmp_path):
+    pytest.importorskip("peft")
+    items, _, _ = pilot_and_lm
+    texts = [norm(it.text) for it in items]
+    model, tok = tiny_lm(texts)
+    tuned = llm.lora_finetune(model, tok, items, epochs=2, learning_rate=1e-3, batch_size=4, r=4, alpha=8,
+                              target_modules=["c_attn"], log=lambda s: None)
+    tuned.save_pretrained(tmp_path / "s0")
+    want = llm.LLMIntent(tuned, tok, method="raw").predict(texts)
+    sha = llm.file_sha256(tmp_path / "s0" / "adapter_model.safetensors")
+    frozen = llm.load_lora(tiny_lm(texts)[0], tmp_path / "s0", sha256=sha)
+    assert not frozen.training and llm.LLMIntent(frozen, tok, method="raw").predict(texts) == want
+    with pytest.raises(ValueError, match="not the frozen"):
+        llm.load_lora(tiny_lm(texts)[0], tmp_path / "s0", sha256="0" * 64)
+
+
 def test_class_weights_are_balanced(pilot_and_lm):
     items, _, _ = pilot_and_lm
     w = llm.class_weights(items)

@@ -148,7 +148,7 @@ The other models' prompts are **byte-identical** to the earlier runs (tested).
 
 ## 7. Runs
 
-Notebook `notebooks/kaggle_s4_llm.ipynb` (version 2026-10-17a). Each run is one commit
+Notebook `notebooks/kaggle_s4_llm.ipynb` (version 2026-10-18a). Each run is one commit
 (*Save & Run All*). Bring the outputs back under `runs/s4/<run name>/`.
 
 | # | Run | Flags | Where |
@@ -159,8 +159,8 @@ Notebook `notebooks/kaggle_s4_llm.ipynb` (version 2026-10-17a). Each run is one 
 | 4 | Prompt-format check | `RUN_SHOT_STYLE` | Kaggle |
 | 5 | S8 on dev | `RUN_S8` (+ `RUN_S8_EGYPTIAN`) | Kaggle (slow), or an H100 with `S8_SERVER` |
 | 6 | S7 on the real split (done; old training loop, section 12) | `RUN_S7_QLORA` | Kaggle |
-| 6b | S7 with the S6-recipe training, dev only | `RUN_S7_QLORA` | Kaggle, ~4.5 h |
-| 7 | Locked test run: each system once, `SPLIT="test"`, `UNLOCK_TEST=True`, in four commits (12-hour limit): 7a `RUN_S4` Jais 3 models and 7b `RUN_S4` Jais 2, Nile-Chat, Qwen3 (both with `GATE_TAU` from dev); 7c `RUN_S7_QLORA` (dev and test on the same weights, τ picked on that dev score); 7d `RUN_S8` | Each S4 commit also scores the declared `inline` secondary (`S4_INLINE`) | after run 6 |
+| 6b | S7 with the S6-recipe training, dev only (done 2026-10-18, section 13; adapters frozen) | `RUN_S7_QLORA`, `S7_FROZEN=False` | Kaggle |
+| 7 | Locked test run: each system once, `SPLIT="test"`, `UNLOCK_TEST=True`, in four commits (12-hour limit): 7a `RUN_S4` Jais 3 models and 7b `RUN_S4` Jais 2, Nile-Chat, Qwen3 (both with `GATE_TAU` from dev); 7c `RUN_S7_QLORA` with `S7_FROZEN` (loads the run-6b adapters from a second dataset, hash-checked; τ from run 6b); 7d `RUN_S8` | Each S4 commit also scores the declared `inline` secondary (`S4_INLINE`) | after run 6 |
 
 ## 8. Prompt check results (Kaggle, notebook 2026-10-15b, 2× T4)
 
@@ -359,3 +359,60 @@ principle rather than a dev search:
 
 Run 6 stays in the record. Run 6b checks the new loop on dev only, and it can stop the test run only for a
 defect (non-finite loss, collapse onto one label), not for a lower score.
+
+## 13. S7 with the S6-recipe training (run 6b; Kaggle 2× T4, notebook 2026-10-17a)
+
+`runs/s4/2026-10-18-run6b-s7/` (not committed). Same 298 train items, 40 dev items and seeds 0-2 as run 6.
+Training as in the protocol log of 2026-10-17: batch 16, 19 steps per epoch, LR warmed up from 4e-5 and
+decayed to 4e-6, clipping at 1.0, class-balanced loss, answers ending with `<|eot_id|>`. About 60 min per
+seed.
+
+| Scoring | Seed 0 | Seed 1 | Seed 2 | Mean ± SD | Run 6 (old loop) |
+|---|---|---|---|---|---|
+| **`prior` (headline)** | 0.950 | 0.950 | 0.950 | **0.950 ± 0.000** | not computed |
+| `raw` | 0.950 | 0.925 | 0.925 | 0.933 ± 0.014 | 0.633 ± 0.300 |
+| `calibrated` | 0.925 | 0.850 | 0.900 | 0.892 ± 0.038 | 0.892 ± 0.029 |
+
+Intent macro-F1 for `prior`: 0.933 ± 0.004. Unsafe execution: 0.000 for `prior` and `raw` in every seed.
+
+**Defect check (the rule fixed in advance): passed.** Every loss is finite, and every seed and method
+predicts all three labels (no collapse). Run 6b does not stop the test run.
+
+What the run shows:
+- **The seed instability is gone.** `raw` went from 0.325-0.925 to 0.925-0.950. The training loss falls
+  smoothly in every seed (epoch 1 → 3: 0.13-0.30 → 0.002-0.007). Clipping was active in epoch 1
+  (gradient norm up to 21, clipped to 1.0).
+- **Which change fixed it is not identified.** Batching, schedule, clipping, class weights and the
+  end-of-turn token changed together. Run 6 vs 6b is a before/after comparison, not an ablation.
+- **`calibrated` is now the weakest scoring.** Content-free calibration pushes the out-of-scope requests
+  toward in scope (out-of-scope success 0.29-0.57 vs 0.71-0.86 for `prior`). That matches the a priori
+  reason it was dropped as the S4 primary (protocol log 2026-10-10): an empty input really is out of
+  scope.
+- **Fine-tuning vs zero-shot, dev, descriptive:** S7 `prior` 0.950 vs Jais 2 0-shot `prior` 0.925. Each
+  seed differs from zero-shot on 1-3 items (paired McNemar p = 1.0), so **no measurable gain on 40
+  items**. S2 also scores 0.950.
+- **Out-of-scope recall on the 192 native Egyptian requests:** 1.000 / 0.990 / 0.990. For comparison:
+  Jais 2 6-shot `prior` 0.964, Jais-3-7B 1.000, S1 0.990. The 4 alarms are too few to read (0.75-1.00).
+- **Code-switched triggers are the weak spot, and vary by seed.** With «فكرني» replaced by "remind me"
+  (22 items), STS is 0.95 / **0.50** / 0.91. The one dev item phrased in English
+  (pm-111, «set a reminder بكرة 9 الصبح …») is read as out of scope by seeds 0 and 1. The trained
+  classical systems share the gap: S2 0.773, S3 0.636 on the same perturbation. The training data has
+  few English triggers.
+- **Remaining errors:** recurring reminders (pm-193 in every seed, pm-194 in seed 2), which are out of scope
+  only by the task contract, and pm-111.
+- **Caveats:** 39 of 40 dev items are assistant drafts, as are 261 of the 298 train items. The training
+  loss near zero shows the train set is almost memorised. Whether this transfers to author-written
+  requests is exactly what the test split measures.
+
+Saved adapters (`s7_adapters/s<seed>/`, not committed, 177 MB each; same `adapter_config.json`, SHA-256
+`abdb6553a493…`):
+
+| Seed | `adapter_model.safetensors` SHA-256 |
+|---|---|
+| 0 | `64e87a48a6c24f6ff73cd4cfc62946ba28104f218aa9a63a74d196224bb6c62c` |
+| 1 | `30abde5994ea9b010f017b8c802a4c1fa19e1275456021d16de63c2d2a86735d` |
+| 2 | `8ada29076edce065ac0c6ac38c8d8d0ad9075ac447d740a6e9724b443d16c9ab` |
+
+**Frozen for the test run (protocol log 2026-10-18).** These three adapters are the S7 models. Commit 7c loads
+them from a second Kaggle dataset, refuses any file whose hash differs from the table above, rescores dev as a
+reproduction check, and scores test with the τ that run 6b picked on dev (0.0, except 0.9 for s1 `calibrated`).

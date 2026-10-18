@@ -1,0 +1,4 @@
+model,n,STS_inline,STS_turns,difference,diff_low,diff_high,p_value,mcnemar_only_inline,mcnemar_only_turns,mcnemar_p,family,precision,p_holm_this_run
+jais2-8b,120,0.7333,0.7583,-0.025,-0.0783,0.024,0.5161,3,6,0.5078,confirmatory,nf4-fp32,0.5161
+nile-4b,120,0.725,0.7417,-0.0167,-0.063,0.0268,0.7257,3,5,0.7266,descriptive,fp32,
+qwen3-8b,120,0.7083,0.7,0.0083,-0.0342,0.0509,1.0,4,3,1.0,descriptive,fp16,

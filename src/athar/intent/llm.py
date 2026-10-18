@@ -51,12 +51,14 @@ of as earlier chat turns; ``"turns"`` stays the primary.
 
 from __future__ import annotations
 
+import hashlib
 import math
 import random
 import re
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -437,6 +439,25 @@ def lora_examples(tokenizer: Any, train: Sequence[GoldItem],
 
 class _NoModel:
     """Placeholder model for prompt construction only."""
+
+
+def file_sha256(path: str | Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def load_lora(model: Any, directory: str | Path, sha256: str | None = None) -> Any:
+    """A frozen S7 adapter on its base model, in eval mode. With ``sha256``, the weights file must
+    match it, so a test run cannot silently score other weights than the ones frozen on dev."""
+    from peft import PeftModel
+
+    weights = Path(directory) / "adapter_model.safetensors"
+    if sha256 is not None and file_sha256(weights) != sha256:
+        raise ValueError(f"{weights}: SHA-256 {file_sha256(weights)[:12]}... is not the frozen {sha256[:12]}...")
+    return PeftModel.from_pretrained(model, str(directory)).eval()
 
 
 def class_weights(train: Sequence[GoldItem]) -> dict[str, float]:

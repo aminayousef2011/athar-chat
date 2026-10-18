@@ -122,6 +122,18 @@ def install_fakes(vocab_texts: list[str], calls: dict[str, list]) -> None:  # ty
     llm.load_tokenizer = load_tokenizer
 
 
+def frozen_adapters(root: Path, vocab_texts: list[str]) -> dict[int, str]:
+    """A tiny LoRA adapter saved as the second Kaggle dataset (s0/), as run 6b's adapters are."""
+    from athar.data.io import load_items
+    from athar.intent import llm
+
+    model, tok = tiny_lm(vocab_texts)
+    items = load_items(ROOT / "data" / "pilot" / "pilot.jsonl")
+    tuned = llm.lora_finetune(model, tok, items, epochs=1, batch_size=4, r=4, alpha=8, log=lambda s: None)
+    tuned.save_pretrained(root / "s0")
+    return {0: llm.file_sha256(root / "s0" / "adapter_model.safetensors")}
+
+
 def stand_in_for_test() -> None:
     """``load_split(..., "test")`` returns the dev items: the rehearsal never opens the test split."""
     from athar.data import split
@@ -166,8 +178,10 @@ def main(argv: list[str] | None = None) -> int:
                    (ROOT / "data" / "draft" / "athar_draft.jsonl").read_text(encoding="utf-8").splitlines()]
     calls: dict[str, list] = {"load_llm": [], "load_tokenizer": []}  # type: ignore[type-arg]
     install_fakes(vocab_texts, calls)
+    frozen_sha: dict[int, str] = {}
     if a.split == "test":
         stand_in_for_test()
+        frozen_sha = frozen_adapters(kaggle_in / "datasets" / "someone" / "s7-adapters", vocab_texts)
 
     nb = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
     ns: dict[str, object] = {"__name__": "__notebook__"}
@@ -183,6 +197,7 @@ def main(argv: list[str] | None = None) -> int:
         if "RUN_S4" in src and "PRIMARY" in src and i == 1:
             ns.update(S8_MAX_NEW_TOKENS=4, S8_SEEDS=[0, 1])   # the tiny model has 2048 positions
             if a.flags == "all":
+                ns.update(S7_FROZEN=False)   # dev: exercise training (runs 6/6b); the test rehearsal loads
                 ns.update(RUN_PROMPT_CHECK=True, RUN_S4=True, RUN_S7_QLORA=True, S7_SEEDS=[0], RUN_MASSIVE_OOD=True,
                           RUN_SCORING_ABLATION=True, RUN_S4_DIAGNOSTICS=True, DIAG_MODELS=[],
                           DIAG_SETS=("dev", "egyptian", "msa"), RUN_EGYPTIAN_OOD=True, RUN_S8=True,
@@ -191,7 +206,8 @@ def main(argv: list[str] | None = None) -> int:
                 ns.update(SPLIT="test", UNLOCK_TEST=True, RUN_PROMPT_CHECK=False, RUN_SHOT_STYLE=False,
                           RUN_SCORING_ABLATION=False, RUN_S4_DIAGNOSTICS=False, RUN_MASSIVE_OOD=False,
                           RUN_EGYPTIAN_OOD=False, RUN_S8_EGYPTIAN=False, RUN_S4=True, RUN_S7_QLORA=True,
-                          S7_SEEDS=[0], RUN_S8=True,
+                          S7_SEEDS=[0], RUN_S8=True, S7_FROZEN=True, S7_ADAPTER_SHA256=frozen_sha,
+                          S7_GATE_TAU={f"S7-jais2-qlora-s0-{m}": 0.4 for m in ("raw", "calibrated", "prior")},
                           GATE_TAU={f"S4-{k}-6shot-{ns['PRIMARY']}": 0.5 for k, *_ in ns["MODELS"]})  # type: ignore[attr-defined]
         if "CFG = yaml.safe_load" in src:
             ns["CFG"].update(resamples=50, permutations=50)  # type: ignore[union-attr]
@@ -317,16 +333,21 @@ def check_s7(out: Path, ns: dict[str, object]) -> list[str]:
     want = {(s, sp, m) for s in seeds for sp in splits for m in ns["S7_METHODS"]}  # type: ignore[attr-defined]
     if got != want:
         problems.append(f"s7_seeds.csv rows {sorted(got)}, expected {sorted(want)}")
-    training = pd.read_csv(out / "s7_training.csv")
-    if len(training) != len(seeds) * ns["S7_RECIPE"]["epochs"] or not training.loss.notna().all():  # type: ignore[index]
-        problems.append("s7_training.csv: an epoch record is missing")
+    frozen = bool(ns.get("S7_FROZEN"))
+    if not frozen:
+        training = pd.read_csv(out / "s7_training.csv")
+        if len(training) != len(seeds) * ns["S7_RECIPE"]["epochs"] or not training.loss.notna().all():  # type: ignore[index]
+            problems.append("s7_training.csv: an epoch record is missing")
     for s in seeds:
         for sp in splits:
-            if not (out / f"s7_jais2_qlora_s{s}_{sp}.json").exists():
+            report = out / f"s7_jais2_qlora_s{s}_{sp}.json"
+            if not report.exists():
                 problems.append(f"S7 seed {s}: no {sp} report")
-        if ns.get("S7_SAVE_ADAPTERS") and not (Path(str(ns["ADAPTERS"])) / f"s{s}" / "adapter_config.json").exists():
+            elif frozen and json.loads(report.read_text(encoding="utf-8"))["model"]["frozen"]["adapter_sha256"]                     != ns["S7_ADAPTER_SHA256"][s]:  # type: ignore[index]
+                problems.append(f"S7 seed {s}: {sp} report does not record the frozen adapter hash")
+        if not frozen and ns.get("S7_SAVE_ADAPTERS") and                 not (Path(str(ns["ADAPTERS"])) / f"s{s}" / "adapter_config.json").exists():
             problems.append(f"S7 seed {s}: adapter not saved")
-    if ns.get("S7_EGYPTIAN") and len(pd.read_csv(out / "egyptian_ood_s7.csv")) != len(seeds):
+    if ns.get("S7_EGYPTIAN") and not (frozen and ns["SPLIT"] == "test") and             len(pd.read_csv(out / "egyptian_ood_s7.csv")) != len(seeds):
         problems.append("egyptian_ood_s7.csv: a seed is missing")
     return problems
 
@@ -349,10 +370,13 @@ def check_test_run(out: Path, ns: dict[str, object]) -> list[str]:
     s7 = pd.read_csv(out / "s7_seeds.csv")
     test_rows = s7[s7.split == "test"]
     for _, row in test_rows.iterrows():
-        dev = json.loads((out / f"s7_jais2_qlora_s{row.seed}_dev.json").read_text(encoding="utf-8"))
-        rule = dev["systems"][row.system]["gate"]["rule_threshold_on_this_split"]
-        if row.gate_tau != rule:
-            problems.append(f"{row.system}: test tau {row.gate_tau} is not its dev tau {rule}")
+        if ns.get("S7_FROZEN"):
+            want = ns["S7_GATE_TAU"][row.system]  # type: ignore[index]
+        else:
+            dev = json.loads((out / f"s7_jais2_qlora_s{row.seed}_dev.json").read_text(encoding="utf-8"))
+            want = dev["systems"][row.system]["gate"]["rule_threshold_on_this_split"]
+        if row.gate_tau != want:
+            problems.append(f"{row.system}: test tau {row.gate_tau} is not its dev tau {want}")
     for s in ns["S7_SEEDS"]:  # type: ignore[attr-defined]
         dev = json.loads((out / f"s7_jais2_qlora_s{s}_dev.json").read_text(encoding="utf-8"))
         test = json.loads((out / f"s7_jais2_qlora_s{s}_test.json").read_text(encoding="utf-8"))

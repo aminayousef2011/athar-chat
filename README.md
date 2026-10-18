@@ -14,6 +14,9 @@ three outcomes:
 Two simulated tools: `create_reminder(datetime, reminder_text)` and `create_alarm(datetime)`.
 No real reminders or alarms are created.
 
+**Results:** [docs/report.md](docs/report.md) collects all findings to date (development, native
+Egyptian evaluation, and the locked test results available so far).
+
 **Research question:** does lightweight text classification (S2: word TF-IDF + logistic
 regression; S3: S2 + character n-grams) improve *Safe Task Success* over keyword rules (S1) when
 all systems share the same normalizer, argument extractor, execution policy and templates?
