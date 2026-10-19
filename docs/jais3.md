@@ -148,7 +148,7 @@ The other models' prompts are **byte-identical** to the earlier runs (tested).
 
 ## 7. Runs
 
-Notebook `notebooks/kaggle_s4_llm.ipynb` (version 2026-10-18a). Each run is one commit
+Notebook `notebooks/kaggle_s4_llm.ipynb` (version 2026-10-18b). Each run is one commit
 (*Save & Run All*). Bring the outputs back under `runs/s4/<run name>/`.
 
 | # | Run | Flags | Where |
@@ -413,6 +413,14 @@ Saved adapters (`s7_adapters/s<seed>/`, not committed, 177 MB each; same `adapte
 | 1 | `30abde5994ea9b010f017b8c802a4c1fa19e1275456021d16de63c2d2a86735d` |
 | 2 | `8ada29076edce065ac0c6ac38c8d8d0ad9075ac447d740a6e9724b443d16c9ab` |
 
-**Frozen for the test run (protocol log 2026-10-18).** These three adapters are the S7 models. Commit 7c loads
-them from a second Kaggle dataset, refuses any file whose hash differs from the table above, rescores dev as a
+**Frozen for the test run (protocol log 2026-10-18).** These three adapters are the S7 models. Commit 7c finds
+them by content hash in a second Kaggle dataset, refuses any file whose hash differs from the table above, rescores dev as a
 reproduction check, and scores test with the τ that run 6b picked on dev (0.0, except 0.9 for s1 `calibrated`).
+
+## 14. Locked test results (commits 7a, 7b, 7c+7d)
+
+All LLM test runs are complete: `results/s4/7a-jais3/`, `results/s4/7b-others/`, `results/s4/7cd-s7-s8/`.
+Headlines on the 120 author-written items: S7 (frozen run-6b adapters, `prior`) 0.786 ± 0.024; S4
+primary Jais 2 0.758, Jais-3-3.7B 0.742, Nile-Chat 0.742, Qwen3 0.700, Jais-3-7B 0.550 (inline 0.733,
+pre-registered secondary test confirmed for Jais-3-7B only); S8 0.725 ± 0.033. The full analysis is in
+[report.md](report.md), section 6.

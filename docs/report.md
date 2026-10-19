@@ -2,7 +2,7 @@
 
 **Safe tool routing for Egyptian Arabic, with Jais 2 / Jais 3 baselines**
 
-Amina Yousef, Applied NLP course project. Status as of **2026-10-18**.
+Amina Yousef, Applied NLP course project. Status as of **2026-10-19**.
 
 > **Status of the evidence**
 >
@@ -11,8 +11,8 @@ Amina Yousef, Applied NLP course project. Status as of **2026-10-18**.
 > | Data, agreement study, pre-registered protocol, frozen systems | final |
 > | Development results (dev split, native Egyptian set, ablations) | final |
 > | **Locked test, S4 LLM intent recognizers (5 models)** | **final** (commits 7a, 7b) |
+> | **Locked test, S7 (Jais 2 + QLoRA, frozen adapters) and S8 (Jais 3 tool calling)** | **final** (commit 7c+7d) |
 > | Locked test, core systems S1-S3: **H1-H3** and the oracle | **pending** (one local run) |
-> | Locked test, S7 (Jais 2 + QLoRA, frozen adapters) and S8 (Jais 3 tool calling) | **pending** (Kaggle commit 7c+7d) |
 >
 > The primary research question (H1-H3) is **not answered yet**. Every number below is read
 > from the run outputs cited next to it. Nothing is estimated or rounded beyond three decimals.
@@ -21,34 +21,42 @@ Amina Yousef, Applied NLP course project. Status as of **2026-10-18**.
 
 ## 1. Summary of findings
 
-1. **On the 120 author-written test items, the best LLM intent recognizers reach Safe Task Success
-   (STS) 0.74-0.76.** These are Jais 2 8B 0.758, Jais-3-3.7B 0.742 and Nile-Chat 4B 0.742. Their 95%
-   CIs overlap. Jais-3-7B with the pre-registered prompt is the outlier at 0.550 (section 6.1).
+1. **On the 120 author-written test items, the best LLM system is Jais 2 + QLoRA (S7): Safe Task
+   Success (STS) 0.786 ± 0.024 over three frozen seeds.** Its test intent accuracy is 0.93-0.99. Among the
+   prompted intent recognizers (S4), Jais 2 8B (0.758), Jais-3-3.7B (0.742) and Nile-Chat 4B (0.742) are
+   statistically indistinguishable. Jais-3-7B with the pre-registered prompt is the outlier at 0.550
+   (sections 6.1, 6.5).
 2. **The bottleneck on real requests is the shared extraction/policy layer, not intent.** Intent accuracy
    is 0.88-0.93 for four of the five models, yet only 0.79-0.83 of correctly classified items succeed.
-   Between 20% and 30% of the 50 ACT items are executed with wrong arguments. Fifteen test items fail for **all five** models although all five recognised the intent. This bounds
+   Between 20% and 30% of the 50 ACT items are executed with wrong arguments. Fifteen test items fail
+   for **all five** models although all five recognised the intent. This bounds
    the gold-intent oracle at **≤ 0.875** before it is even run (section 6.3). Reminders are the weak path:
-   reminder-item STS is 0.26-0.68, alarms 0.87-0.92.
-3. **Development numbers on drafted data did not predict test performance.** Dev (40 items, 39
+   reminder-item STS is 0.26-0.68, alarms 0.87-0.92. S7, with near-perfect intent, also fails all 15.
+3. **Jais 3 end to end (S8) fails in the complementary place.** Doing its own extraction, it solves
+   12-14 of those 15 items, and its ACT success is 0.90-0.92 against 0.40-0.68 for every S4 model. Its
+   weakness is incomplete requests: CLARIFY success is 0.50-0.56, it acts on 8-9 of 50 incomplete
+   requests, and it answers 8-12 in plain text instead of calling a tool. Overall STS is 0.725 ± 0.033
+   (sections 6.6, 6.7).
+4. **Development numbers on drafted data did not predict test performance.** Dev (40 items, 39
    AI-drafted) ranked Jais 2 last (0.725) and Jais-3-3.7B first (0.950). On author-written test, Jais 2 is
    first. Unsafe execution rose from 0-0.025 on dev to 0.10-0.15 on test (section 6.4).
-4. **A pre-registered secondary hypothesis was confirmed for one model and not the other.** Listing
+5. **A pre-registered secondary hypothesis was confirmed for one model and not the other.** Listing
    the few-shot exemplars in the user message instead of as chat turns raises Jais-3-7B's test STS from
    0.550 to 0.733 (+18.3 points, 24 vs 2 discordant items, Holm-adjusted p = 0.0002). The same change
    does **not** help Jais 2 (-2.5 points, p = 0.52), whose dev effect did not replicate (section 6.2).
-5. **Jais 3 is the safest model on native out-of-scope Egyptian requests.** Jais-3-7B declined all 192
+6. **Jais 3 is the safest model on native out-of-scope Egyptian requests.** Jais-3-7B declined all 192
    out-of-scope requests written by an independent native speaker, significantly more than Jais 2
    (7 vs 0 discordant, McNemar p = 0.016) (section 5.3). The TF-IDF classifiers trained on our data
    decline only 0.865-0.870.
-6. **Size-matched, general-Arabic Jais-3-3.7B equals Egyptian Nile-Chat 4B**, on test STS (0.742 vs
+7. **Size-matched, general-Arabic Jais-3-3.7B equals Egyptian Nile-Chat 4B**, on test STS (0.742 vs
    0.742), on native out-of-scope recall (0.958 vs 0.964, p = 1.0) and in calibration (test ECE 0.030 vs
    0.060).
-7. **Jais 3 end to end through native tool calling (S8, dev)** reaches STS 0.717 ± 0.014 with intent
-   F1 0.92. It understands requests but does not reliably follow the tool contract: 18 of 120 answers
-   are correct plain-text replies instead of tool calls (section 5.6).
-8. **QLoRA fine-tuning of Jais 2 (S7) was unstable until the optimisation was fixed** with the protocol's
-   own pre-registered recipe. Seed SD in `raw` STS fell from 0.300 to 0.014. Fine-tuning brought no
-   measurable gain over zero-shot Jais 2 on dev (section 5.5).
+8. **Jais 3 follows the tool contract only partly.** On dev and test alike, intent F1 is 0.92, but 9-15%
+   of answers are plain-text replies where a tool call was required (sections 5.6, 6.6).
+9. **QLoRA fine-tuning of Jais 2 (S7) was unstable until the optimisation was fixed** with the protocol's
+   own pre-registered recipe: seed SD in dev `raw` STS fell from 0.300 to 0.014. Fine-tuning showed no
+   gain on dev, but on test it improves on zero-shot Jais 2 by +0.075 to +0.117 STS in every seed. That
+   comparison was declared as descriptive (section 6.5).
 
 ---
 
@@ -121,7 +129,7 @@ not change.
   the reason and whether the test split had been opened. All 13 entries were made **before** the
   test split was opened.
 - **Freeze.** `athar-train fit` hashes the models, the configuration, the protocol, the contract and every
-  shared-core source into `models/freeze.json` (current `d9bc40cf…`). The locked run refuses to start if
+  shared-core source into `models/freeze.json` (current `718ed2305a17…`). The locked run refuses to start if
   any of them changed. S7's adapters are frozen by SHA-256 (protocol log 2026-10-18).
 - **Statistics.** 95% percentile intervals from a family-level bootstrap (10,000 resamples).
   Paired approximate randomization swapping whole families (10,000 permutations). Holm-Bonferroni
@@ -256,9 +264,10 @@ reliably follow the tool contract.
 
 ## 6. Locked test results (120 author-written items)
 
-S4 commits 7a and 7b ran on Kaggle 2× T4 with notebook 2026-10-17a, the pinned revisions and the frozen
-manifest. Each model used the precision it had on dev. Each report covers exactly the 120 test items
-(verified). Outputs: `results/s4/7a-jais3/`, `results/s4/7b-others/`.
+All test commits ran on Kaggle 2× T4 with the pinned revisions and the frozen manifest. S4 (7a, 7b) used
+notebook 2026-10-17a, and S7 + S8 (7c+7d) used 2026-10-18b. Each model ran at its dev precision. Every
+report covers exactly the 120 test items, and S7's adapter hashes match the frozen ones (all verified).
+Outputs: `results/s4/7a-jais3/`, `results/s4/7b-others/`, `results/s4/7cd-s7-s8/`.
 
 ### 6.1 S4 intent recognizers
 
@@ -330,19 +339,89 @@ will name the failing patterns.
 
 ### 6.4 Dev vs test
 
-| Model | Dev STS (40, drafted) | Test STS (120, author) | Dev rank → test rank |
-|---|---|---|---|
-| Jais 2 8B | 0.725 | 0.758 | 5 → 1 |
-| Jais-3-3.7B | 0.950 | 0.742 | 1 → 2 (tie) |
-| Nile-Chat 4B | 0.900 | 0.742 | 2 → 2 (tie) |
-| Qwen3 8B | 0.850 | 0.700 | 3 → 4 |
-| Jais-3-7B | 0.825 | 0.550 | 4 → 5 |
+| System | Dev STS (40, drafted) | Test STS (120, author) |
+|---|---|---|
+| S7 Jais 2 + QLoRA (`prior`, 3 seeds) | 0.950 ± 0.000 | 0.786 ± 0.024 |
+| S4 Jais 2 8B | 0.725 | 0.758 |
+| S4 Jais-3-3.7B | 0.950 | 0.742 |
+| S4 Nile-Chat 4B | 0.900 | 0.742 |
+| S8 Jais-3-7B tool calling (3 seeds) | 0.717 ± 0.014 | 0.725 ± 0.033 |
+| S4 Qwen3 8B | 0.850 | 0.700 |
+| S4 Jais-3-7B | 0.825 | 0.550 |
 
-Unsafe execution: 0.000-0.025 on dev, 0.100-0.150 on test. A 40-item drafted dev set was too small,
+Among the S4 models, the dev ranking (Jais 2 last, Jais-3-3.7B first) did not survive.
+
+Unsafe execution: 0.000-0.025 on dev, 0.100-0.150 on test for S4 and S7. A 40-item drafted dev set was too small,
 and too far from real text, to select between LLMs. This supports the protocol's rule that nothing
 is concluded from dev.
 
 ---
+
+### 6.5 S7: Jais 2 8B + QLoRA, frozen run-6b adapters (commit 7c)
+
+The three adapters were loaded and SHA-256 checked. Dev was rescored first as a reproduction check: 6
+of 9 seed × method cells match run 6b exactly, and 3 differ by one item (0.025). That is GPU
+nondeterminism; the frozen τ was used regardless.
+
+| Scoring | Seed 0 | Seed 1 | Seed 2 | Mean ± SD | Unsafe exec. |
+|---|---|---|---|---|---|
+| **`prior` (headline)** | 0.758 [0.68, 0.84] | 0.800 [0.72, 0.88] | 0.800 [0.72, 0.88] | **0.786 ± 0.024** | 0.133 |
+| `raw` | 0.767 | 0.800 | 0.775 | 0.781 ± 0.017 | 0.133 |
+| `calibrated` | 0.725 | 0.658 | 0.700 | 0.694 ± 0.034 | 0.133 |
+
+- **Intent is nearly solved by fine-tuning**, and the remaining errors belong to the shared core. Intent
+  accuracy is 0.925 / 0.983 / 0.992 (`prior`). Success given the correct intent is 0.807-0.820, and all
+  15 shared-core failures (section 6.3) fail for every seed.
+- **Fine-tuned vs zero-shot Jais 2** (declared 2026-10-17 as descriptive, no multiplicity correction),
+  `prior` vs S4 Jais 2 0-shot `prior` (0.683), family-level paired test:
+
+  | Seed | Difference [95% CI] | p | Discordant (S7 / 0-shot) |
+  |---|---|---|---|
+  | 0 | +0.075 [0.000, 0.153] | 0.077 | 15 / 6 |
+  | 1 | +0.117 [0.063, 0.183] | 0.0003 | 14 / 0 |
+  | 2 | +0.117 [0.063, 0.183] | 0.0003 | 14 / 0 |
+
+  The direction is consistent over seeds. On dev, the 40 drafted items could not show this.
+- **`calibrated` is again the weakest scoring**, as on dev and as the a priori argument predicts.
+- The gate's τ is 0 for every headline seed, so the gated and ungated results are identical.
+
+### 6.6 S8: Jais-3-7B end to end through native tool calling (commit 7d)
+
+Settings as on dev: fp16, reasoning effort high, xml tool calls, sampling T 0.7 / top-p 0.95 / top-k 20,
+seeds 0-2, 144 min.
+
+| | Seed 0 | Seed 1 | Seed 2 | Mean ± SD |
+|---|---|---|---|---|
+| Safe Task Success | 0.758 [0.69, 0.83] | 0.725 [0.65, 0.80] | 0.692 [0.61, 0.77] | **0.725 ± 0.033** |
+| intent macro-F1 | 0.941 | 0.930 | 0.882 | 0.918 ± 0.032 |
+| unsafe execution | 0.100 | 0.108 | 0.108 | 0.106 ± 0.005 |
+| no tool call (invalid) | 11 | 12 | 16 | |
+| success: ACT / CLARIFY / ABSTAIN | 0.92 / 0.56 / 0.85 | 0.90 / 0.52 / 0.80 | 0.90 / 0.50 / 0.65 | |
+| decline-reason accuracy (gold ABSTAIN) | 0.85 | 0.80 | 0.65 | |
+
+- **ACT is S8's strength.** Executions with wrong arguments are 0.08-0.10 of ACT items, against
+  0.20-0.30 for the shared core, and S8 almost never asks an unnecessary clarification (0.00-0.02).
+- **CLARIFY is its weakness.** Of the 50 incomplete requests, 22-25 fail:
+  - 8-12 are answered in plain text instead of with `ask_clarification`.
+  - 8-9 are executed with a guessed value for the missing slot. These are all of S8's unsafe executions.
+  - 4-7 ask for the wrong slots.
+- **It never executed an out-of-scope request.** Its 3-4 invalid answers on ABSTAIN items are plain-text
+  declines.
+
+### 6.7 Two failure profiles
+
+| | Shared pipeline (S4 / S7) | End-to-end Jais 3 (S8) |
+|---|---|---|
+| ACT success | 0.40-0.68 (S4); S7 limited by the same core | **0.90-0.92** |
+| ACT items executed with wrong arguments | 0.20-0.30 | **0.08-0.10** |
+| CLARIFY success | **0.58-0.84** (S4) | 0.50-0.56 |
+| The 15 items failed by every S4 model despite the right intent | 0 of 15 solved | **12-14 of 15 solved** |
+| Out-of-scope requests executed | 0.029-0.043 of non-ACT items (S4) | 0 |
+
+The shared rule-based extractor fails on how real users phrase times and reminder texts. The LLM
+extracts those well, but does not follow the clarification protocol. The data therefore point to a
+hybrid design: LLM argument extraction, with the deterministic policy deciding when to execute and
+when to ask. That is a hypothesis for future work, not a result of this project.
 
 ## 7. Notes for Jais practitioners
 
@@ -370,12 +449,17 @@ templates.
 - **Few-shot format.** Jais-3-7B is strongly sensitive to exemplars given as chat turns: on test it
   over-abstains, and inline exemplars add +18 STS points. Jais 2 is not sensitive in this way.
 - **Out-of-scope behaviour.** Jais-3-7B declined 192/192 native out-of-scope Egyptian requests.
-- **Tool calling (Jais 3).** It often answers in plain Arabic when a tool call is required, and it
-  follows argument conventions inconsistently (time words left in arguments, defaults for ambiguous
-  dates). A strict tool contract needs either constrained decoding or post-hoc validation.
+- **Tool calling (Jais 3).**
+  - Its argument extraction from real Egyptian requests is strong: wrong-argument executions are
+    0.08-0.10 of ACT items on test, much better than our rule-based extractor.
+  - It often answers in plain Arabic when a tool call is required (9-15% of answers), and on incomplete
+    requests it may execute with a guessed value instead of asking.
+  - A strict tool contract needs constrained decoding, or validation that turns a plain-text question
+    into a clarification call.
 - **QLoRA on Jais 2.** One optimizer step per example at a constant LR left the label bias
   seed-dependent. Batched, scheduled, clipped, class-balanced updates removed this. Train the answer to
-  end with the template's end-of-turn token, not a generic EOS.
+  end with the template's end-of-turn token, not a generic EOS. With that recipe, 298 mostly drafted
+  examples were enough for test intent accuracy of 0.93-0.99 on author-written requests.
 
 ---
 
@@ -400,8 +484,9 @@ templates.
 | Step | Settles | Where |
 |---|---|---|
 | Core locked run: `athar-eval --split test --unlock-test` | **H1-H3** (S2, S3 vs S1), the oracle ceiling (≤ 0.875 by section 6.3), core robustness and calibration | local CPU, about 2 min |
-| Commit 7c + 7d | S7 (frozen run-6b adapters) and S8 on test | Kaggle, about 4 h |
-| Error analysis (protocol section 7) | Which argument and policy patterns fail on author-written reminders | local |
+| Error analysis (protocol section 7) | Which argument and policy patterns of the shared core fail on author-written requests (the 15 items of section 6.3), and S8's clarification failures | local |
+
+All GPU runs are complete.
 
 ---
 
@@ -410,12 +495,12 @@ templates.
 | Item | Value |
 |---|---|
 | Split manifest | `data/splits/manifest.json`, `940beba352ec…` |
-| Freeze | `models/freeze.json`, `d9bc40cf9473…` (`athar-train verify models`) |
+| Freeze | `models/freeze.json`, `718ed2305a17…` (`athar-train verify models`) |
 | Eval config | `configs/eval.yaml`, SHA-256 `dfbd8398c8c3…` (recorded in every S4 report) |
 | Model revisions | Jais-3-7B `94d69f49b4af`, Jais-3-3.7B `3d5754d5db87`, Jais-2-8B-Chat `da0e1639cd92`, Nile-Chat-4B `2a365667659b`, Qwen3-8B `b968826d9c46` |
-| GPU notebook | `notebooks/kaggle_s4_llm.ipynb` (test S4: 2026-10-17a; S7/S8 test: 2026-10-18a); CPU smoke test and test-run rehearsal: `scripts/smoke_kaggle_notebook.py [--split test]` |
+| GPU notebook | `notebooks/kaggle_s4_llm.ipynb` (test S4: 2026-10-17a; S7/S8 test: 2026-10-18b); CPU smoke test and test-run rehearsal: `scripts/smoke_kaggle_notebook.py [--split test]` |
 | Environment | Kaggle 2× T4, torch 2.11.0, transformers 5.19.0, peft 0.20.0, bitsandbytes 0.50.2 |
-| Outputs | dev: `runs/s4/…`, `runs/ood/core_2026-10-18.json`; test: `results/s4/7a-jais3/`, `results/s4/7b-others/` |
+| Outputs | dev: `runs/s4/…`, `runs/ood/core_2026-10-18.json`; test: `results/s4/7a-jais3/`, `results/s4/7b-others/`, `results/s4/7cd-s7-s8/` |
 | Details | [jais3.md](jais3.md) (all LLM runs), [evaluation_protocol.md](evaluation_protocol.md) (design, deviations), [data_card.md](data_card.md), [agreement.md](agreement.md) |
 
 ### References

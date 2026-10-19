@@ -122,16 +122,23 @@ def install_fakes(vocab_texts: list[str], calls: dict[str, list]) -> None:  # ty
     llm.load_tokenizer = load_tokenizer
 
 
-def frozen_adapters(root: Path, vocab_texts: list[str]) -> dict[int, str]:
-    """A tiny LoRA adapter saved as the second Kaggle dataset (s0/), as run 6b's adapters are."""
+def frozen_adapters(root: Path, vocab_texts: list[str]) -> tuple[dict[int, str], str]:
+    """A tiny LoRA adapter as the second Kaggle dataset, deliberately flattened and renamed (as an
+    upload may do): the notebook must find it by content hash."""
     from athar.data.io import load_items
     from athar.intent import llm
 
     model, tok = tiny_lm(vocab_texts)
     items = load_items(ROOT / "data" / "pilot" / "pilot.jsonl")
     tuned = llm.lora_finetune(model, tok, items, epochs=1, batch_size=4, r=4, alpha=8, log=lambda s: None)
-    tuned.save_pretrained(root / "s0")
-    return {0: llm.file_sha256(root / "s0" / "adapter_model.safetensors")}
+    saved = root.parent / "saved"
+    tuned.save_pretrained(saved / "s0")
+    root.mkdir(parents=True)
+    shutil.copy(saved / "s0" / "adapter_model.safetensors", root / "adapter_model (3).safetensors")
+    shutil.copy(saved / "s0" / "adapter_config.json", root / "adapter_config (1).json")
+    shutil.rmtree(saved)
+    return ({0: llm.file_sha256(root / "adapter_model (3).safetensors")},
+            llm.file_sha256(root / "adapter_config (1).json"))
 
 
 def stand_in_for_test() -> None:
@@ -179,9 +186,10 @@ def main(argv: list[str] | None = None) -> int:
     calls: dict[str, list] = {"load_llm": [], "load_tokenizer": []}  # type: ignore[type-arg]
     install_fakes(vocab_texts, calls)
     frozen_sha: dict[int, str] = {}
+    frozen_config_sha = ""
     if a.split == "test":
         stand_in_for_test()
-        frozen_sha = frozen_adapters(kaggle_in / "datasets" / "someone" / "s7-adapters", vocab_texts)
+        frozen_sha, frozen_config_sha = frozen_adapters(kaggle_in / "datasets" / "someone" / "s7-adapters", vocab_texts)
 
     nb = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
     ns: dict[str, object] = {"__name__": "__notebook__"}
@@ -207,6 +215,7 @@ def main(argv: list[str] | None = None) -> int:
                           RUN_SCORING_ABLATION=False, RUN_S4_DIAGNOSTICS=False, RUN_MASSIVE_OOD=False,
                           RUN_EGYPTIAN_OOD=False, RUN_S8_EGYPTIAN=False, RUN_S4=True, RUN_S7_QLORA=True,
                           S7_SEEDS=[0], RUN_S8=True, S7_FROZEN=True, S7_ADAPTER_SHA256=frozen_sha,
+                          S7_ADAPTER_CONFIG_SHA256=frozen_config_sha,
                           S7_GATE_TAU={f"S7-jais2-qlora-s0-{m}": 0.4 for m in ("raw", "calibrated", "prior")},
                           GATE_TAU={f"S4-{k}-6shot-{ns['PRIMARY']}": 0.5 for k, *_ in ns["MODELS"]})  # type: ignore[attr-defined]
         if "CFG = yaml.safe_load" in src:

@@ -170,6 +170,31 @@ def test_frozen_lora_loads_only_with_its_hash_and_scores_like_the_trained_one(pi
         llm.load_lora(tiny_lm(texts)[0], tmp_path / "s0", sha256="0" * 64)
 
 
+def test_find_adapter_by_content_whatever_the_upload_layout(tmp_path):
+    weights, config = b"weights of seed 1", b'{"r": 16}'
+    w_sha = __import__("hashlib").sha256(weights).hexdigest()
+    c_sha = __import__("hashlib").sha256(config).hexdigest()
+    # as saved: <dataset>/s7_adapters/s1/{adapter_model.safetensors, adapter_config.json}
+    nested = tmp_path / "nested" / "s7_adapters" / "s1"
+    nested.mkdir(parents=True)
+    (nested / "adapter_model.safetensors").write_bytes(weights)
+    (nested / "adapter_config.json").write_bytes(config)
+    (nested.parent / "s0").mkdir()
+    (nested.parent / "s0" / "adapter_model.safetensors").write_bytes(b"weights of seed 0")
+    assert llm.find_adapter(tmp_path / "nested", w_sha, c_sha, tmp_path / "w1") == nested
+    # flattened and renamed by an upload: located by hash, re-assembled in the work dir
+    flat = tmp_path / "flat"
+    flat.mkdir()
+    (flat / "adapter_model (2).safetensors").write_bytes(weights)
+    (flat / "adapter_config (1).json").write_bytes(config)
+    out = llm.find_adapter(flat, w_sha, c_sha, tmp_path / "w2")
+    assert out == tmp_path / "w2"
+    assert (out / "adapter_model.safetensors").read_bytes() == weights
+    assert (out / "adapter_config.json").read_bytes() == config
+    with pytest.raises(FileNotFoundError, match="Seen:"):
+        llm.find_adapter(flat, "0" * 64, c_sha, tmp_path / "w3")
+
+
 def test_class_weights_are_balanced(pilot_and_lm):
     items, _, _ = pilot_and_lm
     w = llm.class_weights(items)

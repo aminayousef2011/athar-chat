@@ -53,6 +53,7 @@ from __future__ import annotations
 
 import hashlib
 import math
+import os
 import random
 import re
 from collections import Counter
@@ -447,6 +448,37 @@ def file_sha256(path: str | Path) -> str:
         for block in iter(lambda: f.read(1 << 20), b""):
             h.update(block)
     return h.hexdigest()
+
+
+def find_adapter(root: str | Path, sha256: str, config_sha256: str, workdir: str | Path) -> Path:
+    """The directory of the frozen adapter whose weights hash to ``sha256``, found under ``root`` by
+    content, so neither the dataset's folder layout nor its file names matter (Kaggle uploads can
+    nest, rename or flatten them). If the weights do not sit as ``adapter_model.safetensors`` next to
+    an ``adapter_config.json`` with ``config_sha256``, both are linked/copied into ``workdir``."""
+    import shutil
+
+    files = [Path(r) / f for r, _d, fs in os.walk(root, followlinks=True) for f in fs]
+    weights = next((f for f in files if f.suffix == ".safetensors" and file_sha256(f) == sha256), None)
+    if weights is None:
+        seen = sorted(str(f.relative_to(root)) for f in files if f.suffix in (".safetensors", ".json"))[:40]
+        raise FileNotFoundError(f"no .safetensors file with SHA-256 {sha256[:12]}... under {root}. "
+                                f"Seen: {seen or 'no .safetensors/.json files'}")
+    config = weights.parent / "adapter_config.json"
+    if weights.name == "adapter_model.safetensors" and config.exists() and file_sha256(config) == config_sha256:
+        return weights.parent
+    config_src = next((f for f in files if f.suffix == ".json" and file_sha256(f) == config_sha256), None)
+    if config_src is None:
+        raise FileNotFoundError(f"no adapter_config.json with SHA-256 {config_sha256[:12]}... under {root}")
+    out = Path(workdir)
+    out.mkdir(parents=True, exist_ok=True)
+    target = out / "adapter_model.safetensors"
+    if not target.exists():
+        try:
+            target.symlink_to(weights)
+        except OSError:          # no symlinks (e.g. Windows without privileges): copy
+            shutil.copyfile(weights, target)
+    shutil.copyfile(config_src, out / "adapter_config.json")
+    return out
 
 
 def load_lora(model: Any, directory: str | Path, sha256: str | None = None) -> Any:
