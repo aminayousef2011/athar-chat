@@ -70,9 +70,24 @@ src/athar/eval/  scoring, family-level statistics, robustness suite, harness (`a
 configs/         training/search config
 data/            dataset, split config and manifest; data/pilot/ = 20 assistant-drafted pilot items
 tests/           unit tests for the contract and the tooling (pytest)
+app/             local Streamlit demo (logic in src/athar/demo.py)
+scripts/         notebook generator, Kaggle kit, smoke test, error analysis
+results/         locked test outputs (core, S4/S7/S8) and the error analysis
 ```
 
-Later phases add `models/` (frozen systems), `results/` (the one locked test run) and `app/`.
+`models/` holds the frozen systems, `results/` the locked test outputs and the error analysis, and `app/`
+the local demo.
+
+## Demo (CPU)
+
+```powershell
+uv run --extra ui streamlit run app/streamlit_app.py
+```
+
+Type an Egyptian Arabic request and see how S1, S2 and S3 route it (reply, tool call or clarification
+question), with examples of the report's findings. A second tab shows the locked test results and a
+browser of every test failure. The frozen models are hash-verified before they are loaded; the LLM
+systems need GPUs and appear only through their recorded results.
 
 ## Setup (CPU only)
 
