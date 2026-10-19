@@ -14,8 +14,11 @@ three outcomes:
 Two simulated tools: `create_reminder(datetime, reminder_text)` and `create_alarm(datetime)`.
 No real reminders or alarms are created.
 
-**Results:** [docs/report.md](docs/report.md) collects all findings to date (development, native
-Egyptian evaluation, and the locked test results available so far).
+**Results:** [docs/report.md](docs/report.md). On the locked test (120 author-written requests), the keyword
+rules (S1, STS 0.767) beat both classifiers (S2 0.600, S3 0.625; Holm p ≤ 0.005): the classifiers, trained
+on mostly AI-drafted text, did not transfer to a native speaker's phrasing. The shared extractor caps every
+pipeline system at 0.808 (oracle). The report gives the error analysis, the Jais 2 / Jais 3 results and the
+threats to validity.
 
 **Research question:** does lightweight text classification (S2: word TF-IDF + logistic
 regression; S3: S2 + character n-grams) improve *Safe Task Success* over keyword rules (S1) when
@@ -104,7 +107,8 @@ and `tests/test_agent.py`, with the real Jais 3 chat template as a fixture):
 
 ```powershell
 uv run python scripts/build_kaggle_kit.py   # -> dist/athar-chat-kit.zip: upload as a Kaggle Dataset
-uv run --extra neural --with pandas python scripts/smoke_kaggle_notebook.py   # whole notebook on CPU, tiny models
+uv run python scripts/make_notebook.py notebooks/kaggle_s4_llm.ipynb   # the notebook is generated from this script
+uv run --extra neural --with pandas python scripts/smoke_kaggle_notebook.py [--split test]   # whole notebook on CPU, tiny models
 ```
 
 Then accept the Jais 2 terms on Hugging Face (Jais 3 is not gated) and add an `HF_TOKEN` Kaggle
@@ -154,7 +158,7 @@ uv run athar-train fit --manifest data/splits/manifest.json --config configs/tra
 uv run athar-train verify models     # model files, config and shared-core sources unchanged
 ```
 
-Extended baselines (reported separately from the core comparison): S5 frozen
+Extended baselines (implemented and dry-run on the drafts; **not fitted on the final split, not reported**): S5 frozen
 `multilingual-e5-small` embeddings + logistic regression, and S6 fine-tuned `MARBERTv2` over 5
 seeds. Both use pinned model revisions and need the optional `neural` extra (PyTorch CPU,
 transformers):

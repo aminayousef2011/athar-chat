@@ -135,7 +135,7 @@
     "src/athar/eval/perturb.py": "00085b38ffecca712194f10d06ea3246cfa152561e17dece51037dafe945d21c",
     "src/athar/eval/harness.py": "c14c075bad720a6c76a648e2e2723198793d1e0fba37c24536d0887f87951b48",
     "docs/task_contract.md": "fbc3f3a0c5753339d573e749010938410d60c9bce72e6d76d89223576bcd464a",
-    "docs/evaluation_protocol.md": "24aec4dfdbec192e188c8987bc43ca0671d1931194aad741b68ee646b21c0ec6",
+    "docs/evaluation_protocol.md": "d92b2a9bc7a3eb24adf8d5523608dcf8c928e1f069f77452e028dbff9945bc02",
     "configs/eval.yaml": "482280d83abab26f2a6c310b45d173b11af2aedc74335734f3dd38993d0cf74e"
   },
   "environment": {
@@ -148,7 +148,7 @@
     "numpy": "2.4.6",
     "joblib": "1.6.0"
   },
-  "process_peak_rss_mb": 140.4,
+  "process_peak_rss_mb": 140.8,
   "systems": {
     "S1": {
       "kind": "keyword rules",
@@ -156,7 +156,7 @@
         "intent_macro_f1": 0.7556,
         "intent_accuracy": 0.8
       },
-      "predict_ms_per_item": 0.015
+      "predict_ms_per_item": 0.0113
     },
     "S2": {
       "kind": "tf-idf + logistic regression",
@@ -176,25 +176,25 @@
         "intent_accuracy": 0.95
       },
       "file": "S2.joblib",
-      "sha256": "7bb07e3ca718e6f160f523062acedb3b858c90801ded1d4fc06b2f0d9e10d5ae",
+      "sha256": "cb9a94c790e184f9ed8103aea124adc43d2fe58acd77005cb2552b70e396db78",
       "files": {
-        "S2.joblib": "7bb07e3ca718e6f160f523062acedb3b858c90801ded1d4fc06b2f0d9e10d5ae"
+        "S2.joblib": "cb9a94c790e184f9ed8103aea124adc43d2fe58acd77005cb2552b70e396db78"
       },
       "size_kb": 20.4,
       "n_features": 419,
       "resources": {
         "final_fit": {
-          "cpu_seconds": 0.0312,
-          "wall_seconds": 0.0326,
-          "peak_traced_mb": 0.56
+          "cpu_seconds": 0.0781,
+          "wall_seconds": 0.0762,
+          "peak_traced_mb": 0.57
         },
         "search": {
-          "cpu_seconds": 0.8906,
-          "wall_seconds": 0.8988,
+          "cpu_seconds": 0.6562,
+          "wall_seconds": 0.7115,
           "peak_traced_mb": 2.31,
           "n_fits": 12
         },
-        "predict_ms_per_item": 0.029
+        "predict_ms_per_item": 0.0535
       },
       "grid": [
         {
@@ -503,25 +503,25 @@
         "intent_accuracy": 0.925
       },
       "file": "S3.joblib",
-      "sha256": "b05bba8153843c0f1ea6dd93d280c49722d9d01265f35b744300a32671f285e5",
+      "sha256": "eac17524171b440f394c7681860f3e3c7d87ede8c9143390428093db84bc5e08",
       "files": {
-        "S3.joblib": "b05bba8153843c0f1ea6dd93d280c49722d9d01265f35b744300a32671f285e5"
+        "S3.joblib": "eac17524171b440f394c7681860f3e3c7d87ede8c9143390428093db84bc5e08"
       },
       "size_kb": 161.5,
       "n_features": 3780,
       "resources": {
         "final_fit": {
-          "cpu_seconds": 0.125,
-          "wall_seconds": 0.1371,
+          "cpu_seconds": 0.2969,
+          "wall_seconds": 0.2906,
           "peak_traced_mb": 4.57
         },
         "search": {
-          "cpu_seconds": 9.0,
-          "wall_seconds": 9.176,
+          "cpu_seconds": 18.0312,
+          "wall_seconds": 17.6166,
           "peak_traced_mb": 7.85,
           "n_fits": 36
         },
-        "predict_ms_per_item": 0.103
+        "predict_ms_per_item": 0.2138
       },
       "grid": [
         {
@@ -1361,5 +1361,5 @@
       }
     }
   },
-  "freeze_sha256": "718ed2305a17fc51861eaa7ec31598e306050a23542179bb060077fb298c5e82"
+  "freeze_sha256": "387f591da3a621274ced92d697ded81784cc7b59b300852a836a76af72ac901b"
 }
