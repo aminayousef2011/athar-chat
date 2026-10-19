@@ -1,0 +1,35 @@
+{
+ "python": "3.13.15",
+ "gpus": [
+  "Tesla T4",
+  "Tesla T4"
+ ],
+ "compute_capability": [
+  [
+   7,
+   5
+  ],
+  [
+   7,
+   5
+  ]
+ ],
+ "native_bf16": false,
+ "athar-chat": "0.1.0",
+ "torch": "2.11.0+cu128",
+ "transformers": "5.19.0",
+ "accelerate": "1.14.0",
+ "bitsandbytes": "0.50.2",
+ "peft": "0.20.0",
+ "revisions": {
+  "inception42/Jais-3-7B": "94d69f49b4af702d42fcee122cc06e493a6fe7e1",
+  "inception42/Jais-3-3.7B": "3d5754d5db87cd3a59f0f5b09c7ac39b351ff5ed",
+  "inception42/Jais-2-8B-Chat": "da0e1639cd92b508b24120f7f77f5270a8465dc4",
+  "MBZUAI-Paris/Nile-Chat-4B": "2a365667659bbd6786c2760d868e37c506d76ce3",
+  "Qwen/Qwen3-8B": "b968826d9c46dd6066d109eabc6255188de91218"
+ },
+ "primary": "prior",
+ "notebook_version": "2026-10-17a",
+ "manifest": "940beba352ec508c1811f1f7b819ea6a3190fe0b7b91d99b2b5ff1e7c350db50",
+ "split": "dev"
+}

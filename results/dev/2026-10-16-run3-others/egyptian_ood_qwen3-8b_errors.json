@@ -1,0 +1,38 @@
+[
+ {
+  "id": "egy-main-massive-5082",
+  "text": "اعمل منبه جديد لستة الصبح",
+  "source_intent": "alarm_set",
+  "pred": "unsupported"
+ },
+ {
+  "id": "egy-main-massive-9103",
+  "text": "اجتماع النهارده بليل",
+  "source_intent": "calendar_query",
+  "pred": "create_alarm"
+ },
+ {
+  "id": "egy-main-massive-14648",
+  "text": "الوصفة لو سمحت",
+  "source_intent": "cooking_recipe",
+  "pred": "create_reminder"
+ },
+ {
+  "id": "egy-main-massive-2309",
+  "text": "الساعة سبعة الصبح بتوقيت مكة المكرمة",
+  "source_intent": "datetime_convert",
+  "pred": "create_alarm"
+ },
+ {
+  "id": "egy-main-massive-12846",
+  "text": "قطار تذكرة جدة ينبع بكرة الصبح",
+  "source_intent": "transport_ticket",
+  "pred": "create_reminder"
+ },
+ {
+  "id": "egy-main-massive-6024",
+  "text": "لازم آخذ سترة بطاقيه أو jacket النهارده للشغل",
+  "source_intent": "weather_query",
+  "pred": "create_reminder"
+ }
+]

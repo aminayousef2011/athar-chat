@@ -1,0 +1,27 @@
+<|ifm|begin_of_text|><|ifm|im_start|>system
+إنت مساعد بيصنّف طلب المستخدم لأداة تذكيرات ومنبهات. رد بكلمة واحدة بس من دول:
+تذكير: لو المستخدم عايز تذكير واحد ليه هو بحاجة، مرة واحدة (حتى لو الوقت أو المحتوى ناقص).
+منبه: لو عايز منبه أو يصحى في وقت معين، مرة واحدة.
+غير مدعوم: لو الطلب مسح أو تعديل لتذكير أو منبه موجود، أو متكرر (كل يوم، كل أسبوع)، أو لحد تاني، أو فيه أكتر من طلب، أو محتاج أداة تانية (تقويم، إيميل، تايمر، الطقس، مكالمة).
+متكتبش أي حاجة غير الكلمة.<|ifm|im_end|><|ifm|im_start|>user
+متنسانيش عندي one-on-one مع احمد النهارده الساعه 3 العصر<|ifm|im_end|><|ifm|im_start|>assistant
+<ifm|think>
+</ifm|think>تذكير<|ifm|im_end|><|ifm|im_start|>user
+صحيني يوم الاحد الساعه 6 الصبح عشان افتتاح الموقع<|ifm|im_end|><|ifm|im_start|>assistant
+<ifm|think>
+</ifm|think>منبه<|ifm|im_end|><|ifm|im_start|>user
+امسح منبه الصبح<|ifm|im_end|><|ifm|im_start|>assistant
+<ifm|think>
+</ifm|think>غير مدعوم<|ifm|im_end|><|ifm|im_start|>user
+فكرني اراجع الخطه الزمنيه للمشروع النهارده الساعه 8 الصبح<|ifm|im_end|><|ifm|im_start|>assistant
+<ifm|think>
+</ifm|think>تذكير<|ifm|im_end|><|ifm|im_start|>user
+ظبطلي المنبه علي 8 بالليل<|ifm|im_end|><|ifm|im_start|>assistant
+<ifm|think>
+</ifm|think>منبه<|ifm|im_end|><|ifm|im_start|>user
+ابعت لل developers تذكير بال code freeze<|ifm|im_end|><|ifm|im_start|>assistant
+<ifm|think>
+</ifm|think>غير مدعوم<|ifm|im_end|><|ifm|im_start|>user
+ابعت لاخويا قوله يدفع الفاتوره<|ifm|im_end|><|ifm|im_start|>assistant
+<ifm|think>
+</ifm|think>

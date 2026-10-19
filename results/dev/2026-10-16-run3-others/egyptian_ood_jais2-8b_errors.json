@@ -1,0 +1,44 @@
+[
+ {
+  "id": "egy-main-massive-63",
+  "text": "قولى عن منبهاتى",
+  "source_intent": "alarm_query",
+  "pred": "create_alarm"
+ },
+ {
+  "id": "egy-main-massive-2309",
+  "text": "الساعة سبعة الصبح بتوقيت مكة المكرمة",
+  "source_intent": "datetime_convert",
+  "pred": "create_reminder"
+ },
+ {
+  "id": "egy-main-massive-5497",
+  "text": "ايه فارق التوقيت بين الرياض و جدة",
+  "source_intent": "datetime_convert",
+  "pred": "create_reminder"
+ },
+ {
+  "id": "egy-main-massive-5204",
+  "text": "تحويل تمانيه الصباح بتوقيت الطايف إلى توقيت أبو ظبي",
+  "source_intent": "datetime_convert",
+  "pred": "create_reminder"
+ },
+ {
+  "id": "egy-main-massive-4336",
+  "text": "الساعة كام في السعودية",
+  "source_intent": "datetime_query",
+  "pred": "create_reminder"
+ },
+ {
+  "id": "egy-main-massive-1158",
+  "text": "قولى نكتة",
+  "source_intent": "general_joke",
+  "pred": "create_reminder"
+ },
+ {
+  "id": "egy-main-massive-1579",
+  "text": "قولى نكتة عن الكورة",
+  "source_intent": "general_joke",
+  "pred": "create_alarm"
+ }
+]

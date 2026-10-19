@@ -1,0 +1,50 @@
+[
+ {
+  "id": "egy-main-massive-3161",
+  "text": "عندي أي منبهات لستة الصبح بكره",
+  "source_intent": "alarm_query",
+  "pred": "create_alarm"
+ },
+ {
+  "id": "egy-main-massive-4851",
+  "text": "هل المنبه بتاعى مظبوط",
+  "source_intent": "alarm_query",
+  "pred": "create_alarm"
+ },
+ {
+  "id": "egy-main-massive-63",
+  "text": "قولى عن منبهاتى",
+  "source_intent": "alarm_query",
+  "pred": "create_alarm"
+ },
+ {
+  "id": "egy-main-massive-9103",
+  "text": "اجتماع النهارده بليل",
+  "source_intent": "calendar_query",
+  "pred": "create_reminder"
+ },
+ {
+  "id": "egy-main-massive-2309",
+  "text": "الساعة سبعة الصبح بتوقيت مكة المكرمة",
+  "source_intent": "datetime_convert",
+  "pred": "create_alarm"
+ },
+ {
+  "id": "egy-main-massive-13391",
+  "text": "ايه عشرة بالمئة من أربعين دولارًا",
+  "source_intent": "qa_maths",
+  "pred": "create_reminder"
+ },
+ {
+  "id": "egy-main-massive-13412",
+  "text": "كم يساوي أربعة زائد خمسة",
+  "source_intent": "qa_maths",
+  "pred": "create_reminder"
+ },
+ {
+  "id": "egy-main-massive-13460",
+  "text": "قولى ما هو حاصل ضرب ثمانية عشر و واحد وثلاثين",
+  "source_intent": "qa_maths",
+  "pred": "create_reminder"
+ }
+]

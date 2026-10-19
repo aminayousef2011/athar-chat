@@ -1,0 +1,4 @@
+seed,system,n,recall_create_alarm,recall_create_alarm_ci95,n_create_alarm,recall_unsupported,recall_unsupported_ci95,n_unsupported,macro_f1,false_execution_intents
+0,S7-jais2-qlora-s0-prior,196,0.75,"(0.30064184258240184, 0.9544127391902995)",4,1.0,"(0.9803848539332458, 1.0)",192,0.927,0
+1,S7-jais2-qlora-s1-prior,196,1.0,"(0.5101091635454027, 1.0)",4,0.99,"(0.9628214588546004, 0.997138710621703)",192,0.897,2
+2,S7-jais2-qlora-s2-prior,196,1.0,"(0.5101091635454027, 1.0)",4,0.99,"(0.9628214588546004, 0.997138710621703)",192,0.897,2

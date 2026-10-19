@@ -1,0 +1,556 @@
+{
+  "data": {
+    "repo": "Alhasan/egyptian-nlu",
+    "revision": "5094a703965e72686fe3ca43543d3bae342fd2c0",
+    "file": "egy_test.jsonl",
+    "sha256": "01a12d0b566f0cfb02aae2b2ffc9c3fe1f87f5e8df0522cb8817733855cef2a0",
+    "pairs_file": "egy_test.csv",
+    "pairs_sha256": "afe96ceb149b8549835520f2fe2be65c46e814211e3163b2fe94f117b6546df4",
+    "attribution": "Egyptian NLU test set by Alhasan Abdellatif (huggingface.co/datasets/Alhasan/egyptian-nlu), CC BY 4.0, derived from Amazon MASSIVE (CC BY 4.0)"
+  },
+  "systems": {
+    "S1": {
+      "n": 196,
+      "recall_create_alarm": 1.0,
+      "recall_create_alarm_ci95": [
+        0.5101091635454027,
+        1.0
+      ],
+      "n_create_alarm": 4,
+      "recall_unsupported": 0.9895833333333334,
+      "recall_unsupported_ci95": [
+        0.9628214588546004,
+        0.997138710621703
+      ],
+      "n_unsupported": 192,
+      "macro_f1": 0.8973821989528796,
+      "false_execution_intents": 2,
+      "errors": [
+        {
+          "id": "egy-main-massive-4851",
+          "text": "هل المنبه بتاعى مظبوط",
+          "source_intent": "alarm_query",
+          "pred": "create_alarm"
+        },
+        {
+          "id": "egy-main-massive-4921",
+          "text": "اطفى المنبه الأول بتاعى",
+          "source_intent": "alarm_remove",
+          "pred": "create_alarm"
+        }
+      ],
+      "dialect_gap": {
+        "msa": {
+          "n": 196,
+          "recall_create_alarm": 1.0,
+          "recall_create_alarm_ci95": [
+            0.5101091635454027,
+            1.0
+          ],
+          "n_create_alarm": 4,
+          "recall_unsupported": 0.9791666666666666,
+          "recall_unsupported_ci95": [
+            0.947666268951536,
+            0.9918692160678246
+          ],
+          "n_unsupported": 192,
+          "macro_f1": 0.8280701754385964,
+          "false_execution_intents": 4
+        },
+        "egyptian": {
+          "n": 196,
+          "recall_create_alarm": 1.0,
+          "recall_create_alarm_ci95": [
+            0.5101091635454027,
+            1.0
+          ],
+          "n_create_alarm": 4,
+          "recall_unsupported": 0.9895833333333334,
+          "recall_unsupported_ci95": [
+            0.9628214588546004,
+            0.997138710621703
+          ],
+          "n_unsupported": 192,
+          "macro_f1": 0.8973821989528796,
+          "false_execution_intents": 2
+        },
+        "oos_recall_gap": -0.010416666666666666,
+        "mcnemar_oos": {
+          "only_msa": 0,
+          "only_egyptian": 2,
+          "p_value": 0.5
+        }
+      }
+    },
+    "S2": {
+      "n": 196,
+      "recall_create_alarm": 0.0,
+      "recall_create_alarm_ci95": [
+        0.0,
+        0.4898908364545973
+      ],
+      "n_create_alarm": 4,
+      "recall_unsupported": 0.8697916666666666,
+      "recall_unsupported_ci95": [
+        0.8148505229649732,
+        0.91022577525649
+      ],
+      "n_unsupported": 192,
+      "macro_f1": 0.46005509641873277,
+      "false_execution_intents": 25,
+      "errors": [
+        {
+          "id": "egy-main-massive-3161",
+          "text": "عندي أي منبهات لستة الصبح بكره",
+          "source_intent": "alarm_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-63",
+          "text": "قولى عن منبهاتى",
+          "source_intent": "alarm_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-4712",
+          "text": "متصحينيش بكره",
+          "source_intent": "alarm_remove",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-5082",
+          "text": "اعمل منبه جديد لستة الصبح",
+          "source_intent": "alarm_set",
+          "pred": "unsupported"
+        },
+        {
+          "id": "egy-main-massive-533",
+          "text": "اعمل منبه على تسعة بليل",
+          "source_intent": "alarm_set",
+          "pred": "unsupported"
+        },
+        {
+          "id": "egy-main-massive-174",
+          "text": "اعمل منبه يصحيني سبعة الصبح يوم الخميس",
+          "source_intent": "alarm_set",
+          "pred": "unsupported"
+        },
+        {
+          "id": "egy-main-massive-4081",
+          "text": "عاوز أحط منبه وانا راجع البيت بكرة يقكرنى أوقف عند المحل وأشتري أكل",
+          "source_intent": "alarm_set",
+          "pred": "unsupported"
+        },
+        {
+          "id": "egy-main-massive-1630",
+          "text": "على صوت الموسيقى دى",
+          "source_intent": "audio_volume_up",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-9103",
+          "text": "اجتماع النهارده بليل",
+          "source_intent": "calendar_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-6726",
+          "text": "اجتماع",
+          "source_intent": "calendar_remove",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-2309",
+          "text": "الساعة سبعة الصبح بتوقيت مكة المكرمة",
+          "source_intent": "datetime_convert",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-4882",
+          "text": "الساعة كام في المدينة",
+          "source_intent": "datetime_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-4336",
+          "text": "الساعة كام في السعودية",
+          "source_intent": "datetime_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-16694",
+          "text": "دور على email شركة كيان وحطه في قائمة جهات الإتصال بتاعتى",
+          "source_intent": "email_addcontact",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-17111",
+          "text": "تفاصيل التواصل مع سلمان",
+          "source_intent": "email_querycontact",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-16024",
+          "text": "أرسل email لصالح وقوله أنا مشغول بكره",
+          "source_intent": "email_sendemail",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-16701",
+          "text": "حابب ارد على ايميل سلافة",
+          "source_intent": "email_sendemail",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-4216",
+          "text": "قولى بأظرف نكتة سمعتها على الاطلاق",
+          "source_intent": "general_joke",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-1579",
+          "text": "قولى نكتة عن الكورة",
+          "source_intent": "general_joke",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-6646",
+          "text": "شنو أهم عمليات البحث في جوجل النهارده",
+          "source_intent": "general_quirky",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-4154",
+          "text": "طفي ال wifi بتاعتى",
+          "source_intent": "iot_wemo_off",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-3029",
+          "text": "بكره الاغنيه دى",
+          "source_intent": "music_dislikeness",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-4985",
+          "text": "ايوه حابب احفظ الآراء على الاغتيه اللى بتشتغل واي مشغل بيشغلها",
+          "source_intent": "music_likeness",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-11598",
+          "text": "قولى عن فعاليات سباق الخيل الموجودة بالمدينة بتاعتى",
+          "source_intent": "recommendation_events",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-15454",
+          "text": "غرد على شركة خطوط طيران الإمارات أن أنا زعلان لأن ضيعوا شنطي",
+          "source_intent": "social_post",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-12707",
+          "text": "ابحث عن مواصلات",
+          "source_intent": "transport_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-12846",
+          "text": "قطار تذكرة جدة ينبع بكرة الصبح",
+          "source_intent": "transport_ticket",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-5468",
+          "text": "هل لازم أخد نظارات شمسية ؟",
+          "source_intent": "weather_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-6024",
+          "text": "لازم آخذ سترة بطاقيه أو jacket النهارده للشغل",
+          "source_intent": "weather_query",
+          "pred": "create_reminder"
+        }
+      ],
+      "dialect_gap": {
+        "msa": {
+          "n": 196,
+          "recall_create_alarm": 0.0,
+          "recall_create_alarm_ci95": [
+            0.0,
+            0.4898908364545973
+          ],
+          "n_create_alarm": 4,
+          "recall_unsupported": 0.8645833333333334,
+          "recall_unsupported_ci95": [
+            0.8089792852613451,
+            0.9058846707316466
+          ],
+          "n_unsupported": 192,
+          "macro_f1": 0.4585635359116022,
+          "false_execution_intents": 26
+        },
+        "egyptian": {
+          "n": 196,
+          "recall_create_alarm": 0.0,
+          "recall_create_alarm_ci95": [
+            0.0,
+            0.4898908364545973
+          ],
+          "n_create_alarm": 4,
+          "recall_unsupported": 0.8697916666666666,
+          "recall_unsupported_ci95": [
+            0.8148505229649732,
+            0.91022577525649
+          ],
+          "n_unsupported": 192,
+          "macro_f1": 0.46005509641873277,
+          "false_execution_intents": 25
+        },
+        "oos_recall_gap": -0.005208333333333333,
+        "mcnemar_oos": {
+          "only_msa": 5,
+          "only_egyptian": 6,
+          "p_value": 1.0
+        }
+      }
+    },
+    "S3": {
+      "n": 196,
+      "recall_create_alarm": 0.25,
+      "recall_create_alarm_ci95": [
+        0.04558726080970055,
+        0.6993581574175981
+      ],
+      "n_create_alarm": 4,
+      "recall_unsupported": 0.8645833333333334,
+      "recall_unsupported_ci95": [
+        0.8089792852613451,
+        0.9058846707316466
+      ],
+      "n_unsupported": 192,
+      "macro_f1": 0.6265004616805171,
+      "false_execution_intents": 26,
+      "errors": [
+        {
+          "id": "egy-main-massive-3161",
+          "text": "عندي أي منبهات لستة الصبح بكره",
+          "source_intent": "alarm_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-4712",
+          "text": "متصحينيش بكره",
+          "source_intent": "alarm_remove",
+          "pred": "create_alarm"
+        },
+        {
+          "id": "egy-main-massive-5082",
+          "text": "اعمل منبه جديد لستة الصبح",
+          "source_intent": "alarm_set",
+          "pred": "unsupported"
+        },
+        {
+          "id": "egy-main-massive-533",
+          "text": "اعمل منبه على تسعة بليل",
+          "source_intent": "alarm_set",
+          "pred": "unsupported"
+        },
+        {
+          "id": "egy-main-massive-4081",
+          "text": "عاوز أحط منبه وانا راجع البيت بكرة يقكرنى أوقف عند المحل وأشتري أكل",
+          "source_intent": "alarm_set",
+          "pred": "unsupported"
+        },
+        {
+          "id": "egy-main-massive-1630",
+          "text": "على صوت الموسيقى دى",
+          "source_intent": "audio_volume_up",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-8029",
+          "text": "ايه الأحداث الجايه النهارده",
+          "source_intent": "calendar_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-9103",
+          "text": "اجتماع النهارده بليل",
+          "source_intent": "calendar_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-6726",
+          "text": "اجتماع",
+          "source_intent": "calendar_remove",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-2309",
+          "text": "الساعة سبعة الصبح بتوقيت مكة المكرمة",
+          "source_intent": "datetime_convert",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-4882",
+          "text": "الساعة كام في المدينة",
+          "source_intent": "datetime_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-4336",
+          "text": "الساعة كام في السعودية",
+          "source_intent": "datetime_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-3361",
+          "text": "ايه تاريخ التلات الجاي",
+          "source_intent": "datetime_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-17051",
+          "text": "افتح الإيميل الجديد",
+          "source_intent": "email_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-17111",
+          "text": "تفاصيل التواصل مع سلمان",
+          "source_intent": "email_querycontact",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-16701",
+          "text": "حابب ارد على ايميل سلافة",
+          "source_intent": "email_sendemail",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-4216",
+          "text": "قولى بأظرف نكتة سمعتها على الاطلاق",
+          "source_intent": "general_joke",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-6646",
+          "text": "شنو أهم عمليات البحث في جوجل النهارده",
+          "source_intent": "general_quirky",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-5010",
+          "text": "اجعل المعتاد",
+          "source_intent": "iot_coffee",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-5201",
+          "text": "قلل أنواري على أقل درجة من السطوع",
+          "source_intent": "iot_hue_lightdim",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-1786",
+          "text": "اقفل غرفة النوم الأساسية",
+          "source_intent": "iot_hue_lightoff",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-4154",
+          "text": "طفي ال wifi بتاعتى",
+          "source_intent": "iot_wemo_off",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-3029",
+          "text": "بكره الاغنيه دى",
+          "source_intent": "music_dislikeness",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-4985",
+          "text": "ايوه حابب احفظ الآراء على الاغتيه اللى بتشتغل واي مشغل بيشغلها",
+          "source_intent": "music_likeness",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-15454",
+          "text": "غرد على شركة خطوط طيران الإمارات أن أنا زعلان لأن ضيعوا شنطي",
+          "source_intent": "social_post",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-12707",
+          "text": "ابحث عن مواصلات",
+          "source_intent": "transport_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-12846",
+          "text": "قطار تذكرة جدة ينبع بكرة الصبح",
+          "source_intent": "transport_ticket",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-5468",
+          "text": "هل لازم أخد نظارات شمسية ؟",
+          "source_intent": "weather_query",
+          "pred": "create_reminder"
+        },
+        {
+          "id": "egy-main-massive-6024",
+          "text": "لازم آخذ سترة بطاقيه أو jacket النهارده للشغل",
+          "source_intent": "weather_query",
+          "pred": "create_reminder"
+        }
+      ],
+      "dialect_gap": {
+        "msa": {
+          "n": 196,
+          "recall_create_alarm": 0.25,
+          "recall_create_alarm_ci95": [
+            0.04558726080970055,
+            0.6993581574175981
+          ],
+          "n_create_alarm": 4,
+          "recall_unsupported": 0.859375,
+          "recall_unsupported_ci95": [
+            0.8031305442687525,
+            0.9015210694957679
+          ],
+          "n_unsupported": 192,
+          "macro_f1": 0.625,
+          "false_execution_intents": 27
+        },
+        "egyptian": {
+          "n": 196,
+          "recall_create_alarm": 0.25,
+          "recall_create_alarm_ci95": [
+            0.04558726080970055,
+            0.6993581574175981
+          ],
+          "n_create_alarm": 4,
+          "recall_unsupported": 0.8645833333333334,
+          "recall_unsupported_ci95": [
+            0.8089792852613451,
+            0.9058846707316466
+          ],
+          "n_unsupported": 192,
+          "macro_f1": 0.6265004616805171,
+          "false_execution_intents": 26
+        },
+        "oos_recall_gap": -0.005208333333333333,
+        "mcnemar_oos": {
+          "only_msa": 7,
+          "only_egyptian": 8,
+          "p_value": 1.0
+        }
+      }
+    }
+  }
+}

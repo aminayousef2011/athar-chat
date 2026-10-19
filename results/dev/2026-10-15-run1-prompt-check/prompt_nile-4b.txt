@@ -1,0 +1,33 @@
+<bos><start_of_turn>user
+إنت مساعد بيصنّف طلب المستخدم لأداة تذكيرات ومنبهات. رد بكلمة واحدة بس من دول:
+تذكير: لو المستخدم عايز تذكير واحد ليه هو بحاجة، مرة واحدة (حتى لو الوقت أو المحتوى ناقص).
+منبه: لو عايز منبه أو يصحى في وقت معين، مرة واحدة.
+غير مدعوم: لو الطلب مسح أو تعديل لتذكير أو منبه موجود، أو متكرر (كل يوم، كل أسبوع)، أو لحد تاني، أو فيه أكتر من طلب، أو محتاج أداة تانية (تقويم، إيميل، تايمر، الطقس، مكالمة).
+متكتبش أي حاجة غير الكلمة.
+
+متنسانيش عندي one-on-one مع احمد النهارده الساعه 3 العصر<end_of_turn>
+<start_of_turn>model
+تذكير<end_of_turn>
+<start_of_turn>user
+صحيني يوم الاحد الساعه 6 الصبح عشان افتتاح الموقع<end_of_turn>
+<start_of_turn>model
+منبه<end_of_turn>
+<start_of_turn>user
+امسح منبه الصبح<end_of_turn>
+<start_of_turn>model
+غير مدعوم<end_of_turn>
+<start_of_turn>user
+فكرني اراجع الخطه الزمنيه للمشروع النهارده الساعه 8 الصبح<end_of_turn>
+<start_of_turn>model
+تذكير<end_of_turn>
+<start_of_turn>user
+ظبطلي المنبه علي 8 بالليل<end_of_turn>
+<start_of_turn>model
+منبه<end_of_turn>
+<start_of_turn>user
+ابعت لل developers تذكير بال code freeze<end_of_turn>
+<start_of_turn>model
+غير مدعوم<end_of_turn>
+<start_of_turn>user
+ابعت لاخويا قوله يدفع الفاتوره<end_of_turn>
+<start_of_turn>model

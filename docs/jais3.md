@@ -149,7 +149,7 @@ The other models' prompts are **byte-identical** to the earlier runs (tested).
 ## 7. Runs
 
 Notebook `notebooks/kaggle_s4_llm.ipynb` (version 2026-10-18b). Each run is one commit
-(*Save & Run All*). Bring the outputs back under `runs/s4/<run name>/`.
+(*Save & Run All*). Dev outputs are committed under `results/dev/<run name>/`, test outputs under `results/s4/`.
 
 | # | Run | Flags | Where |
 |---|---|---|---|
@@ -164,7 +164,7 @@ Notebook `notebooks/kaggle_s4_llm.ipynb` (version 2026-10-18b). Each run is one 
 
 ## 8. Prompt check results (Kaggle, notebook 2026-10-15b, 2× T4)
 
-Outputs: `runs/results/s4_results/` (not committed). Manifest `940beba352ec`, transformers 5.19.0, all
+Outputs: `results/dev/2026-10-15-run1-prompt-check/`. Manifest `940beba352ec`, transformers 5.19.0, all
 revisions as pinned.
 
 | Model | Answer role | Answer consistent | Tokens: تذكير / منبه / غير مدعوم | 6-shot prompt tokens |
@@ -185,8 +185,7 @@ revisions as pinned.
 
 ## 9. Dev results, real split (Kaggle 2× T4, notebook 2026-10-16a)
 
-Runs 2 and 3, outputs in `runs/s4/2026-10-16-run2-jais3/` and `runs/s4/2026-10-16-run3-others/` (not
-committed). Dev has 40 items (39 assistant drafts, 1 author-written), so every CI is wide and **nothing is
+Runs 2 and 3, outputs in `results/dev/2026-10-16-run2-jais3/` and `results/dev/2026-10-16-run3-others/`. Dev has 40 items (39 assistant drafts, 1 author-written), so every CI is wide and **nothing is
 decided on these numbers**. The locked author-written test split decides. Core systems are from
 `athar-eval --split dev` on the frozen models.
 
@@ -208,7 +207,7 @@ the best other S4 setting is shown for reference.
 Unsafe execution was 0.000-0.025 for every primary setting.
 
 **Native Egyptian out-of-scope recall** (192 requests written by a native speaker, `Alhasan/egyptian-nlu`;
-6-shot `prior`). Paired exact McNemar on the same items (`runs/s4/egyptian_paired_2026-10-16.csv`):
+6-shot `prior`). Paired exact McNemar on the same items (`results/dev/egyptian_paired_2026-10-16.csv`):
 
 | Comparison | Recall A → B | Only A right / only B right | McNemar p |
 |---|---|---|---|
@@ -236,7 +235,7 @@ What the dev runs show (descriptive; the protocol's caveats apply):
 
 ## 10. Few-shot format check (run 4; Kaggle 2× T4, notebook 2026-10-16a)
 
-`runs/s4/2026-10-16-run4-shotstyle/` (not committed). Primary method (`prior`), the 40 dev items, three
+`results/dev/2026-10-16-run4-shotstyle/`. Primary method (`prior`), the 40 dev items, three
 exemplar sets (shot seeds 0-2, train only).
 
 | Model (precision) | Exemplars as chat turns (S4 format) | Old role (Jais 2 only) | Exemplars listed in the user message |
@@ -271,7 +270,7 @@ Paired exact McNemar per exemplar set (only A right / only B right):
 
 ## 11. S8: Jais-3-7B end to end through tool calling (run 5; Kaggle 2× T4)
 
-`runs/s4/2026-10-16-run5-s8/` (not committed). The two downloaded copies (`results_6.zip`,
+`results/dev/2026-10-16-run5-s8/`. The two downloaded copies (`results_6.zip`,
 `results_7.zip`) are byte-identical, so this is one run. Settings: fp16, reasoning effort high, xml
 tool calls, sampling T 0.7 / top-p 0.95 / top-k 20, seeds 0-2, 49.6 min. Same 40 dev items.
 
@@ -312,7 +311,7 @@ Reading:
 
 ## 12. S7: Jais 2 8B + QLoRA on the real split (run 6; Kaggle 2× T4, notebook 2026-10-16a)
 
-`runs/s4/2026-10-17-run6-s7/` (not committed). Recipe as pre-registered: r 16, α 32, dropout 0.05,
+`results/dev/2026-10-17-run6-s7/`. Recipe as pre-registered: r 16, α 32, dropout 0.05,
 3 epochs, LR 2e-4, nf4-fp32, trained on the 298 train items (zero-shot prompt → verbalizer, loss on the
 answer tokens). About 79 min per seed. Same 40 dev items.
 
@@ -362,7 +361,7 @@ defect (non-finite loss, collapse onto one label), not for a lower score.
 
 ## 13. S7 with the S6-recipe training (run 6b; Kaggle 2× T4, notebook 2026-10-17a)
 
-`runs/s4/2026-10-18-run6b-s7/` (not committed). Same 298 train items, 40 dev items and seeds 0-2 as run 6.
+`results/dev/2026-10-18-run6b-s7/` (the 530 MB of adapters are not committed; their SHA-256 are below). Same 298 train items, 40 dev items and seeds 0-2 as run 6.
 Training as in the protocol log of 2026-10-17: batch 16, 19 steps per epoch, LR warmed up from 4e-5 and
 decayed to 4e-6, clipping at 1.0, class-balanced loss, answers ending with `<|eot_id|>`. About 60 min per
 seed.

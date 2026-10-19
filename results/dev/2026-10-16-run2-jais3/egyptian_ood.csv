@@ -1,0 +1,4 @@
+system,n,recall_create_alarm,recall_create_alarm_ci95,n_create_alarm,recall_unsupported,recall_unsupported_ci95,n_unsupported,macro_f1,false_execution_intents,precision,caught@0.6,caught@0.7
+S1,196,1.0,"(0.5101091635454027, 1.0)",4,0.99,"(0.9628214588546004, 0.997138710621703)",192,0.897,2,,,
+S4-jais3-7b-6shot-prior,196,1.0,"(0.5101091635454027, 1.0)",4,1.0,"(0.9803848539332458, 1.0)",192,1.0,0,fp16,0.0,0.0
+S4-jais3-3.7b-6shot-prior,196,1.0,"(0.5101091635454027, 1.0)",4,0.958,"(0.9199480120522676, 0.9787381040532077)",192,0.823,8,fp32,1.0,4.0

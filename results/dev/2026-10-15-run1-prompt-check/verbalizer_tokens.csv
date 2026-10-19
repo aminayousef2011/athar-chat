@@ -1,0 +1,6 @@
+model,answer_consistent,answer_role,create_reminder,create_alarm,unsupported,prompt_tokens
+jais3-7b,True,assistant,2,2,2,284
+jais3-3.7b,True,assistant,2,2,2,284
+jais2-8b,True,ai,2,2,2,263
+nile-4b,True,assistant,3,2,4,339
+qwen3-8b,True,assistant,4,2,4,384

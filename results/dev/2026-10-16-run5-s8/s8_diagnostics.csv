@@ -1,0 +1,4 @@
+system,n,invalid,invalid_by_cause,truncated,mean_new_tokens,decline_reason_accuracy,act_wrong_text_only
+S8-jais3-7b-s0,40,5,{'no tool call': 5},0,293.1,0.7142857142857143,1
+S8-jais3-7b-s1,40,5,{'no tool call': 5},0,285.125,0.7142857142857143,2
+S8-jais3-7b-s2,40,8,{'no tool call': 8},0,382.1,0.5714285714285714,0

@@ -1,0 +1,2885 @@
+{
+ "config": {
+  "seed": 20261007,
+  "level": 0.95,
+  "resamples": 10000,
+  "permutations": 10000,
+  "alpha": 0.05,
+  "calibration_bins": 10,
+  "oracle": false,
+  "comparisons": [],
+  "gate": {
+   "thresholds": [
+    0.0,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    0.95
+   ],
+   "max_unsafe_execution_rate": 0.02
+  },
+  "perturbations": [
+   "taa_marbuta",
+   "hamza",
+   "alef_maqsura",
+   "digits",
+   "diacritics",
+   "elongation",
+   "punctuation",
+   "politeness",
+   "english_trigger"
+  ]
+ },
+ "config_sha256": "dfbd8398c8c38ef504a6fff547d562f83f2281c9f6dbe15ef5b93138f879f116",
+ "n_items": 40,
+ "systems": {
+  "S7-jais2-qlora-s0-raw": {
+   "metrics": {
+    "n": 40,
+    "safe_task_success": 0.95,
+    "intent_macro_f1": 0.9357142857142856,
+    "route_macro_f1": 0.9321044546851,
+    "intent_accuracy": 0.95,
+    "route_accuracy": 0.95,
+    "unsafe_execution_rate": 0.0,
+    "unsafe_execution_on_non_act": 0.0,
+    "wrong_argument_execution": 0.0,
+    "execution_precision": 1.0,
+    "unnecessary_clarification_rate": 0.0,
+    "over_abstention_rate": 0.030303030303030304,
+    "missed_abstention_rate": 0.14285714285714285,
+    "success_by_gold_route": {
+     "ACT": 0.9375,
+     "CLARIFY": 1.0,
+     "ABSTAIN": 0.8571428571428571
+    },
+    "pairs": 12,
+    "pair_both_success": 1.0,
+    "invalid_outputs": 0,
+    "intent_per_class": {
+     "create_reminder": {
+      "precision": 0.95,
+      "recall": 0.95,
+      "f1": 0.95,
+      "support": 20
+     },
+     "create_alarm": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 13
+     },
+     "unsupported": {
+      "precision": 0.8571428571428571,
+      "recall": 0.8571428571428571,
+      "f1": 0.8571428571428571,
+      "support": 7
+     }
+    },
+    "route_per_class": {
+     "ACT": {
+      "precision": 1.0,
+      "recall": 0.9375,
+      "f1": 0.967741935483871,
+      "support": 16
+     },
+     "CLARIFY": {
+      "precision": 0.9444444444444444,
+      "recall": 1.0,
+      "f1": 0.9714285714285714,
+      "support": 17
+     },
+     "ABSTAIN": {
+      "precision": 0.8571428571428571,
+      "recall": 0.8571428571428571,
+      "f1": 0.8571428571428571,
+      "support": 7
+     }
+    },
+    "intent_confusion": {
+     "labels": [
+      "create_reminder",
+      "create_alarm",
+      "unsupported"
+     ],
+     "matrix": [
+      [
+       19,
+       0,
+       1
+      ],
+      [
+       0,
+       13,
+       0
+      ],
+      [
+       1,
+       0,
+       6
+      ]
+     ]
+    },
+    "route_confusion": {
+     "labels": [
+      "ACT",
+      "CLARIFY",
+      "ABSTAIN"
+     ],
+     "matrix": [
+      [
+       15,
+       0,
+       1
+      ],
+      [
+       0,
+       17,
+       0
+      ],
+      [
+       0,
+       1,
+       6
+      ]
+     ]
+    }
+   },
+   "ci": {
+    "safe_task_success": {
+     "estimate": 0.95,
+     "low": 0.8780487804878049,
+     "high": 1.0,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "intent_macro_f1": {
+     "estimate": 0.9357142857142856,
+     "low": 0.8367346938775512,
+     "high": 1.0,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "route_macro_f1": {
+     "estimate": 0.9321044546851,
+     "low": 0.8299650358110724,
+     "high": 1.0,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "unsafe_execution_rate": {
+     "estimate": 0.0,
+     "low": 0.0,
+     "high": 0.0,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "unnecessary_clarification_rate": {
+     "estimate": 0.0,
+     "low": 0.0,
+     "high": 0.0,
+     "level": 0.95,
+     "resamples": 10000
+    }
+   },
+   "calibration": {
+    "ece": 0.05177410876139668,
+    "brier": 0.08929540025848859,
+    "aurc": 0.003189946018893387
+   },
+   "subgroups": {
+    "domain": {
+     "general": {
+      "n": 11,
+      "safe_task_success": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     },
+     "project_management": {
+      "n": 29,
+      "safe_task_success": {
+       "estimate": 0.9310344827586207,
+       "low": 0.84,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 0.9259259259259259,
+       "low": 0.7916666666666666,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     }
+    },
+    "code_switching": {
+     "arabic-only": {
+      "n": 21,
+      "safe_task_success": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     },
+     "code-switched": {
+      "n": 19,
+      "safe_task_success": {
+       "estimate": 0.8947368421052632,
+       "low": 0.7647058823529411,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 0.9111111111111111,
+       "low": 0.6559139784946236,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     }
+    },
+    "tool": {
+     "create_alarm": {
+      "n": 13,
+      "safe_task_success": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     },
+     "create_reminder": {
+      "n": 20,
+      "safe_task_success": {
+       "estimate": 0.95,
+       "low": 0.8636363636363636,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 0.48717948717948717,
+       "low": 0.4634146341463415,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     },
+     "unsupported": {
+      "n": 7,
+      "safe_task_success": {
+       "estimate": 0.8571428571428571,
+       "low": 0.625,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 0.46153846153846156,
+       "low": 0.38461538461538464,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     }
+    }
+   },
+   "robustness": {
+    "taa_marbuta": {
+     "n": 32,
+     "safe_task_success": 0.96875,
+     "invariance_rate": 1.0
+    },
+    "hamza": {
+     "n": 27,
+     "safe_task_success": 0.9259259259259259,
+     "invariance_rate": 1.0
+    },
+    "alef_maqsura": {
+     "n": 34,
+     "safe_task_success": 0.9705882352941176,
+     "invariance_rate": 1.0
+    },
+    "digits": {
+     "n": 23,
+     "safe_task_success": 0.9565217391304348,
+     "invariance_rate": 1.0
+    },
+    "diacritics": {
+     "n": 40,
+     "safe_task_success": 0.95,
+     "invariance_rate": 1.0
+    },
+    "elongation": {
+     "n": 40,
+     "safe_task_success": 0.95,
+     "invariance_rate": 1.0
+    },
+    "punctuation": {
+     "n": 40,
+     "safe_task_success": 0.925,
+     "invariance_rate": 0.925
+    },
+    "politeness": {
+     "n": 40,
+     "safe_task_success": 0.95,
+     "invariance_rate": 1.0
+    },
+    "english_trigger": {
+     "n": 22,
+     "safe_task_success": 0.9545454545454546,
+     "invariance_rate": 1.0
+    }
+   },
+   "gate": {
+    "curve": [
+     {
+      "tau": 0.0,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.4,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.5,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.6,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.7,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.8,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.9,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.95,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     }
+    ],
+    "max_unsafe_execution_rate": 0.02,
+    "rule_threshold_on_this_split": 0.0,
+    "confidence": [
+     0.9999999422131898,
+     0.9997100960655158,
+     0.9976971330590904,
+     0.9999648574766283,
+     0.9999365449609622,
+     0.9602852536789552,
+     0.9991956356712192,
+     0.9986623697334606,
+     0.9999918146712796,
+     0.9994402604400634,
+     0.9986249586856182,
+     0.9938622582504035,
+     0.989009715513131,
+     0.9897007894290969,
+     0.9998736113401475,
+     0.9986750673052398,
+     0.9996398026240357,
+     0.9984557592200678,
+     0.9968724242900824,
+     0.9986220256019528,
+     0.9997945890269463,
+     0.9994036739804443,
+     0.925917188593545,
+     0.982924292626695,
+     0.9967296836976769,
+     0.9939666190339216,
+     0.9986605928378911,
+     0.9995927995525703,
+     0.9993762946399729,
+     0.9995815238955086,
+     0.9991028158695151,
+     0.9986675862742079,
+     0.9982347713180891,
+     0.9922067628154609,
+     0.9999998570970883,
+     0.9999999335736682,
+     0.8807960332522655,
+     0.6120955693818699,
+     0.999884893767222,
+     0.9999996877548987
+    ]
+   },
+   "items": [
+    {
+     "id": "c158-a",
+     "family_id": "fam-c158",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-017",
+     "family_id": "genf007",
+     "pair_id": "genp007",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "gen-018",
+     "family_id": "genf007",
+     "pair_id": "genp007",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-059",
+     "family_id": "genf025",
+     "pair_id": "genp025",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "gen-060",
+     "family_id": "genf025",
+     "pair_id": "genp025",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-061",
+     "family_id": "genf025",
+     "pair_id": null,
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-064",
+     "family_id": "genf027",
+     "pair_id": "genp027",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "gen-065",
+     "family_id": "genf027",
+     "pair_id": "genp027",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-066",
+     "family_id": "genf027",
+     "pair_id": null,
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-073",
+     "family_id": "genf031",
+     "pair_id": "genp031",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "gen-074",
+     "family_id": "genf031",
+     "pair_id": "genp031",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-037",
+     "family_id": "pmf013",
+     "pair_id": "pmp013",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-038",
+     "family_id": "pmf013",
+     "pair_id": "pmp013",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-039",
+     "family_id": "pmf013",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-076",
+     "family_id": "pmf028",
+     "pair_id": "pmp028",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-077",
+     "family_id": "pmf028",
+     "pair_id": "pmp028",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-078",
+     "family_id": "pmf028",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-098",
+     "family_id": "pmf036",
+     "pair_id": "pmp036",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-099",
+     "family_id": "pmf036",
+     "pair_id": "pmp036",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-100",
+     "family_id": "pmf036",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-109",
+     "family_id": "pmf041",
+     "pair_id": "pmp041",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-110",
+     "family_id": "pmf041",
+     "pair_id": "pmp041",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-111",
+     "family_id": "pmf041",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": false,
+     "executed": false
+    },
+    {
+     "id": "pm-112",
+     "family_id": "pmf041",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-127",
+     "family_id": "pmf048",
+     "pair_id": "pmp048",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-128",
+     "family_id": "pmf048",
+     "pair_id": "pmp048",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-129",
+     "family_id": "pmf048",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-136",
+     "family_id": "pmf052",
+     "pair_id": "pmp052",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-137",
+     "family_id": "pmf052",
+     "pair_id": "pmp052",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-154",
+     "family_id": "pmf060",
+     "pair_id": "pmp060",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-155",
+     "family_id": "pmf060",
+     "pair_id": "pmp060",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-156",
+     "family_id": "pmf060",
+     "pair_id": null,
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-168",
+     "family_id": "pmf065",
+     "pair_id": "pmp065",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-169",
+     "family_id": "pmf065",
+     "pair_id": "pmp065",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-177",
+     "family_id": "pmf069",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-178",
+     "family_id": "pmf069",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-193",
+     "family_id": "pmf078",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": false,
+     "executed": false
+    },
+    {
+     "id": "pm-194",
+     "family_id": "pmf078",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-195",
+     "family_id": "pmf079",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-206",
+     "family_id": "pmf085",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    }
+   ]
+  },
+  "S7-jais2-qlora-s0-calibrated": {
+   "metrics": {
+    "n": 40,
+    "safe_task_success": 0.925,
+    "intent_macro_f1": 0.8858350951374208,
+    "route_macro_f1": 0.882063882063882,
+    "intent_accuracy": 0.925,
+    "route_accuracy": 0.925,
+    "unsafe_execution_rate": 0.0,
+    "unsafe_execution_on_non_act": 0.0,
+    "wrong_argument_execution": 0.0,
+    "execution_precision": 1.0,
+    "unnecessary_clarification_rate": 0.0,
+    "over_abstention_rate": 0.0,
+    "missed_abstention_rate": 0.42857142857142855,
+    "success_by_gold_route": {
+     "ACT": 1.0,
+     "CLARIFY": 1.0,
+     "ABSTAIN": 0.5714285714285714
+    },
+    "pairs": 12,
+    "pair_both_success": 1.0,
+    "invalid_outputs": 0,
+    "intent_per_class": {
+     "create_reminder": {
+      "precision": 0.8695652173913043,
+      "recall": 1.0,
+      "f1": 0.9302325581395349,
+      "support": 20
+     },
+     "create_alarm": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 13
+     },
+     "unsupported": {
+      "precision": 1.0,
+      "recall": 0.5714285714285714,
+      "f1": 0.7272727272727273,
+      "support": 7
+     }
+    },
+    "route_per_class": {
+     "ACT": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 16
+     },
+     "CLARIFY": {
+      "precision": 0.85,
+      "recall": 1.0,
+      "f1": 0.918918918918919,
+      "support": 17
+     },
+     "ABSTAIN": {
+      "precision": 1.0,
+      "recall": 0.5714285714285714,
+      "f1": 0.7272727272727273,
+      "support": 7
+     }
+    },
+    "intent_confusion": {
+     "labels": [
+      "create_reminder",
+      "create_alarm",
+      "unsupported"
+     ],
+     "matrix": [
+      [
+       20,
+       0,
+       0
+      ],
+      [
+       0,
+       13,
+       0
+      ],
+      [
+       3,
+       0,
+       4
+      ]
+     ]
+    },
+    "route_confusion": {
+     "labels": [
+      "ACT",
+      "CLARIFY",
+      "ABSTAIN"
+     ],
+     "matrix": [
+      [
+       16,
+       0,
+       0
+      ],
+      [
+       0,
+       17,
+       0
+      ],
+      [
+       0,
+       3,
+       4
+      ]
+     ]
+    }
+   },
+   "ci": {
+    "safe_task_success": {
+     "estimate": 0.925,
+     "low": 0.7906670746634029,
+     "high": 1.0,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "intent_macro_f1": {
+     "estimate": 0.8858350951374208,
+     "low": 0.6491228070175438,
+     "high": 1.0,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "route_macro_f1": {
+     "estimate": 0.882063882063882,
+     "low": 0.6453900709219859,
+     "high": 1.0,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "unsafe_execution_rate": {
+     "estimate": 0.0,
+     "low": 0.0,
+     "high": 0.0,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "unnecessary_clarification_rate": {
+     "estimate": 0.0,
+     "low": 0.0,
+     "high": 0.0,
+     "level": 0.95,
+     "resamples": 10000
+    }
+   },
+   "calibration": {
+    "ece": 0.06884572312246326,
+    "brier": 0.14405665632774306,
+    "aurc": 0.012457518030320263
+   },
+   "subgroups": {
+    "domain": {
+     "general": {
+      "n": 11,
+      "safe_task_success": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     },
+     "project_management": {
+      "n": 29,
+      "safe_task_success": {
+       "estimate": 0.896551724137931,
+       "low": 0.7083333333333334,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 0.8632478632478633,
+       "low": 0.6068376068376068,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     }
+    },
+    "code_switching": {
+     "arabic-only": {
+      "n": 21,
+      "safe_task_success": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     },
+     "code-switched": {
+      "n": 19,
+      "safe_task_success": {
+       "estimate": 0.8421052631578947,
+       "low": 0.5384615384615384,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 0.8454106280193235,
+       "low": 0.4444444444444444,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     }
+    },
+    "tool": {
+     "create_alarm": {
+      "n": 13,
+      "safe_task_success": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     },
+     "create_reminder": {
+      "n": 20,
+      "safe_task_success": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     },
+     "unsupported": {
+      "n": 7,
+      "safe_task_success": {
+       "estimate": 0.5714285714285714,
+       "low": 0.125,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 0.36363636363636365,
+       "low": 0.1111111111111111,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     }
+    }
+   },
+   "robustness": {
+    "taa_marbuta": {
+     "n": 32,
+     "safe_task_success": 0.96875,
+     "invariance_rate": 1.0
+    },
+    "hamza": {
+     "n": 27,
+     "safe_task_success": 0.8888888888888888,
+     "invariance_rate": 1.0
+    },
+    "alef_maqsura": {
+     "n": 34,
+     "safe_task_success": 0.9117647058823529,
+     "invariance_rate": 1.0
+    },
+    "digits": {
+     "n": 23,
+     "safe_task_success": 0.9565217391304348,
+     "invariance_rate": 1.0
+    },
+    "diacritics": {
+     "n": 40,
+     "safe_task_success": 0.925,
+     "invariance_rate": 1.0
+    },
+    "elongation": {
+     "n": 40,
+     "safe_task_success": 0.925,
+     "invariance_rate": 1.0
+    },
+    "punctuation": {
+     "n": 40,
+     "safe_task_success": 0.925,
+     "invariance_rate": 1.0
+    },
+    "politeness": {
+     "n": 40,
+     "safe_task_success": 0.925,
+     "invariance_rate": 0.975
+    },
+    "english_trigger": {
+     "n": 22,
+     "safe_task_success": 0.9090909090909091,
+     "invariance_rate": 1.0
+    }
+   },
+   "gate": {
+    "curve": [
+     {
+      "tau": 0.0,
+      "coverage": 0.4,
+      "gated": 0.0,
+      "safe_task_success": 0.925,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.4,
+      "coverage": 0.4,
+      "gated": 0.0,
+      "safe_task_success": 0.925,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.5,
+      "coverage": 0.4,
+      "gated": 0.0,
+      "safe_task_success": 0.925,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.6,
+      "coverage": 0.4,
+      "gated": 0.0,
+      "safe_task_success": 0.925,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.7,
+      "coverage": 0.4,
+      "gated": 0.0,
+      "safe_task_success": 0.925,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.8,
+      "coverage": 0.4,
+      "gated": 0.0,
+      "safe_task_success": 0.925,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.9,
+      "coverage": 0.4,
+      "gated": 0.0,
+      "safe_task_success": 0.925,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.95,
+      "coverage": 0.4,
+      "gated": 0.0,
+      "safe_task_success": 0.925,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     }
+    ],
+    "max_unsafe_execution_rate": 0.02,
+    "rule_threshold_on_this_split": 0.0,
+    "confidence": [
+     0.9852254276209965,
+     0.999996842982816,
+     0.9999924506965782,
+     0.9999999754141207,
+     0.9999999019070476,
+     0.9999862899765185,
+     0.9999945285944627,
+     0.9999801657921379,
+     0.9999999837160907,
+     0.999962140214755,
+     0.9999305665624784,
+     0.9999957821507807,
+     0.9999956678465639,
+     0.999996024633521,
+     0.9999986152356092,
+     0.9999970722755074,
+     0.999997927162715,
+     0.9999845338214115,
+     0.9999885000248426,
+     0.9999857959455329,
+     0.9999976779968528,
+     0.9999965041015544,
+     0.9993366034704223,
+     0.999985804659513,
+     0.9999949237768829,
+     0.9999940472021658,
+     0.9999959184126247,
+     0.9999976505753096,
+     0.9999986391145773,
+     0.9999995198694182,
+     0.9999986343697919,
+     0.9999996121996874,
+     0.99999932569313,
+     0.9999919346674194,
+     0.9633018420765739,
+     0.9830555301769532,
+     0.9999722197779094,
+     0.9998424502053761,
+     0.8983442449774758,
+     0.9250176490003954
+    ]
+   },
+   "items": [
+    {
+     "id": "c158-a",
+     "family_id": "fam-c158",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-017",
+     "family_id": "genf007",
+     "pair_id": "genp007",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "gen-018",
+     "family_id": "genf007",
+     "pair_id": "genp007",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-059",
+     "family_id": "genf025",
+     "pair_id": "genp025",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "gen-060",
+     "family_id": "genf025",
+     "pair_id": "genp025",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-061",
+     "family_id": "genf025",
+     "pair_id": null,
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-064",
+     "family_id": "genf027",
+     "pair_id": "genp027",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "gen-065",
+     "family_id": "genf027",
+     "pair_id": "genp027",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-066",
+     "family_id": "genf027",
+     "pair_id": null,
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-073",
+     "family_id": "genf031",
+     "pair_id": "genp031",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "gen-074",
+     "family_id": "genf031",
+     "pair_id": "genp031",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-037",
+     "family_id": "pmf013",
+     "pair_id": "pmp013",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-038",
+     "family_id": "pmf013",
+     "pair_id": "pmp013",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-039",
+     "family_id": "pmf013",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-076",
+     "family_id": "pmf028",
+     "pair_id": "pmp028",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-077",
+     "family_id": "pmf028",
+     "pair_id": "pmp028",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-078",
+     "family_id": "pmf028",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-098",
+     "family_id": "pmf036",
+     "pair_id": "pmp036",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-099",
+     "family_id": "pmf036",
+     "pair_id": "pmp036",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-100",
+     "family_id": "pmf036",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-109",
+     "family_id": "pmf041",
+     "pair_id": "pmp041",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-110",
+     "family_id": "pmf041",
+     "pair_id": "pmp041",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-111",
+     "family_id": "pmf041",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-112",
+     "family_id": "pmf041",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-127",
+     "family_id": "pmf048",
+     "pair_id": "pmp048",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-128",
+     "family_id": "pmf048",
+     "pair_id": "pmp048",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-129",
+     "family_id": "pmf048",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-136",
+     "family_id": "pmf052",
+     "pair_id": "pmp052",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-137",
+     "family_id": "pmf052",
+     "pair_id": "pmp052",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-154",
+     "family_id": "pmf060",
+     "pair_id": "pmp060",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-155",
+     "family_id": "pmf060",
+     "pair_id": "pmp060",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-156",
+     "family_id": "pmf060",
+     "pair_id": null,
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-168",
+     "family_id": "pmf065",
+     "pair_id": "pmp065",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-169",
+     "family_id": "pmf065",
+     "pair_id": "pmp065",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-177",
+     "family_id": "pmf069",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-178",
+     "family_id": "pmf069",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-193",
+     "family_id": "pmf078",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": false,
+     "executed": false
+    },
+    {
+     "id": "pm-194",
+     "family_id": "pmf078",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": false,
+     "executed": false
+    },
+    {
+     "id": "pm-195",
+     "family_id": "pmf079",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": false,
+     "executed": false
+    },
+    {
+     "id": "pm-206",
+     "family_id": "pmf085",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    }
+   ]
+  },
+  "S7-jais2-qlora-s0-prior": {
+   "metrics": {
+    "n": 40,
+    "safe_task_success": 0.95,
+    "intent_macro_f1": 0.9357142857142856,
+    "route_macro_f1": 0.9321044546851,
+    "intent_accuracy": 0.95,
+    "route_accuracy": 0.95,
+    "unsafe_execution_rate": 0.0,
+    "unsafe_execution_on_non_act": 0.0,
+    "wrong_argument_execution": 0.0,
+    "execution_precision": 1.0,
+    "unnecessary_clarification_rate": 0.0,
+    "over_abstention_rate": 0.030303030303030304,
+    "missed_abstention_rate": 0.14285714285714285,
+    "success_by_gold_route": {
+     "ACT": 0.9375,
+     "CLARIFY": 1.0,
+     "ABSTAIN": 0.8571428571428571
+    },
+    "pairs": 12,
+    "pair_both_success": 1.0,
+    "invalid_outputs": 0,
+    "intent_per_class": {
+     "create_reminder": {
+      "precision": 0.95,
+      "recall": 0.95,
+      "f1": 0.95,
+      "support": 20
+     },
+     "create_alarm": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 13
+     },
+     "unsupported": {
+      "precision": 0.8571428571428571,
+      "recall": 0.8571428571428571,
+      "f1": 0.8571428571428571,
+      "support": 7
+     }
+    },
+    "route_per_class": {
+     "ACT": {
+      "precision": 1.0,
+      "recall": 0.9375,
+      "f1": 0.967741935483871,
+      "support": 16
+     },
+     "CLARIFY": {
+      "precision": 0.9444444444444444,
+      "recall": 1.0,
+      "f1": 0.9714285714285714,
+      "support": 17
+     },
+     "ABSTAIN": {
+      "precision": 0.8571428571428571,
+      "recall": 0.8571428571428571,
+      "f1": 0.8571428571428571,
+      "support": 7
+     }
+    },
+    "intent_confusion": {
+     "labels": [
+      "create_reminder",
+      "create_alarm",
+      "unsupported"
+     ],
+     "matrix": [
+      [
+       19,
+       0,
+       1
+      ],
+      [
+       0,
+       13,
+       0
+      ],
+      [
+       1,
+       0,
+       6
+      ]
+     ]
+    },
+    "route_confusion": {
+     "labels": [
+      "ACT",
+      "CLARIFY",
+      "ABSTAIN"
+     ],
+     "matrix": [
+      [
+       15,
+       0,
+       1
+      ],
+      [
+       0,
+       17,
+       0
+      ],
+      [
+       0,
+       1,
+       6
+      ]
+     ]
+    }
+   },
+   "ci": {
+    "safe_task_success": {
+     "estimate": 0.95,
+     "low": 0.8780487804878049,
+     "high": 1.0,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "intent_macro_f1": {
+     "estimate": 0.9357142857142856,
+     "low": 0.8367346938775512,
+     "high": 1.0,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "route_macro_f1": {
+     "estimate": 0.9321044546851,
+     "low": 0.8299650358110724,
+     "high": 1.0,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "unsafe_execution_rate": {
+     "estimate": 0.0,
+     "low": 0.0,
+     "high": 0.0,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "unnecessary_clarification_rate": {
+     "estimate": 0.0,
+     "low": 0.0,
+     "high": 0.0,
+     "level": 0.95,
+     "resamples": 10000
+    }
+   },
+   "calibration": {
+    "ece": 0.03894354375388804,
+    "brier": 0.0731211518898838,
+    "aurc": 0.00536862032992064
+   },
+   "subgroups": {
+    "domain": {
+     "general": {
+      "n": 11,
+      "safe_task_success": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     },
+     "project_management": {
+      "n": 29,
+      "safe_task_success": {
+       "estimate": 0.9310344827586207,
+       "low": 0.84,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 0.9259259259259259,
+       "low": 0.7916666666666666,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     }
+    },
+    "code_switching": {
+     "arabic-only": {
+      "n": 21,
+      "safe_task_success": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     },
+     "code-switched": {
+      "n": 19,
+      "safe_task_success": {
+       "estimate": 0.8947368421052632,
+       "low": 0.7647058823529411,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 0.9111111111111111,
+       "low": 0.6559139784946236,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     }
+    },
+    "tool": {
+     "create_alarm": {
+      "n": 13,
+      "safe_task_success": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 1.0,
+       "low": 1.0,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     },
+     "create_reminder": {
+      "n": 20,
+      "safe_task_success": {
+       "estimate": 0.95,
+       "low": 0.8636363636363636,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 0.48717948717948717,
+       "low": 0.4634146341463415,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     },
+     "unsupported": {
+      "n": 7,
+      "safe_task_success": {
+       "estimate": 0.8571428571428571,
+       "low": 0.625,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      },
+      "intent_macro_f1": {
+       "estimate": 0.46153846153846156,
+       "low": 0.38461538461538464,
+       "high": 1.0,
+       "level": 0.95,
+       "resamples": 10000
+      }
+     }
+    }
+   },
+   "robustness": {
+    "taa_marbuta": {
+     "n": 32,
+     "safe_task_success": 0.96875,
+     "invariance_rate": 1.0
+    },
+    "hamza": {
+     "n": 27,
+     "safe_task_success": 0.9259259259259259,
+     "invariance_rate": 1.0
+    },
+    "alef_maqsura": {
+     "n": 34,
+     "safe_task_success": 0.9705882352941176,
+     "invariance_rate": 1.0
+    },
+    "digits": {
+     "n": 23,
+     "safe_task_success": 0.9565217391304348,
+     "invariance_rate": 1.0
+    },
+    "diacritics": {
+     "n": 40,
+     "safe_task_success": 0.95,
+     "invariance_rate": 1.0
+    },
+    "elongation": {
+     "n": 40,
+     "safe_task_success": 0.95,
+     "invariance_rate": 1.0
+    },
+    "punctuation": {
+     "n": 40,
+     "safe_task_success": 0.9,
+     "invariance_rate": 0.9
+    },
+    "politeness": {
+     "n": 40,
+     "safe_task_success": 0.95,
+     "invariance_rate": 1.0
+    },
+    "english_trigger": {
+     "n": 22,
+     "safe_task_success": 0.9545454545454546,
+     "invariance_rate": 1.0
+    }
+   },
+   "gate": {
+    "curve": [
+     {
+      "tau": 0.0,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.4,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.5,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.6,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.7,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.8,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.9,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     },
+     {
+      "tau": 0.95,
+      "coverage": 0.375,
+      "gated": 0.0,
+      "safe_task_success": 0.95,
+      "unsafe_execution_rate": 0.0,
+      "execution_precision": 1.0,
+      "unnecessary_clarification_rate": 0.0
+     }
+    ],
+    "max_unsafe_execution_rate": 0.02,
+    "rule_threshold_on_this_split": 0.0,
+    "confidence": [
+     0.9999999824895626,
+     0.9990344593755941,
+     0.9923748125433534,
+     0.9999696672702516,
+     0.9999452630432859,
+     0.9655247871375877,
+     0.9993087101965664,
+     0.9988570022252278,
+     0.9999929415719723,
+     0.9995401898392136,
+     0.9988555585098692,
+     0.9798636440130581,
+     0.9643423301348798,
+     0.9665320499157678,
+     0.9995788908698099,
+     0.9956036716052786,
+     0.9988014790950337,
+     0.9948725094847569,
+     0.9896631896168502,
+     0.9954226066137909,
+     0.9993156895918436,
+     0.9980168426562361,
+     0.9764788863837673,
+     0.9453496631841511,
+     0.9891984516469938,
+     0.9802003997269155,
+     0.9955552265575567,
+     0.9986452262738784,
+     0.997927084837338,
+     0.9996388965616171,
+     0.9992259772686334,
+     0.9988494037021706,
+     0.9984756590169905,
+     0.9932678189243054,
+     0.999999855089492,
+     0.9999999800347592,
+     0.689505365622412,
+     0.8399508648126512,
+     0.9999585400024774,
+     0.999999902334938
+    ]
+   },
+   "items": [
+    {
+     "id": "c158-a",
+     "family_id": "fam-c158",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-017",
+     "family_id": "genf007",
+     "pair_id": "genp007",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "gen-018",
+     "family_id": "genf007",
+     "pair_id": "genp007",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-059",
+     "family_id": "genf025",
+     "pair_id": "genp025",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "gen-060",
+     "family_id": "genf025",
+     "pair_id": "genp025",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-061",
+     "family_id": "genf025",
+     "pair_id": null,
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-064",
+     "family_id": "genf027",
+     "pair_id": "genp027",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "gen-065",
+     "family_id": "genf027",
+     "pair_id": "genp027",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-066",
+     "family_id": "genf027",
+     "pair_id": null,
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "gen-073",
+     "family_id": "genf031",
+     "pair_id": "genp031",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "gen-074",
+     "family_id": "genf031",
+     "pair_id": "genp031",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-037",
+     "family_id": "pmf013",
+     "pair_id": "pmp013",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-038",
+     "family_id": "pmf013",
+     "pair_id": "pmp013",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-039",
+     "family_id": "pmf013",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-076",
+     "family_id": "pmf028",
+     "pair_id": "pmp028",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-077",
+     "family_id": "pmf028",
+     "pair_id": "pmp028",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-078",
+     "family_id": "pmf028",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-098",
+     "family_id": "pmf036",
+     "pair_id": "pmp036",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-099",
+     "family_id": "pmf036",
+     "pair_id": "pmp036",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-100",
+     "family_id": "pmf036",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-109",
+     "family_id": "pmf041",
+     "pair_id": "pmp041",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-110",
+     "family_id": "pmf041",
+     "pair_id": "pmp041",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-111",
+     "family_id": "pmf041",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": false,
+     "executed": false
+    },
+    {
+     "id": "pm-112",
+     "family_id": "pmf041",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-127",
+     "family_id": "pmf048",
+     "pair_id": "pmp048",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-128",
+     "family_id": "pmf048",
+     "pair_id": "pmp048",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-129",
+     "family_id": "pmf048",
+     "pair_id": null,
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-136",
+     "family_id": "pmf052",
+     "pair_id": "pmp052",
+     "gold_intent": "create_reminder",
+     "gold_route": "ACT",
+     "pred_intent": "create_reminder",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-137",
+     "family_id": "pmf052",
+     "pair_id": "pmp052",
+     "gold_intent": "create_reminder",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-154",
+     "family_id": "pmf060",
+     "pair_id": "pmp060",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-155",
+     "family_id": "pmf060",
+     "pair_id": "pmp060",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-156",
+     "family_id": "pmf060",
+     "pair_id": null,
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-168",
+     "family_id": "pmf065",
+     "pair_id": "pmp065",
+     "gold_intent": "create_alarm",
+     "gold_route": "ACT",
+     "pred_intent": "create_alarm",
+     "pred_route": "ACT",
+     "valid": true,
+     "success": true,
+     "executed": true
+    },
+    {
+     "id": "pm-169",
+     "family_id": "pmf065",
+     "pair_id": "pmp065",
+     "gold_intent": "create_alarm",
+     "gold_route": "CLARIFY",
+     "pred_intent": "create_alarm",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-177",
+     "family_id": "pmf069",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-178",
+     "family_id": "pmf069",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-193",
+     "family_id": "pmf078",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "create_reminder",
+     "pred_route": "CLARIFY",
+     "valid": true,
+     "success": false,
+     "executed": false
+    },
+    {
+     "id": "pm-194",
+     "family_id": "pmf078",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-195",
+     "family_id": "pmf079",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    },
+    {
+     "id": "pm-206",
+     "family_id": "pmf085",
+     "pair_id": null,
+     "gold_intent": "unsupported",
+     "gold_route": "ABSTAIN",
+     "pred_intent": "unsupported",
+     "pred_route": "ABSTAIN",
+     "valid": true,
+     "success": true,
+     "executed": false
+    }
+   ]
+  }
+ },
+ "seed_summaries": {},
+ "comparisons": {},
+ "model": {
+  "id": "inception42/Jais-2-8B-Chat",
+  "adapter": "QLoRA",
+  "recipe": {
+   "epochs": 3,
+   "learning_rate": 0.0002,
+   "r": 16,
+   "alpha": 32,
+   "dropout": 0.05,
+   "batch_size": 16,
+   "warmup_ratio": 0.1,
+   "max_grad_norm": 1.0,
+   "weight_decay": 0.01,
+   "class_balanced": true
+  },
+  "precision": "nf4-fp32",
+  "revision": "da0e1639cd92b508b24120f7f77f5270a8465dc4",
+  "seed": 0,
+  "training": [
+   {
+    "epoch": 1,
+    "loss": 0.127436058215658,
+    "steps": 19,
+    "lr_first": 4e-05,
+    "lr_last": 0.00015000000000000001,
+    "grad_norm_mean": 3.7341206271789575,
+    "grad_norm_max": 9.746220588684082
+   },
+   {
+    "epoch": 2,
+    "loss": 0.040100188716971526,
+    "steps": 19,
+    "lr_first": 0.00014615384615384615,
+    "lr_last": 7.692307692307693e-05,
+    "grad_norm_mean": 1.3388898680476766,
+    "grad_norm_max": 4.146254062652588
+   },
+   {
+    "epoch": 3,
+    "loss": 0.00243297510433608,
+    "steps": 19,
+    "lr_first": 7.307692307692307e-05,
+    "lr_last": 3.846153846153847e-06,
+    "grad_norm_mean": 0.18793958234355637,
+    "grad_norm_max": 1.4052075147628784
+   }
+  ],
+  "train_minutes": 60.6,
+  "split": "dev"
+ }
+}
