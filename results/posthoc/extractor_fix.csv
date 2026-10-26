@@ -1,0 +1,15 @@
+system,n,sts_locked,sts_with_fix,fixed,broken
+S1,120,0.767,0.883,14,0
+S2,120,0.6,0.7,12,0
+S3,120,0.625,0.717,11,0
+oracle,120,0.808,0.925,14,0
+S4-jais2-8b-6shot-prior,120,0.758,0.867,13,0
+S4-jais3-3.7b-6shot-prior,120,0.742,0.833,11,0
+S4-jais3-7b-6shot-prior,120,0.55,0.633,10,0
+S4-nile-4b-6shot-prior,120,0.742,0.858,14,0
+S4-qwen3-8b-6shot-prior,120,0.7,0.817,14,0
+S7-jais2-qlora-s0-prior,120,0.758,0.867,13,0
+S7-jais2-qlora-s1-prior,120,0.8,0.917,14,0
+S7-jais2-qlora-s2-prior,120,0.8,0.917,14,0
+oracle (train),298,0.963,0.973,3,0
+oracle (dev),40,1.0,1.0,0,0

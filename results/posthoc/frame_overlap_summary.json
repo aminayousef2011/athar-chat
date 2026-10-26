@@ -1,0 +1,8 @@
+{
+  "test_items": 120,
+  "distinct_frames_A": 52,
+  "distinct_frames_B": 54,
+  "frame_seen_in_train": 59,
+  "frame_seen_in_author_train": 51,
+  "frame_seen_in_dev": 0
+}

@@ -122,7 +122,7 @@ with test_tab:
     cols = ["id", "text", "cause", "gold_route", "pred_route", "gold_intent", "pred_intent",
             "gold_canonical", "pred_canonical", "gold_targets", "pred_targets"]
     st.dataframe(pd.DataFrame(shown)[cols], hide_index=True)
-    st.caption("Rebuilt exactly from the locked runs by scripts/error_analysis.py (report section 6).")
+    st.caption("Rebuilt exactly from the locked runs by scripts/error_analysis.py (report section 7.3).")
 
 with about_tab:
     st.markdown(

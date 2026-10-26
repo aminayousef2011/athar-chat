@@ -38,11 +38,11 @@ EXAMPLES: tuple[Example, ...] = (
     Example("فكرني بكرة الساعة 9 الصبح ابعت التقرير لمديري",
             "Complete reminder in the drafts' style («فكرني»): every system acts."),
     Example("حطلي تذكير يوم الخميس الساعة 7 الصبح عشان اراجع خطة السبرينت",
-            "Noun-form reminder («حطلي تذكير»), frequent in the native test and rare in training "
-            "(report section 3)."),
+            "Noun-form reminder («حطلي تذكير»), frequent in the author-written test and rare in "
+            "training (report section 3.2)."),
     Example("عايز تذكير بكرة الساعة 5 العصر علشان اراجع الميزانية",
-            "The shared extractor's text bug: a time between «تذكير» and the task leaves «عايز علشان» "
-            "in the reminder text (report section 6.3)."),
+            "The shared extractor's framing gap: «عايز» is not in the framing lexicon, so «عايز علشان» "
+            "stays in the reminder text (report section 7.3)."),
     Example("فكرني اكلم العميل", "Incomplete request: no time, so the system asks."),
     Example("صحيني الساعة 7", "Alarm with an hour but no AM/PM."),
     Example("remind me بكرة الساعة 3 العصر اعمل review للـ PR", "Arabic-English code-switching."),

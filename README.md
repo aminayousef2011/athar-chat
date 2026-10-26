@@ -15,10 +15,12 @@ Two simulated tools: `create_reminder(datetime, reminder_text)` and `create_alar
 No real reminders or alarms are created.
 
 **Results:** [docs/report.md](docs/report.md). On the locked test (120 author-written requests), the keyword
-rules (S1, STS 0.767) beat both classifiers (S2 0.600, S3 0.625; Holm p ≤ 0.005): the classifiers, trained
-on mostly AI-drafted text, did not transfer to a native speaker's phrasing. The shared extractor caps every
-pipeline system at 0.808 (oracle). The report gives the error analysis, the Jais 2 / Jais 3 results and the
-threats to validity.
+rules (S1, STS 0.767) beat both classifiers (S2 0.600, S3 0.625). The gap is significant under the
+pre-registered family-clustered test (Holm p ≤ 0.005) but only borderline when test items that share a
+sentence frame are treated as dependent (post hoc, Holm p 0.05-0.11): the test is one writer's templated
+phrasing. The classifiers were trained on mostly AI-drafted text and over-regularized by a 40-item drafted
+dev set. The shared extractor caps every pipeline system at 0.808 (oracle); one framing-lexicon gap causes 15
+of its 23 failures. Post hoc analyses: [docs/posthoc_analyses.md](docs/posthoc_analyses.md).
 
 **Research question:** does lightweight text classification (S2: word TF-IDF + logistic
 regression; S3: S2 + character n-grams) improve *Safe Task Success* over keyword rules (S1) when

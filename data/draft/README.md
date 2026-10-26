@@ -1,10 +1,13 @@
 # ATHAR Chat: draft dataset v2 (project-manager focus)
 
-**Status: assistant-drafted, not the evaluation dataset.** These 300 requests were written by
-an AI assistant to show the shape, scope and size of the data, and to dry-run the tooling.
-Every item is marked `source: assistant_draft`. The real dataset is written and reviewed by
-native Egyptian Arabic speakers. Draft items never enter the locked test set, and no reported
-result is based on them.
+**Status: assistant-drafted training and development data, never test data.** These 300 requests
+were written by an AI assistant, first to show the shape, scope and size of the data and to
+dry-run the tooling. Every item is marked `source: assistant_draft`. The planned native
+contributor collection did not happen (protocol log 2026-10-10), so the final dataset
+(`data/athar.jsonl`) uses them as 261 of the 298 training items and 39 of the 40 dev items. The
+locked test split is written entirely by the author, and no draft item enters it. Every trained
+system, and every dev-based choice, therefore rests mostly on these drafts
+([docs/report.md](../../docs/report.md), sections 3 and 7).
 
 ## Who the requests come from
 

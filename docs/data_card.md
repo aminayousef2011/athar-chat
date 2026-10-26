@@ -57,7 +57,14 @@ so the requests are written for this project.
   written: 29 items differ from their card's plan, and 19 A/B versions that turned out not to be
   minimal pairs (18 different tools, 1 both complete) were unpaired by `athar-data build`
   without changing their text. A first attempt and a version with texts edited after labelling
-  were discarded (`data/raw/private/`, not committed; protocol section 10).
+  were discarded (protocol section 10). The first attempt is kept for transparency in
+  `data/author/discarded/` (it was committed in `5fba0c9`); the edited version is in
+  `data/raw/private/`, not committed. Neither is used anywhere.
+- **Test construction (found after the test run).** The 120 test texts reuse a small set of
+  sentence frames: 52 distinct frames, the most frequent used 10 times, and some frame and purpose
+  combinations are implausible («صحيني … 6 بالليل عشان اصحى بدري»). 59 of the 120 share a frame with
+  a training item, 51 of them through the author's 37 training items. Read the test as one
+  writer's templated phrasing, not a sample of natural requests (report, section 3.2).
 - **Assistant-drafted items (300)**: training and development data only; the splitter keeps
   them out of test. The 20 pilot items are not part of the dataset.
 - They are written requests, not collected from users, so they are plausible requests, not a

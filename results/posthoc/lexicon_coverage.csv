@@ -1,0 +1,4 @@
+split,in_scope,contains_gold_intent_cue,share
+train,247,245,0.992
+dev,33,31,0.939
+test,100,100,1.0
