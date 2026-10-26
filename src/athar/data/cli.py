@@ -11,6 +11,9 @@
     athar-data import-contrib COLLECTION.csv --cards CARDS.csv --out SHEET.csv
     athar-data build     SHEET.csv --out data/athar.jsonl [--cards CARDS.csv]
     athar-data form-script --cards CARDS.csv --wave 1 --people 5 --out contrib/make_forms.gs
+    athar-data form-script --cards CARDS.csv --manifest MANIFEST.json --split test --wave 2 --people 8 --out ...
+    athar-data check-contrib EXPORT.xlsx --cards CARDS.csv --manifest MANIFEST.json --out KEPT.csv
+                         [--reference DATA.jsonl ...] [--exclude-codes CODE ...] [--report REPORT.json]
     athar-data author-sheet --cards CARDS.csv --out contrib/author_sheet_wave1.xlsx   # needs openpyxl
     athar-data check-author SHEET.xlsx --cards CARDS.csv     # writing checks before import
 
@@ -186,10 +189,39 @@ def cmd_build(a: argparse.Namespace) -> int:
     return 1 if r["errors"] else 0
 
 
+def _split_cards(manifest: str, splits: Sequence[str]) -> set[str]:
+    """Card ids whose scenario family is in ``splits`` (families are named ``fam-<card id>``)."""
+    m = read_manifest(manifest)
+    return {f.removeprefix("fam-") for s in splits for f in m["splits"][s]["families"] if f.startswith("fam-c")}
+
+
 def cmd_form_script(a: argparse.Namespace) -> int:
-    n = contrib.form_script(a.cards, a.out, a.wave, a.people)
+    if (a.manifest is None) != (a.split is None):
+        raise ValueError("--manifest and --split go together")
+    card_ids = _split_cards(a.manifest, [a.split]) if a.manifest else None
+    intro = contrib.FORM_INTRO_NATURAL if card_ids is not None else contrib.FORM_INTRO
+    n = contrib.form_script(a.cards, a.out, a.wave, a.people, card_ids=card_ids, intro=intro)
     print(f"wrote {a.out}: {n['forms']} Google Forms, {n['requests']} requests (paste into script.google.com, "
           f"run createForms)")
+    return 0
+
+
+def cmd_check_contrib(a: argparse.Namespace) -> int:
+    refs = [str(r.raw["text"]) for path in a.reference for r in read_records(path) if r.raw.get("text")]
+    training = _split_cards(a.manifest, ["train", "dev"]) if a.manifest else None
+    r = contrib.check_contrib(a.export, a.cards, reference_texts=refs, exclude_codes=a.exclude_codes,
+                              training_cards=training)
+    for s in r["submissions"]:
+        why = "; ".join(s["reasons"]) if s["reasons"] else f"{s['messages'] - s['kept']} messages dropped"
+        print(f"{s['submission']:8} {s['timestamp'][:16]:16} {s['status']:8} kept {s['kept']:2}/{s['messages']:2}  {why}")
+    contrib.write_collection(r["kept"], a.out)
+    if a.report:
+        Path(a.report).parent.mkdir(parents=True, exist_ok=True)
+        Path(a.report).write_text(json.dumps({k: v for k, v in r.items() if k != "kept"}, ensure_ascii=False,
+                                             indent=1), encoding="utf-8")
+    seen = sum(row["comment"] != "" for row in r["kept"])
+    print(f"wrote {a.out}: {len(r['kept'])} messages from {len(r['writers'])} writers "
+          f"({seen} on scenarios whose family is in train/dev, reported apart)")
     return 0
 
 
@@ -280,7 +312,19 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--wave", default="1")
     s.add_argument("--people", type=int, default=5)
     s.add_argument("--out", default="contrib/make_forms.gs")
+    s.add_argument("--manifest", help="with --split: only cards whose scenario family is in that split")
+    s.add_argument("--split", choices=["train", "dev", "test"])
     s.set_defaults(func=cmd_form_script)
+
+    s = sub.add_parser("check-contrib", help="screen a contributor form export before labelling")
+    s.add_argument("export", help="Google Forms export (.csv or .xlsx)")
+    s.add_argument("--cards", required=True)
+    s.add_argument("--out", required=True, help="collection sheet of the kept messages (for import-contrib)")
+    s.add_argument("--manifest", help="mark messages on scenarios whose family is in train/dev")
+    s.add_argument("--reference", nargs="*", default=[], help="dataset JSONL files a message must not copy")
+    s.add_argument("--exclude-codes", nargs="*", default=[], help="codes to exclude (e.g. the project author)")
+    s.add_argument("--report", help="write the per-submission decisions as JSON")
+    s.set_defaults(func=cmd_check_contrib)
 
     s = sub.add_parser("author-sheet", help="Excel workbook for the author to write the wave-1 requests in")
     s.add_argument("--cards", required=True)

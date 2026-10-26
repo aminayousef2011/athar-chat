@@ -120,8 +120,13 @@ right time on the right task, so section 7.3 also separates genuinely wrong exec
 - **Agreement** ([agreement.md](agreement.md)). A second native annotator independently labelled 60
   items, 45 of them test items: intent κ = 0.916, route κ = 1.000; exact target sets 92.3% (CLARIFY);
   datetimes and reminder texts 100% (ACT). The 5 disagreements were kept; no gold label was changed.
-- **The native contributor collection planned in the proposal did not happen** (protocol log
-  2026-10-10). The whole test split is written by one person, who also designed the system.
+- **The native contributor collection planned in the proposal did not yield usable test data.** A
+  Google Form gathered 21 responses (30 requests each) on 9-11 October. Most were not independent
+  writers: 19 shared one writing pattern, and several contributor codes gave identical answers. The
+  collection was
+  therefore not used (protocol log 2026-10-10), and the whole test split is written by one person,
+  who also designed the system. A second, screened collection is the subject of a separate,
+  pre-registered evaluation ([protocol_natural.md](protocol_natural.md)).
 
 **How the test texts were written (disclosed after the test run).** The author wrote the requests
 from scenario cards in two passes. The first pass (kept in `data/author/discarded/`) was discarded,

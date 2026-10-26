@@ -19,8 +19,9 @@ HLD: [hld.html](hld.html) (published at https://claude.ai/artifact/RXeHV9e9ctgry
   freeze and before the test split was opened. It is added beside Jais 2 (S4) and as an end-to-end
   tool-calling system (S8), logged in the protocol (section 10, 2026-10-15), followed by a re-freeze
   that leaves S1-S3 unchanged. Design and claims: [jais3.md](jais3.md).
-- **Data as built (differs from the proposal).** The native contributor collection did not happen
-  (protocol log 2026-10-10). The test split is 120 requests written by the author, a native speaker;
+- **Data as built (differs from the proposal).** The native contributor collection (a Google Form,
+  21 responses on 9-11 October) did not yield independent writers and was not used (protocol log
+  2026-10-10). The test split is 120 requests written by the author, a native speaker;
   train and dev are mostly the 300 assistant-drafted items (`source: assistant_draft`), which never
   enter test. The consequences (a measurable synthetic-to-real shift) are analysed in
   [report.md](report.md), sections 3, 5 and 9.

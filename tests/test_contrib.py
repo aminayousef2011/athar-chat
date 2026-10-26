@@ -274,3 +274,73 @@ def test_build_unpairs_versions_that_are_not_a_minimal_pair(tmp_path):
     assert all(it.pair_id is None and it.family_id == "fam-c001" for it in items)   # still one family
     assert [it.text for it in items] == [a["text"], b["text"]]                       # texts untouched
     assert "pair dropped" in items[1].notes
+
+
+def test_form_script_selects_cards_and_uses_the_natural_intro(tmp_path):
+    import json
+    import re
+
+    C.write_kit(tmp_path)
+    cards = tmp_path / "scenario_cards.csv"
+    chosen = {"c001", "c002", "c003", "c126", "c142"}
+    n = C.form_script(cards, tmp_path / "f.gs", wave="2", people=2, card_ids=chosen, intro=C.FORM_INTRO_NATURAL)
+    kit = json.loads(re.search(r"const KIT = (.*?);\n\nfunction", (tmp_path / "f.gs").read_text(encoding="utf-8"),
+                               re.S).group(1))
+    asked = {q["title"][1:5] for f in kit["forms"] for p in f["pages"] for q in p["questions"]}
+    assert asked == chosen and n["forms"] == 2 and kit["intro"] == C.FORM_INTRO_NATURAL
+    assert all("(wave 2, block" in f["title"] for f in kit["forms"])
+
+
+def _screen_fixture(tmp_path):
+    C.write_kit(tmp_path)
+    q = {("c001", "A"): "[c001-A] Write the full request", ("c001", "B"): "[c001-B] Write it again, as the card says",
+         ("c002", "A"): "[c002-A] Write the full request", ("c002", "B"): "[c002-B] Write it again, as the card says",
+         ("c126", "A"): "[c126-A] Write the full request"}
+    natural = {("c001", "A"): "فكرني بكرة الساعة 9 الصبح احضر الستاند اب", ("c001", "B"): "فكرني احضر الستاند اب",
+               ("c002", "A"): "حطلي تذكير السبت الجاي 6 بالليل ابعت التقرير", ("c002", "B"): "فكرني ابعت التقرير 8",
+               ("c126", "A"): "امسح المنبه بتاع بكرة"}
+    other = {("c001", "A"): "عايزك تفكرني الحد الصبح بدري عندي ميتنج", ("c001", "B"): "ابقى فكرني بالميتنج",
+             ("c002", "A"): "يوم السبت على 6 المغرب فكرني بالريبورت", ("c002", "B"): "متنسانيش الريبورت الساعة 8",
+             ("c126", "A"): "شيل المنبه اللي ظبطته امبارح"}
+    copy = {k: v + " ولو ينفع" for k, v in other.items()}                          # near-duplicate of "other"
+    years = {("c001", "A"): "Set a reminder (Standup) يوم ٢٤ أكتوبر ٢٠٢٦ الساعة ٩:٠٠",   # machine formatting
+             ("c001", "B"): "Reminder (Daily Standup) يوم ٢٤ أكتوبر ٢٠٢٦",
+             ("c002", "A"): "تذكير بالتقرير الأسبوعي يوم السبت ٢٤ أكتوبر ٢٠٢٦ الساعة ٦:٠٠ مساءً",
+             ("c002", "B"): "ذكّرني بإرسال التقرير الأسبوعي للمدير", ("c126", "A"): "أرجو حذف المنبه الخاص بالغد"}
+    b_is_a = {("c001", "A"): "صحيني بدري قبل الاجتماع بنص ساعة", ("c001", "B"): "صحيني بدري قبل الاجتماع بنص ساعة",
+              ("c002", "A"): "خليك فاكر تقولي على الشيت بتاع الحسابات", ("c002", "B"): "خليك فاكر تقولي على الشيت بتاع الحسابات",
+              ("c126", "A"): "لغي منبه الفجر"}
+    author = {("c001", "A"): "نبهني على الساعة عشرة كده عشان الكول", ("c001", "B"): "نبهني على الكول",
+              ("c002", "A"): "عاوز ريمايندر للتاسك بتاعة الديزاين", ("c002", "B"): "ريمايندر للديزاين لو سمحت",
+              ("c126", "A"): "مش عايز منبه الجيم خلاص"}
+    subs = [("P01", natural), ("P02", other), ("P03", copy), ("P04", years), ("P05", b_is_a), ("P01", author),
+            ("AUTHOR", author)]
+    export = [{"Timestamp": f"2026/10/2{i}", "Consent": "yes", "Contributor code (for example P03)": code,
+               **{q[k]: t for k, t in texts.items()}} for i, (code, texts) in enumerate(subs)]
+    _write(tmp_path / "export.csv", export)
+    return tmp_path / "export.csv", tmp_path / "scenario_cards.csv", natural
+
+
+def test_check_contrib_applies_every_screening_rule(tmp_path):
+    export, cards, natural = _screen_fixture(tmp_path)
+    r = C.check_contrib(export, cards, reference_texts=[natural[("c126", "A")]], exclude_codes=["author"],
+                        training_cards={"c002"})
+    why = {s["submission"]: " ".join(s["reasons"]) for s in r["submissions"]}
+    assert why["P01"] == "" and why["P02"].startswith("R1") and why["P03"].startswith("R1")   # R1 both copies
+    assert "R2" in why["P04"] and "R4" in why["P05"]
+    assert "R3 repeated" in why["P01#2"] and "R3 excluded code" in why["AUTHOR"]
+    kept = {(k["card_id"], k["version"]): k for k in r["kept"]}
+    assert set(kept) == {("c001", "A"), ("c001", "B"), ("c002", "A"), ("c002", "B")}       # c126-A copies a reference
+    assert kept[("c002", "A")]["comment"] and not kept[("c001", "A")]["comment"]          # training scenario marked
+    assert r["writers"] == ["P01"]
+
+
+def test_check_contrib_cli_writes_an_importable_collection(tmp_path, capsys):
+    export, cards, _ = _screen_fixture(tmp_path)
+    ref = tmp_path / "ref.jsonl"
+    ref.write_text('{"text": "امسح المنبه بتاع بكرة"}\n', encoding="utf-8")
+    assert main(["check-contrib", str(export), "--cards", str(cards), "--out", str(tmp_path / "kept.csv"),
+                 "--reference", str(ref), "--exclude-codes", "AUTHOR", "--report", str(tmp_path / "r.json")]) == 0
+    assert "4 messages from 1 writers" in capsys.readouterr().out
+    r = C.import_contributions(tmp_path / "kept.csv", cards, tmp_path / "label.csv")
+    assert r["rows"] == 4 and not r["skipped"]
