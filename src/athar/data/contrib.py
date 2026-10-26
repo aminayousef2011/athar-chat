@@ -290,18 +290,22 @@ def read_collection(path: str | Path) -> list[dict[str, str]]:
 
 
 def import_contributions(collection: str | Path, cards_path: str | Path, out: str | Path,
-                         source: str = "contributor") -> dict[str, Any]:
+                         source: str = "contributor", *, multi_writer: bool = False) -> dict[str, Any]:
     """Blind labelling sheet: the agreement-sheet columns (labels empty) plus provenance. Each
     card is a family; versions A and B of a pair card are a pair. Intended labels stay out.
     ``collection``: the filled collection sheet, a Google Forms export, or the author workbook
-    (``source="author"``: requests written by the project author, annotation guide 2.2)."""
+    (``source="author"``: requests written by the project author, annotation guide 2.2).
+    ``multi_writer``: several contributors may write the same card (the natural-phrasing set);
+    ids become ``<card>-<version>-<code>`` and each writer's A and B form their own pair, while
+    the family stays the card (the scenario)."""
     if source not in ("author", "contributor"):
         raise ValueError(f"source must be author or contributor, not {source!r}")
     cards = {c["card_id"]: c for c in _read_csv(cards_path)}
     rows, skipped = [], []
     seen: set[str] = set()
     for r in read_collection(collection):
-        key = f"{r['card_id']}-{r['version'].lower()}"
+        writer = re.sub(r"[^a-z0-9]+", "", _code(r["contributor"]).lower()) if multi_writer else ""
+        key = f"{r['card_id']}-{r['version'].lower()}" + (f"-{writer}" if writer else "")
         if r["text"] and key in seen:
             skipped.append(f"{r['card_id']}{r['version']}: written twice, kept the first")
             continue
@@ -314,10 +318,10 @@ def import_contributions(collection: str | Path, cards_path: str | Path, out: st
             continue
         seen.add(key)
         ref = datetime.fromisoformat(card["ref_datetime"])
-        rows.append({"id": f"{card['card_id']}-{r['version'].lower()}", "text": r["text"],
+        rows.append({"id": key, "text": r["text"],
                      "ref_datetime": card["ref_datetime"], "ref_local": describe_datetime(ref), "timezone": TZ,
                      "family_id": f"fam-{card['card_id']}",
-                     "pair_id": f"pair-{card['card_id']}" if card["version_b"] else "",
+                     "pair_id": f"pair-{card['card_id']}" + (f"-{writer}" if writer else "") if card["version_b"] else "",
                      "domain": card["domain"], "source": source,
                      "code_switched": "yes" if _LATIN.search(r["text"]) else "no",
                      "contributor": r["contributor"]})

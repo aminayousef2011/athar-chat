@@ -3,6 +3,7 @@
     athar-data validate  DATA.jsonl [MORE.jsonl ...] [--strict]
     athar-data split     DATA.jsonl --config CFG.yaml --out MANIFEST.json [--allow-shortfall]
     athar-data verify    MANIFEST.json [MORE.json ...]
+    athar-data lock      DATA.jsonl --out MANIFEST.json --note TEXT   # evaluation-only set, all locked test
     athar-data crosscheck (--manifest MANIFEST.json --split train|dev | --pilot PILOT.jsonl)
     athar-data agreement-sheet DATA.jsonl --out SHEET.csv [--n 60] [--seed N]
     athar-data kappa     DATA.jsonl SHEET.csv --annotator NAME [--date YYYY-MM-DD] [--out PREFIX]
@@ -36,6 +37,7 @@ from athar.data.io import DatasetError, load_items, read_records
 from athar.data.split import (
     SplitConfig,
     load_split,
+    locked_manifest,
     make_split,
     read_manifest,
     verify_manifest,
@@ -86,6 +88,25 @@ def cmd_split(a: argparse.Namespace) -> int:
         counts = " / ".join(f"{n} {r}" for r, n in s["counts"].items())
         print(f"{name:5}: {len(s['items']):3} items, {len(s['families']):3} families ({counts})")
     print(f"wrote {a.out}  manifest_sha256={manifest['manifest_sha256']}")
+    return 0
+
+
+def cmd_lock(a: argparse.Namespace) -> int:
+    if Path(a.out).exists():
+        print(f"{a.out} exists: an evaluation set is locked once; nothing written")
+        return 1
+    records = read_records(a.data)
+    issues = validate_records(records)
+    if has_errors(issues):
+        _print_issues([i for i in issues if i.level == "error"])
+        print("fix the errors above before locking")
+        return 1
+    items = [r.item for r in records if r.item is not None]
+    manifest = locked_manifest(items, {r.raw["id"]: r.raw for r in records}, Path(a.data), Path(a.out), a.note)
+    write_manifest(manifest, a.out)
+    counts = " / ".join(f"{n} {r}" for r, n in manifest["splits"]["test"]["counts"].items())
+    print(f"locked {len(items)} items, {manifest['dataset']['n_families']} families ({counts}) in {a.out}  "
+          f"manifest_sha256={manifest['manifest_sha256']}")
     return 0
 
 
@@ -168,7 +189,7 @@ def cmd_cards(a: argparse.Namespace) -> int:
 
 
 def cmd_import(a: argparse.Namespace) -> int:
-    r = contrib.import_contributions(a.collection, a.cards, a.out, a.source)
+    r = contrib.import_contributions(a.collection, a.cards, a.out, a.source, multi_writer=a.multi_writer)
     for s in r["skipped"]:
         print(f"skipped {s}")
     print(f"wrote {a.out}: {r['rows']} requests to label (labels empty; card plans not shown)")
@@ -262,6 +283,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("manifest", nargs="+")
     s.set_defaults(func=cmd_verify)
 
+    s = sub.add_parser("lock", help="evaluation-only dataset: every item in a locked test split")
+    s.add_argument("data")
+    s.add_argument("--out", required=True)
+    s.add_argument("--note", required=True, help="what the set is (recorded in the manifest)")
+    s.set_defaults(func=cmd_lock)
+
     s = sub.add_parser("crosscheck", help="gold vs. shared core with gold intent (never on test)")
     g = s.add_mutually_exclusive_group(required=True)
     g.add_argument("--manifest")
@@ -299,6 +326,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--cards", required=True)
     s.add_argument("--out", required=True)
     s.add_argument("--source", choices=["contributor", "author"], default="contributor")
+    s.add_argument("--multi-writer", action="store_true",
+                   help="several writers per card: ids <card>-<version>-<code>, one pair per writer")
     s.set_defaults(func=cmd_import)
 
     s = sub.add_parser("build", help="labelled sheet -> dataset JSONL (contract-checked)")

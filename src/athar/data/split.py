@@ -252,3 +252,28 @@ def load_split(manifest_path: str | Path, split: str, *, unlock_test: bool = Fal
                                f"run `athar-data verify {manifest_path}`")
         out.append(GoldItem.model_validate(raw))
     return out
+
+
+def locked_manifest(items: Sequence[GoldItem], raws: dict[str, dict[str, Any]], dataset_path: Path,
+                    manifest_path: Path, note: str) -> dict[str, Any]:
+    """A manifest with every item in a locked ``test`` split and empty train/dev: an evaluation-only
+    dataset (docs/protocol_natural.md). It is verified and loaded like the main manifest, so its
+    items are hash-checked and need ``unlock_test=True``."""
+    fams = sorted({it.family_id for it in items})
+    members = sorted(items, key=lambda x: (x.family_id, x.id))
+    empty: dict[str, Any] = {"families": [], "counts": dict.fromkeys(ROUTES, 0), "items": {}}
+    body = {
+        "manifest_version": MANIFEST_VERSION,
+        "contract_version": CONTRACT_VERSION,
+        "dataset": {
+            "path": Path(os.path.relpath(dataset_path.resolve(), manifest_path.resolve().parent)).as_posix(),
+            "sha256": sha256_file(dataset_path),
+            "n_items": len(items),
+            "n_families": len(fams),
+        },
+        "config": {"kind": "evaluation-only", "note": note},
+        "splits": {"train": empty, "dev": dict(empty),
+                   "test": {"families": fams, "counts": dict(zip(ROUTES, _vec(members), strict=True)),
+                            "items": {it.id: item_hash(raws[it.id]) for it in members}}},
+    }
+    return {**body, "manifest_sha256": sha256_text(canonical_json(body))}

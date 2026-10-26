@@ -23,6 +23,7 @@ FILES = [
     "data/pilot/pilot.jsonl", "data/pilot/manifest.json",
     "data/draft/athar_draft.jsonl", "data/draft/manifest.json",
     "data/athar.jsonl", "data/splits/manifest.json",  # real data, once it exists
+    "data/natural/natural.jsonl", "data/natural/manifest.json",  # natural-phrasing set, once locked
     "docs/evaluation_protocol.md", "docs/task_contract.md",
 ]
 

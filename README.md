@@ -168,6 +168,24 @@ uv run athar-data crosscheck --manifest data/splits/manifest.json --split dev
 uv run athar-data stats data/athar.jsonl --manifest data/splits/manifest.json --card docs/data_card.md
 ```
 
+## Natural-phrasing evaluation (v2, pre-registered)
+
+Pre-registered in [docs/protocol_natural.md](docs/protocol_natural.md) before any contributor message
+was labelled: the frozen systems and the v2 systems (`src/athar/v2/`: core v1.1, S1 v1.1, grouped-CV
+S2/S3, the S9 hybrid) on requests written by independent native speakers for the test scenarios.
+
+```powershell
+uv run athar-v2 verify models_v2                                   # v2 freeze (models + sources)
+uv run --with openpyxl athar-data check-contrib EXPORT.xlsx --cards contrib/scenario_cards.csv `
+    --manifest data/splits/manifest.json --reference data/athar.jsonl data/draft/athar_draft.jsonl `
+    --out data/raw/private/contrib/kept.csv --report data/raw/private/contrib/screen.json
+uv run athar-data import-contrib data/raw/private/contrib/kept.csv --cards contrib/scenario_cards.csv `
+    --out data/raw/private/contrib/label.xlsx --multi-writer          # blind sheet; labels, then build
+uv run athar-data lock data/natural/natural.jsonl --out data/natural/manifest.json --note "..."
+uv run athar-v2 evaluate --natural data/natural/manifest.json --s8-traces T0 T1 T2 `
+    --llm-results R.json ... --out results/natural/evaluation.json   # once
+```
+
 ## Training and freezing (Phase 3)
 
 ```powershell

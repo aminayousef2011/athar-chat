@@ -58,7 +58,7 @@ records the precision it used. For the Jais 2 vs Jais 3 comparison, bf16 hardwar
 **Test-set discipline:** `SPLIT = "dev"`. The test split is opened only once, in the Phase 4 run, with `UNLOCK_TEST = True`."""
 
 C1 = r'''# ---- configuration --------------------------------------------------------------------------
-NOTEBOOK_VERSION = "2026-10-18b"   # printed below and saved in environment.json: check it in every run
+NOTEBOOK_VERSION = "2026-10-26a"   # printed below and saved in environment.json: check it in every run
 print("ATHAR notebook version", NOTEBOOK_VERSION)
 import os
 
@@ -81,6 +81,10 @@ WHEEL = _wheels[-1]
 KIT = os.path.dirname(WHEEL)
 print("kit:", KIT)
 MANIFEST = f"{KIT}/data/splits/manifest.json"   # the frozen split (test = 120 author-written items)
+# items to score: the main manifest, or an evaluation-only set (all locked test) such as the
+# natural-phrasing set: f"{KIT}/data/natural/manifest.json" with SPLIT = "test", UNLOCK_TEST = True
+# (docs/protocol_natural.md). Exemplars, prior texts and S7 dev rescoring always use MANIFEST.
+EVAL_MANIFEST = MANIFEST
 SPLIT = "dev"                                     # "test" only in the Phase 4 run
 UNLOCK_TEST = False
 GATE_TAU = {}             # test run only: {system name: tau picked on dev}; empty on dev
@@ -248,7 +252,7 @@ CFG = yaml.safe_load(open(f"{KIT}/configs/eval.yaml", encoding="utf-8"))
 CFG["oracle"] = False
 CFG["comparisons"] = []          # S4/S7/S8 are reported separately: no tests against the core systems
 train = load_split(MANIFEST, "train")
-items = load_split(MANIFEST, SPLIT, unlock_test=UNLOCK_TEST)
+items = load_split(EVAL_MANIFEST, SPLIT, unlock_test=UNLOCK_TEST)
 SHOTS = llm.select_shots(train, per_label=SHOTS_PER_LABEL, seed=CFG["seed"])
 # label prior for method "prior": 60 unlabeled train requests, fixed seed (no dev/test information)
 PRIOR_TEXTS = random.Random(CFG["seed"]).sample([norm(it.text) for it in train], 60)
@@ -283,7 +287,8 @@ ENV = {"python": platform.python_version(),
        "native_bf16": llm.native_bf16(),
        **{pkg: _version(pkg) for pkg in ("athar-chat", "torch", "transformers", "accelerate", "bitsandbytes", "peft")},
        "revisions": REVISIONS, "primary": PRIMARY, "notebook_version": NOTEBOOK_VERSION,
-       "manifest": read_manifest(MANIFEST)["manifest_sha256"], "split": SPLIT}
+       "manifest": read_manifest(MANIFEST)["manifest_sha256"], "split": SPLIT,
+       "eval_manifest": read_manifest(EVAL_MANIFEST)["manifest_sha256"]}
 Path(f"{OUT}/environment.json").write_text(json.dumps(ENV, indent=1), encoding="utf-8")
 print("environment:", ENV)
 print(f"contract v{CONTRACT_VERSION}; manifest {ENV['manifest'][:12]}; "

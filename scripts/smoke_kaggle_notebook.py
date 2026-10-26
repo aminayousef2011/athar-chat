@@ -141,8 +141,9 @@ def frozen_adapters(root: Path, vocab_texts: list[str]) -> tuple[dict[int, str],
             llm.file_sha256(root / "adapter_config (1).json"))
 
 
-def stand_in_for_test() -> None:
-    """``load_split(..., "test")`` returns the dev items: the rehearsal never opens the test split."""
+def stand_in_for_test(natural: Path | None = None) -> None:
+    """``load_split(..., "test")`` returns the dev items: the rehearsal never opens the test split.
+    ``natural``: a stand-in evaluation-only manifest (built from dev items) is loaded as it is."""
     from athar.data import split
 
     real = split.load_split
@@ -150,10 +151,30 @@ def stand_in_for_test() -> None:
     def load_split(manifest, name, unlock_test=False):  # type: ignore[no-untyped-def]
         if name == "test":
             assert unlock_test, "the notebook must pass unlock_test=True for the test split"
+            if natural is not None and Path(manifest).resolve() == natural.resolve():
+                return real(manifest, "test", unlock_test=True)
             return real(manifest, "dev")
         return real(manifest, name)
 
     split.load_split = load_split  # type: ignore[assignment]
+
+
+def natural_stand_in(kit: Path) -> Path:
+    """A locked evaluation-only set (data/natural/) in the extracted kit, made of the dev items."""
+    from athar.data.io import read_records
+    from athar.data.split import load_split, locked_manifest, write_manifest
+
+    dev_ids = {it.id for it in load_split(kit / "data" / "splits" / "manifest.json", "dev")}
+    lines = [line for line in (kit / "data" / "athar.jsonl").read_text(encoding="utf-8").splitlines()
+             if line.strip() and json.loads(line)["id"] in dev_ids]
+    data = kit / "data" / "natural" / "natural.jsonl"
+    data.parent.mkdir(parents=True, exist_ok=True)
+    data.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    records = read_records(data)
+    path = data.parent / "manifest.json"
+    write_manifest(locked_manifest([r.item for r in records if r.item], {r.raw["id"]: r.raw for r in records},
+                                   data, path, "smoke-test stand-in (dev items)"), path)
+    return path
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -162,7 +183,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--keep", action="store_true", help="keep the temporary folder")
     p.add_argument("--split", choices=["dev", "test"], default="dev",
                    help="test: rehearse the locked test run on dev items")
+    p.add_argument("--natural", action="store_true",
+                   help="with --split test: rehearse the natural-phrasing run (EVAL_MANIFEST = a locked "
+                        "stand-in set built from dev items)")
     a = p.parse_args(argv)
+    if a.natural and a.split != "test":
+        sys.exit("--natural rehearses a locked run: use it with --split test")
     if not KIT_ZIP.exists():
         sys.exit("dist/athar-chat-kit.zip is missing: run `uv run python scripts/build_kaggle_kit.py` first")
     if not (EGY / "egy_test.jsonl").exists() or not (EGY / "egy_test.csv").exists():
@@ -187,8 +213,9 @@ def main(argv: list[str] | None = None) -> int:
     install_fakes(vocab_texts, calls)
     frozen_sha: dict[int, str] = {}
     frozen_config_sha = ""
+    natural = natural_stand_in(kaggle_in / "datasets" / "someone" / "athar-chat-kit") if a.natural else None
     if a.split == "test":
-        stand_in_for_test()
+        stand_in_for_test(natural)
         frozen_sha, frozen_config_sha = frozen_adapters(kaggle_in / "datasets" / "someone" / "s7-adapters", vocab_texts)
 
     nb = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
@@ -218,6 +245,8 @@ def main(argv: list[str] | None = None) -> int:
                           S7_ADAPTER_CONFIG_SHA256=frozen_config_sha,
                           S7_GATE_TAU={f"S7-jais2-qlora-s0-{m}": 0.4 for m in ("raw", "calibrated", "prior")},
                           GATE_TAU={f"S4-{k}-6shot-{ns['PRIMARY']}": 0.5 for k, *_ in ns["MODELS"]})  # type: ignore[attr-defined]
+            if natural is not None:
+                ns.update(EVAL_MANIFEST=natural.as_posix())
         if "CFG = yaml.safe_load" in src:
             ns["CFG"].update(resamples=50, permutations=50)  # type: ignore[union-attr]
 
@@ -226,6 +255,11 @@ def main(argv: list[str] | None = None) -> int:
     problems = check(out, ns, calls, a.flags)
     if a.split == "test":
         problems += check_test_run(out, ns)
+    if natural is not None:
+        env = json.loads((out / "environment.json").read_text(encoding="utf-8"))
+        from athar.data.split import read_manifest
+        if env.get("eval_manifest") != read_manifest(natural)["manifest_sha256"]:
+            problems.append("environment.json does not record the natural evaluation manifest")
     for msg in problems:
         print("PROBLEM:", msg)
     if a.keep:

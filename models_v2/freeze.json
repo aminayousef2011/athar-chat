@@ -1,0 +1,1330 @@
+{
+ "protocol": "docs/protocol_natural.md",
+ "core_version": "1.1",
+ "manifest": "940beba352ec508c1811f1f7b819ea6a3190fe0b7b91d99b2b5ff1e7c350db50",
+ "config_sha256": "894274222fa01a66cfa0e44e30fcb7e39f92eb35510bcf870ecced5987f546ad",
+ "sources": {
+  "src/athar/v2/__init__.py": "6782c6b5a14d6fcfdbcb35ff4e04ece65b3fdebb70f715f2a131358f2fd725d3",
+  "src/athar/v2/core.py": "2f96aa785220ac6d8bb26a5312e455f261a8c177b768ec48bade7a1eaac5a116",
+  "src/athar/v2/rules.py": "6f2778d0caf351c51ee320f9547adb39c327158f6ab98adf0e0ec22a2a743a5a",
+  "src/athar/v2/gcv.py": "e2e1bc80849554a679e70f907c91377d1e886f7b17f65b60f166d7fd4b807842",
+  "src/athar/v2/hybrid.py": "508185834c4597adf219db72479fc47e51f11feb428194e187bde12bde8e5bb5",
+  "src/athar/v2/natural.py": "7ae1bc5bb32dafa2a24a69b7ef71fec4123ca5fe65d48564b983ef0ee3ce4fbe",
+  "src/athar/normalize.py": "cd0b5d9a1cafa789a3c6a610e118a57d71b15ca27be780c491515bd52c285662",
+  "src/athar/lexicon.py": "ca7daeab18b17121e004332adb025a341588ca6984d2c369b566bf542b97ce88",
+  "src/athar/timeexpr.py": "4c03f4a8778e04ad94036c8bd057eefec8f28feb69047a6e91d69d02f30db7b0",
+  "src/athar/extract.py": "5cbaef8c6fa4df23af28f1ddd63b8d0e105fa8cbbc5a4d09e3c90c1b55bd9d1a",
+  "src/athar/policy.py": "c3b60496614fe8dcbe5fdd670c0620ccf6ab221b9db9df988bb377871d3a119f",
+  "src/athar/respond.py": "a960a4ad229ba9b94742e2877a47c14600791c58d6132ff8ab631723637c6a6e",
+  "src/athar/schema.py": "f03afe80f577bba00a6a1d2e87bb17471eddcf0e33a8d0aeeea0b6a4b7a73442",
+  "src/athar/pipeline.py": "19e3cce0f1a14b6bd0f713a93a43a5347ddc25ac91d18b3f1d82eec6abad950a",
+  "src/athar/gate.py": "fdcb00f3b885fcbe1a3b83c51c12c0b32306202fdf0a58429169399558f3367c",
+  "src/athar/agent.py": "052a7da3133e6dbd3d4641903d8455b8758e6fcf2c821b6a9504d4700badca3c",
+  "src/athar/intent/rules.py": "ffa53ab9764c094e6c1c8bb81daaa76458ca21649b8777fad937ef9d24123f83",
+  "src/athar/intent/models.py": "7f981abcd9efc73fca2fccc58e9c1f3d5bcbeadf97c6466c73dbef58fc712cd9",
+  "src/athar/intent/neural.py": "2282f2eb1fb7c8ae6765d5d651e9038c68ab7386e1ac6d17626d306567f09a24",
+  "src/athar/intent/llm.py": "ee442559e8b086e45e2ef2b90b30b50b3c2fec301318af0ad4b548fac111a616",
+  "src/athar/eval/metrics.py": "9698c69fc8cc60b1f6fd1984843d413719d0400b38239b6aacf3bb8bfa549b51",
+  "src/athar/eval/stats.py": "411734b0afda8f9ffc936dabe2ad0307d091c766526d010a0009d03492c267d9",
+  "src/athar/eval/perturb.py": "00085b38ffecca712194f10d06ea3246cfa152561e17dece51037dafe945d21c",
+  "src/athar/eval/harness.py": "c14c075bad720a6c76a648e2e2723198793d1e0fba37c24536d0887f87951b48",
+  "docs/task_contract.md": "fbc3f3a0c5753339d573e749010938410d60c9bce72e6d76d89223576bcd464a",
+  "docs/evaluation_protocol.md": "d92b2a9bc7a3eb24adf8d5523608dcf8c928e1f069f77452e028dbff9945bc02",
+  "configs/eval.yaml": "482280d83abab26f2a6c310b45d173b11af2aedc74335734f3dd38993d0cf74e"
+ },
+ "systems": {
+  "S2-gcv": {
+   "params": {
+    "class_weight": "balanced",
+    "max_iter": 2000,
+    "sublinear_tf": true,
+    "min_df": 1,
+    "C": 0.3,
+    "word_ngram": [
+     1,
+     2
+    ]
+   },
+   "selection": "GroupKFold(5) over train+dev families",
+   "refit_on": "train+dev",
+   "n_items": 338,
+   "file": "S2-gcv.joblib",
+   "sha256": "1890c51205c8955a66a3856bed124e353f5e77cb6a935c5941c5cce0838d3571",
+   "grid": [
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.1,
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7608,
+      "folds": [
+       0.8487,
+       0.7833,
+       0.6966,
+       0.7494,
+       0.7261
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.1,
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7736,
+      "folds": [
+       0.8359,
+       0.7991,
+       0.7272,
+       0.7229,
+       0.7827
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.3,
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7725,
+      "folds": [
+       0.8487,
+       0.7991,
+       0.6966,
+       0.7633,
+       0.7548
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.3,
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7893,
+      "folds": [
+       0.8359,
+       0.7991,
+       0.7555,
+       0.7633,
+       0.7926
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 1,
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7768,
+      "folds": [
+       0.8265,
+       0.7991,
+       0.7432,
+       0.7501,
+       0.765
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 1,
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7793,
+      "folds": [
+       0.8065,
+       0.7991,
+       0.7284,
+       0.7383,
+       0.8242
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 3,
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7657,
+      "folds": [
+       0.7852,
+       0.7652,
+       0.7555,
+       0.7576,
+       0.765
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 3,
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7791,
+      "folds": [
+       0.8065,
+       0.7991,
+       0.7408,
+       0.7249,
+       0.8242
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 10,
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7486,
+      "folds": [
+       0.7734,
+       0.7356,
+       0.7086,
+       0.7576,
+       0.768
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 10,
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7818,
+      "folds": [
+       0.8201,
+       0.7991,
+       0.7408,
+       0.7249,
+       0.8242
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 30,
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7378,
+      "folds": [
+       0.7734,
+       0.7356,
+       0.6791,
+       0.733,
+       0.768
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 30,
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7847,
+      "folds": [
+       0.8201,
+       0.7991,
+       0.7408,
+       0.7249,
+       0.8385
+      ]
+     }
+    }
+   ]
+  },
+  "S3-gcv": {
+   "params": {
+    "class_weight": "balanced",
+    "max_iter": 2000,
+    "sublinear_tf": true,
+    "min_df": 1,
+    "C": 1,
+    "char_ngram": [
+     2,
+     5
+    ],
+    "word_ngram": [
+     1,
+     2
+    ]
+   },
+   "selection": "GroupKFold(5) over train+dev families",
+   "refit_on": "train+dev",
+   "n_items": 338,
+   "file": "S3-gcv.joblib",
+   "sha256": "33e3e20bcb6aba25788207401e3e7b0ae3b827c756eb0193cb090f0f9f7b56a8",
+   "grid": [
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.1,
+      "char_ngram": [
+       2,
+       4
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7788,
+      "folds": [
+       0.8153,
+       0.7833,
+       0.7394,
+       0.7778,
+       0.7784
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.1,
+      "char_ngram": [
+       2,
+       4
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7944,
+      "folds": [
+       0.8153,
+       0.7833,
+       0.814,
+       0.7944,
+       0.7648
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.1,
+      "char_ngram": [
+       2,
+       5
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7705,
+      "folds": [
+       0.7974,
+       0.7833,
+       0.7277,
+       0.7778,
+       0.7664
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.1,
+      "char_ngram": [
+       2,
+       5
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7908,
+      "folds": [
+       0.7974,
+       0.7833,
+       0.814,
+       0.7944,
+       0.7648
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.1,
+      "char_ngram": [
+       3,
+       5
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7785,
+      "folds": [
+       0.7974,
+       0.7833,
+       0.7677,
+       0.7778,
+       0.7664
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.1,
+      "char_ngram": [
+       3,
+       5
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7908,
+      "folds": [
+       0.7974,
+       0.7833,
+       0.814,
+       0.7944,
+       0.7648
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.3,
+      "char_ngram": [
+       2,
+       4
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.795,
+      "folds": [
+       0.8382,
+       0.7833,
+       0.7677,
+       0.7778,
+       0.808
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.3,
+      "char_ngram": [
+       2,
+       4
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.8049,
+      "folds": [
+       0.8153,
+       0.7833,
+       0.814,
+       0.7944,
+       0.8173
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.3,
+      "char_ngram": [
+       2,
+       5
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7904,
+      "folds": [
+       0.8153,
+       0.7833,
+       0.7677,
+       0.7778,
+       0.808
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.3,
+      "char_ngram": [
+       2,
+       5
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7947,
+      "folds": [
+       0.7974,
+       0.7506,
+       0.814,
+       0.7944,
+       0.8173
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.3,
+      "char_ngram": [
+       3,
+       5
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.784,
+      "folds": [
+       0.8153,
+       0.7506,
+       0.7805,
+       0.7778,
+       0.7957
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 0.3,
+      "char_ngram": [
+       3,
+       5
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7943,
+      "folds": [
+       0.7974,
+       0.7506,
+       0.7908,
+       0.7944,
+       0.8382
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 1,
+      "char_ngram": [
+       2,
+       4
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7866,
+      "folds": [
+       0.8153,
+       0.7506,
+       0.7677,
+       0.7915,
+       0.8078
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 1,
+      "char_ngram": [
+       2,
+       4
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7985,
+      "folds": [
+       0.8271,
+       0.7652,
+       0.8045,
+       0.8082,
+       0.7873
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 1,
+      "char_ngram": [
+       2,
+       5
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7868,
+      "folds": [
+       0.8153,
+       0.7652,
+       0.7677,
+       0.7778,
+       0.8078
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 1,
+      "char_ngram": [
+       2,
+       5
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.8133,
+      "folds": [
+       0.8505,
+       0.7652,
+       0.8045,
+       0.8082,
+       0.8382
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 1,
+      "char_ngram": [
+       3,
+       5
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7647,
+      "folds": [
+       0.8038,
+       0.699,
+       0.7536,
+       0.7714,
+       0.7959
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 1,
+      "char_ngram": [
+       3,
+       5
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.805,
+      "folds": [
+       0.8089,
+       0.7652,
+       0.8045,
+       0.8082,
+       0.8382
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 3,
+      "char_ngram": [
+       2,
+       4
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7561,
+      "folds": [
+       0.8038,
+       0.6872,
+       0.7235,
+       0.7584,
+       0.8078
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 3,
+      "char_ngram": [
+       2,
+       4
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7975,
+      "folds": [
+       0.8271,
+       0.7652,
+       0.8045,
+       0.783,
+       0.8078
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 3,
+      "char_ngram": [
+       2,
+       5
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7552,
+      "folds": [
+       0.7861,
+       0.6872,
+       0.7235,
+       0.7714,
+       0.8078
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 3,
+      "char_ngram": [
+       2,
+       5
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7939,
+      "folds": [
+       0.8089,
+       0.7652,
+       0.8045,
+       0.783,
+       0.8078
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 3,
+      "char_ngram": [
+       3,
+       5
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7659,
+      "folds": [
+       0.7861,
+       0.6872,
+       0.7659,
+       0.7944,
+       0.7959
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 3,
+      "char_ngram": [
+       3,
+       5
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7954,
+      "folds": [
+       0.7862,
+       0.727,
+       0.8045,
+       0.8082,
+       0.8513
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 10,
+      "char_ngram": [
+       2,
+       4
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7598,
+      "folds": [
+       0.7861,
+       0.6872,
+       0.7235,
+       0.7944,
+       0.8078
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 10,
+      "char_ngram": [
+       2,
+       4
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7893,
+      "folds": [
+       0.7899,
+       0.7652,
+       0.7704,
+       0.7698,
+       0.8513
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 10,
+      "char_ngram": [
+       2,
+       5
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7598,
+      "folds": [
+       0.7861,
+       0.6872,
+       0.7235,
+       0.7944,
+       0.8078
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 10,
+      "char_ngram": [
+       2,
+       5
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7911,
+      "folds": [
+       0.7899,
+       0.727,
+       0.8045,
+       0.783,
+       0.8513
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 10,
+      "char_ngram": [
+       3,
+       5
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7618,
+      "folds": [
+       0.7861,
+       0.6872,
+       0.7333,
+       0.7944,
+       0.8078
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 10,
+      "char_ngram": [
+       3,
+       5
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7904,
+      "folds": [
+       0.7862,
+       0.727,
+       0.8045,
+       0.783,
+       0.8513
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 30,
+      "char_ngram": [
+       2,
+       4
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7537,
+      "folds": [
+       0.7974,
+       0.6872,
+       0.6971,
+       0.7944,
+       0.7924
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 30,
+      "char_ngram": [
+       2,
+       4
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7817,
+      "folds": [
+       0.7899,
+       0.727,
+       0.7704,
+       0.7698,
+       0.8513
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 30,
+      "char_ngram": [
+       2,
+       5
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7568,
+      "folds": [
+       0.7974,
+       0.6872,
+       0.6971,
+       0.7944,
+       0.8078
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 30,
+      "char_ngram": [
+       2,
+       5
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.771,
+      "folds": [
+       0.7698,
+       0.727,
+       0.7704,
+       0.7698,
+       0.8179
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 30,
+      "char_ngram": [
+       3,
+       5
+      ],
+      "word_ngram": [
+       1,
+       1
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.747,
+      "folds": [
+       0.7523,
+       0.6872,
+       0.7069,
+       0.7809,
+       0.8078
+      ]
+     }
+    },
+    {
+     "params": {
+      "class_weight": "balanced",
+      "max_iter": 2000,
+      "sublinear_tf": true,
+      "min_df": 1,
+      "C": 30,
+      "char_ngram": [
+       3,
+       5
+      ],
+      "word_ngram": [
+       1,
+       2
+      ]
+     },
+     "cv": {
+      "intent_macro_f1": 0.7773,
+      "folds": [
+       0.7543,
+       0.727,
+       0.8045,
+       0.783,
+       0.8179
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "freeze_sha256": "8caa1e86659eb11d636a087140686fde684e4298dcedc4538f70b1820dc26618"
+}
