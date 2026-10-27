@@ -221,7 +221,8 @@ def cmd_form_script(a: argparse.Namespace) -> int:
         raise ValueError("--manifest and --split go together")
     card_ids = _split_cards(a.manifest, [a.split]) if a.manifest else None
     intro = contrib.FORM_INTRO_NATURAL if card_ids is not None else contrib.FORM_INTRO
-    n = contrib.form_script(a.cards, a.out, a.wave, a.people, card_ids=card_ids, intro=intro)
+    n = contrib.form_script(a.cards, a.out, a.wave, a.people, card_ids=card_ids, intro=intro,
+                            relative=card_ids is not None)
     print(f"wrote {a.out}: {n['forms']} Google Forms, {n['requests']} requests (paste into script.google.com, "
           f"run createForms)")
     return 0

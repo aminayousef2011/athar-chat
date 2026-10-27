@@ -499,10 +499,28 @@ FORM_INTRO_NATURAL = (
     "you text on your phone (spelling mistakes and English work words are fine). Say days the way you "
     "speak (بكرة، الخميس الجاي، النهارده), not as a calendar date with the year. Version B is the same "
     "wish written again from scratch, missing what the card says. Do not use ChatGPT or any AI or "
-    "translation tool, do not look at anyone else's answers, and use invented names only. About 10 minutes.\n\n"
+    "translation tool, do not look at anyone else's answers, and use invented names only. Each page says "
+    "when you are typing: that is NOT the reminder time, never copy it into your message. About 10 minutes.\n\n"
     "مشروع جامعي: مساعد بيعمل تذكير أو منبه من رسالة بالمصري. لكل موقف اكتب الرسالة اللي إنت فعلاً "
     "هتبعتها، زي ما بتكتب على الموبايل. قول الأيام زي ما بتقولها (بكرة، الخميس الجاي) من غير تاريخ وسنة. "
+    "كل صفحة بتقولك إنت بتكتب إمتى: ده مش وقت التذكير، متنقلوش في الرسالة. "
     "ممنوع ChatGPT أو أي أداة ذكاء اصطناعي، وممنوع تشوف إجابات حد تاني. أسماء من خيالك بس.")
+
+
+def relative_moment(card: dict[str, str]) -> str:
+    """When the contributor is typing, as weekday and clock time only: no day number, month or
+    year to copy (wave 2b; wave-2 contributors copied the full date into their requests)."""
+    from athar.respond import AR_WEEKDAYS
+
+    when = datetime.fromisoformat(card["ref_datetime"])
+    h12, mm = when.hour % 12 or 12, f"{when.minute:02d}"
+    ar_period = ("الصبح" if 5 <= when.hour <= 11 else "الضهر" if 12 <= when.hour <= 14
+                 else "العصر" if 15 <= when.hour <= 17 else "بالليل")
+    return (f"It is now {when.strftime('%A')}, {h12}:{mm} {'am' if when.hour < 12 else 'pm'}: the moment you SEND "
+            "the message, NOT the reminder time. Ask for a later time the way you would say it, and do not "
+            "write a date or a year.\n"
+            f"دلوقتي {AR_WEEKDAYS[when.weekday()]} الساعة {h12}:{mm} {ar_period}: ده وقت ما بتبعت الرسالة، "
+            "مش وقت التذكير. اطلب وقت بعد كده بطريقتك، ومتكتبش تاريخ أو سنة.")
 
 
 def blocks(cards: Sequence[dict[str, str]], wave: str, people: int,
@@ -519,10 +537,12 @@ def blocks(cards: Sequence[dict[str, str]], wave: str, people: int,
 
 
 def form_script(cards_path: str | Path, out: str | Path, wave: str = "1", people: int = 5, *,
-                card_ids: set[str] | None = None, intro: str = FORM_INTRO) -> dict[str, int]:
+                card_ids: set[str] | None = None, intro: str = FORM_INTRO,
+                relative: bool = False) -> dict[str, int]:
     """Google Apps Script that creates one Google Form per contributor block. Paste it into
     script.google.com and run ``createForms``; the form links appear in the execution log.
-    ``card_ids`` selects the cards instead of ``wave`` (wave 2: the test-family cards)."""
+    ``card_ids`` selects the cards instead of ``wave`` (wave 2: the test-family cards);
+    ``relative`` shows the typing moment as weekday and time only (:func:`relative_moment`)."""
     cards = _read_csv(cards_path)
     forms: list[dict[str, Any]] = []
     n_requests = 0
@@ -534,7 +554,8 @@ def form_script(cards_path: str | Path, out: str | Path, wave: str = "1", people
                 qs.append({"title": f"[{c['card_id']}-B] Write it again, as the card says", "help": c["version_b"]})
             n_requests += len(qs)
             pages.append({"title": f"Situation: {c['situation']}",
-                          "help": f"Imagine you are typing on {c['now_local_en']} ({c['now_local_ar']}).",
+                          "help": relative_moment(c) if relative else
+                          f"Imagine you are typing on {c['now_local_en']} ({c['now_local_ar']}).",
                           "questions": qs})
         forms.append({"title": f"ATHAR Chat: Egyptian Arabic requests (wave {wave}, block {k})", "pages": pages})
     data = json.dumps({"intro": intro, "consent": CONSENT, "forms": forms}, ensure_ascii=False, indent=1)

@@ -344,3 +344,19 @@ def test_check_contrib_cli_writes_an_importable_collection(tmp_path, capsys):
     assert "4 messages from 1 writers" in capsys.readouterr().out
     r = C.import_contributions(tmp_path / "kept.csv", cards, tmp_path / "label.csv")
     assert r["rows"] == 4 and not r["skipped"]
+
+
+def test_wave2b_pages_show_only_weekday_and_time(tmp_path):
+    import json
+    import re
+
+    C.write_kit(tmp_path)
+    cards = {c["card_id"]: c for c in C._read_csv(tmp_path / "scenario_cards.csv")}
+    C.form_script(tmp_path / "scenario_cards.csv", tmp_path / "f.gs", wave="2b", people=2,
+                  card_ids={"c001", "c007", "c126"}, intro=C.FORM_INTRO_NATURAL, relative=True)
+    kit = json.loads(re.search(r"const KIT = (.*?);\n\nfunction", (tmp_path / "f.gs").read_text(encoding="utf-8"),
+                               re.S).group(1))
+    for page in (p for f in kit["forms"] for p in f["pages"]):
+        assert "2026" not in page["help"] and not re.search(r"October|November|أكتوبر|نوفمبر", page["help"])
+        assert "NOT the reminder time" in page["help"]
+    assert C.relative_moment(cards["c007"]).startswith("It is now Thursday, 9:50 pm")   # 2026-11-05 21:50

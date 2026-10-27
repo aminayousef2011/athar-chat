@@ -4,8 +4,16 @@ Replace the `[...]` parts before sending. Each person gets **one** wave-2 form l
 contributor code** (W01, W02, ...); keep the private list of who has which code. Never give the same
 form to two people, and never reuse a wave-1 code. Collection closes **Monday 2 November, 23:59**.
 
-Forms: paste `contrib/make_forms_wave2.gs` into script.google.com, run `createForms`, and copy the
-8 "share" links from the execution log (blocks 1-8).
+Forms: paste **`contrib/make_forms_wave2b.gs`** into script.google.com, run `createForms`, and copy
+the 8 "share" links from the execution log (blocks 1-8). Do not send the old wave-2 links any more:
+their pages showed the full date with the year, and people copied it into their messages.
+**One block per person**: blocks 1-7 first (block 8 already has answers).
+
+## 0. Re-invite P01, A12, pp (they answered the old block 8)
+
+> أهلاً [الاسم]، شكراً جداً إنك مليت الفورم 🙏 الفورم القديمة كانت بتكتب التاريخ والسنة بشكل لخبط ناس كتير ونقلوه في الرسالة، فده غلطي أنا مش غلطك 😅
+> عملت نسخة أوضح، فيها مواقف تانية (١٠ دقايق): [لينك بلوك جديد] — الكود: **[W0X]**
+> المهم بس: الوقت المكتوب في كل صفحة ده وقت ما إنت بتكتب، مش وقت التذكير، فاطلب وقت بعده بطريقتك («بكرة الصبح»، «الخميس الجاي») ومن غير تاريخ وسنة.
 
 ## 1. New contributors (WhatsApp, Egyptian Arabic)
 
