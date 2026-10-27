@@ -9,7 +9,7 @@ the 8 "share" links from the execution log (blocks 1-8). Do not send the old wav
 their pages showed the full date with the year, and people copied it into their messages.
 **One block per person**: blocks 1-7 first (block 8 already has answers).
 
-## 0. Re-invite P01, A12, pp (they answered the old block 8)
+## 0. Re-invite A12 and pp (they answered the old block 8)
 
 > أهلاً [الاسم]، شكراً جداً إنك مليت الفورم 🙏 الفورم القديمة كانت بتكتب التاريخ والسنة بشكل لخبط ناس كتير ونقلوه في الرسالة، فده غلطي أنا مش غلطك 😅
 > عملت نسخة أوضح، فيها مواقف تانية (١٠ دقايق): [لينك بلوك جديد] — الكود: **[W0X]**
