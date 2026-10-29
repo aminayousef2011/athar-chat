@@ -1,0 +1,99 @@
+{
+ "protocol": "docs/protocol_natural.md (log 2026-10-29, plan B)",
+ "seed": 20261029,
+ "writers_per_block": 2,
+ "drawn": {
+  "wave1-block5": [
+   "H18"
+  ],
+  "block1": [
+   "E1",
+   "K1"
+  ],
+  "block2": [
+   "PO1",
+   "Q1"
+  ],
+  "block3": [
+   "B2",
+   "C1"
+  ],
+  "block4": [
+   "F2",
+   "PCS1"
+  ],
+  "block5": [
+   "PAS",
+   "R2"
+  ],
+  "block6": [
+   "D1",
+   "PF1"
+  ],
+  "block7": [
+   "7B",
+   "PM12"
+  ],
+  "block8": [
+   "W4",
+   "W5"
+  ]
+ },
+ "pool_messages_per_writer": {
+  "wave1-block5": {
+   "H18": 30
+  },
+  "block1": {
+   "AD1": 13,
+   "E1": 14,
+   "K1": 13,
+   "PM1": 13
+  },
+  "block2": {
+   "PM2": 14,
+   "PO1": 12,
+   "Q1": 12,
+   "R4": 13
+  },
+  "block3": {
+   "B1": 15,
+   "B2": 15,
+   "C1": 15,
+   "PP1": 15,
+   "PS1": 15
+  },
+  "block4": {
+   "F1": 12,
+   "F2": 14,
+   "PCS1": 10
+  },
+  "block5": {
+   "PAS": 15,
+   "PO2": 15,
+   "R1": 15,
+   "R2": 13
+  },
+  "block6": {
+   "C2": 14,
+   "D1": 14,
+   "PF1": 14
+  },
+  "block7": {
+   "7B": 14,
+   "PM12": 14,
+   "PR1": 16
+  },
+  "block8": {
+   "AC": 10,
+   "P2": 14,
+   "W1": 14,
+   "W2": 14,
+   "W3": 14,
+   "W4": 14,
+   "W5": 14
+  }
+ },
+ "sample_messages": 247,
+ "sample_confirmatory": 238,
+ "sample_writers": 17
+}
