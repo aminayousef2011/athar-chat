@@ -225,10 +225,16 @@ def cmd_apply(_: argparse.Namespace) -> int:
     wb = _openpyxl().load_workbook(AUTHOR)
     gold = wb["label"]
     col = {cell(c.value): c.column for c in gold[1]}
+    why = {d["id"]: d["why"] for d in decided}
     for r in gold.iter_rows(min_row=2):
-        if (i := cell(r[0].value)) in final:
+        i = cell(r[0].value)
+        if i in final:
             for f in FIELDS:  # set .value directly: ws.cell(value=None) leaves the old value
                 gold.cell(row=r[0].row, column=col[f]).value = final[i][f] or None
+        if i in why:  # guide 7.3: a sentence in notes for every adjudicated item
+            old = cell(gold.cell(row=r[0].row, column=col["notes"]).value)
+            gold.cell(row=r[0].row, column=col["notes"]).value = " | ".join(
+                x for x in (old, f"adjudicated: {why[i]}") if x)
     wb.save(GOLD)
     RECORD.parent.mkdir(parents=True, exist_ok=True)
     record = {"protocol": "docs/protocol_natural.md (log 2026-11-01)", "items": len(a),
