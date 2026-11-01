@@ -8,7 +8,8 @@ differ (intent, route, clarification targets, unsupported_reason, requested wall
 reminder text after ``canonical_text``), labels side by side, to
 data/raw/private/labelling/adjudication.xlsx. The two annotators fill ``decision`` together:
 ``A`` (author's label), ``I`` (Ibrahim's label) or ``other`` (type the label in the ``final_``
-columns), and a short ``why``.
+columns), and a short ``why``. A row whose ``final_`` columns are filled is decided by them, and
+``apply`` sets its decision to A, I or other by comparing that label with the two sheets.
 
 ``apply`` checks that every row is decided and writes the gold sheet
 data/raw/private/labelling/natural_gold.xlsx: the author's sheet with the adjudicated labels put
@@ -84,6 +85,11 @@ def clean(row: dict[str, str]) -> dict[str, str]:
         local = datetime.strptime(wall(row), "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo(TZ))
         out["datetime"] = local.isoformat()
     return out
+
+
+def same(x: dict[str, str], y: dict[str, str]) -> bool:
+    """Two cleaned labels are the same label (reminder text compared as written)."""
+    return all(x[f].strip() == y[f].strip() for f in FIELDS)
 
 
 def differences(a: dict[str, str], b: dict[str, str]) -> list[str]:
@@ -185,6 +191,15 @@ def cmd_apply(_: argparse.Namespace) -> int:
     rows = list(ws.iter_rows(values_only=True))
     head = [cell(h) for h in rows[0]]
     decided = [{h: cell(v) for h, v in zip(head, r, strict=False)} for r in rows[1:] if r[0]]
+    for d in decided:  # a typed final label decides the row; A/I/other then only says whose it is
+        if d["final_intent"]:
+            typed = {f: d[f"final_{f}"] for f in FIELDS}
+            fixed = clean(typed)
+            if typed["intent"] == "create_alarm" and ("reminder_text" in typed["clarify_targets"]
+                                                       or typed["reminder_text"]):
+                print(f"note {d['id']}: alarms carry no reminder text; it is dropped from the final label")
+            d["decision"] = ("A" if same(fixed, clean(a[d["id"]])) else
+                             "I" if same(fixed, clean(b[d["id"]])) else "other")
     want = {i for i in a if differences(a[i], b[i])}
     problems = [f"{d['id']}: decision {d['decision']!r} is not one of {DECISIONS}"
                 for d in decided if d["decision"] not in DECISIONS]
