@@ -1,0 +1,499 @@
+{
+  "annotator": "Ibrahim (vs the author's labels, before adjudication)",
+  "date": "2026-11-01",
+  "sheet": "data/raw/private/labelling/natural_label_Ibrahim_v2.xlsx",
+  "n_compared": 247,
+  "unknown_ids": [],
+  "intent": {
+    "n": 247,
+    "agreement": 0.9595141700404858,
+    "kappa": 0.9377614272035476,
+    "reading": "almost perfect",
+    "labels": [
+      "create_reminder",
+      "create_alarm",
+      "unsupported"
+    ],
+    "confusion": [
+      [
+        100,
+        3,
+        6
+      ],
+      [
+        1,
+        80,
+        0
+      ],
+      [
+        0,
+        0,
+        57
+      ]
+    ]
+  },
+  "route": {
+    "n": 247,
+    "agreement": 0.9433198380566802,
+    "kappa": 0.9134157944814463,
+    "reading": "almost perfect",
+    "labels": [
+      "ACT",
+      "CLARIFY",
+      "ABSTAIN"
+    ],
+    "confusion": [
+      [
+        85,
+        5,
+        5
+      ],
+      [
+        3,
+        91,
+        1
+      ],
+      [
+        0,
+        0,
+        57
+      ]
+    ]
+  },
+  "targets_exact_set": {
+    "n": 91,
+    "agreement": 0.6483516483516484
+  },
+  "targets_kappa": {
+    "date": {
+      "n": 247,
+      "agreement": 0.8987854251012146,
+      "kappa": 0.3658210947930578,
+      "reading": "fair",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          9,
+          8
+        ],
+        [
+          17,
+          213
+        ]
+      ]
+    },
+    "time": {
+      "n": 247,
+      "agreement": 0.9190283400809717,
+      "kappa": 0.509043927648579,
+      "reading": "moderate",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          12,
+          1
+        ],
+        [
+          19,
+          215
+        ]
+      ]
+    },
+    "am_pm": {
+      "n": 247,
+      "agreement": 0.9595141700404858,
+      "kappa": 0.8337595907928387,
+      "reading": "almost perfect",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          30,
+          2
+        ],
+        [
+          8,
+          207
+        ]
+      ]
+    },
+    "past": {
+      "n": 247,
+      "agreement": 0.9878542510121457,
+      "kappa": 0.9077555085273248,
+      "reading": "almost perfect",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          16,
+          2
+        ],
+        [
+          1,
+          228
+        ]
+      ]
+    },
+    "reminder_text": {
+      "n": 247,
+      "agreement": 0.9959514170040485,
+      "kappa": 0.9633694201394035,
+      "reading": "almost perfect",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          14,
+          1
+        ],
+        [
+          0,
+          232
+        ]
+      ]
+    }
+  },
+  "unsupported_reason": {
+    "n": 57,
+    "agreement": 0.8947368421052632,
+    "kappa": 0.8695652173913042,
+    "reading": "almost perfect",
+    "labels": [
+      "deletion",
+      "recurring",
+      "other_person",
+      "multi_action",
+      "other_tool",
+      "modification",
+      "other"
+    ],
+    "confusion": [
+      [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        18,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        6,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        10,
+        0,
+        0
+      ],
+      [
+        5,
+        0,
+        0,
+        0,
+        0,
+        7,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        5
+      ]
+    ]
+  },
+  "datetime_same_instant": {
+    "n": 85,
+    "agreement": 0.7176470588235294
+  },
+  "reminder_text_same": {
+    "n": 46,
+    "agreement": 0.8913043478260869
+  },
+  "disagreements": [
+    {
+      "id": "c003-b-pas",
+      "gold": "create_reminder/CLARIFY/am_pm",
+      "annotator": "create_reminder/CLARIFY/date,time"
+    },
+    {
+      "id": "c003-b-r2",
+      "gold": "create_reminder/CLARIFY/date",
+      "annotator": "create_reminder/CLARIFY/date,time"
+    },
+    {
+      "id": "c007-a-w5",
+      "gold": "create_alarm/CLARIFY/past",
+      "annotator": "create_alarm/ACT/"
+    },
+    {
+      "id": "c008-b-e1",
+      "gold": "create_reminder/CLARIFY/reminder_text",
+      "annotator": "create_reminder/CLARIFY/am_pm,reminder_text"
+    },
+    {
+      "id": "c008-b-k1",
+      "gold": "create_reminder/CLARIFY/reminder_text",
+      "annotator": "create_reminder/CLARIFY/date,time,reminder_text"
+    },
+    {
+      "id": "c009-b-po1",
+      "gold": "create_alarm/CLARIFY/date",
+      "annotator": "create_alarm/CLARIFY/date,time"
+    },
+    {
+      "id": "c010-a-c1",
+      "gold": "create_reminder/ACT/",
+      "annotator": "create_reminder/CLARIFY/date"
+    },
+    {
+      "id": "c010-b-c1",
+      "gold": "create_reminder/CLARIFY/am_pm",
+      "annotator": "create_reminder/CLARIFY/date,am_pm"
+    },
+    {
+      "id": "c012-a-h18",
+      "gold": "create_reminder/ACT/",
+      "annotator": "unsupported/ABSTAIN/"
+    },
+    {
+      "id": "c012-b-pas",
+      "gold": "create_reminder/CLARIFY/reminder_text",
+      "annotator": "create_alarm/CLARIFY/date,time,reminder_text"
+    },
+    {
+      "id": "c015-b-7b",
+      "gold": "create_reminder/CLARIFY/date",
+      "annotator": "create_reminder/CLARIFY/date,time"
+    },
+    {
+      "id": "c015-b-pm12",
+      "gold": "create_reminder/CLARIFY/date",
+      "annotator": "create_reminder/CLARIFY/date,time"
+    },
+    {
+      "id": "c017-a-w5",
+      "gold": "create_reminder/ACT/",
+      "annotator": "create_reminder/CLARIFY/date"
+    },
+    {
+      "id": "c017-b-h18",
+      "gold": "create_reminder/CLARIFY/reminder_text",
+      "annotator": "create_reminder/CLARIFY/past"
+    },
+    {
+      "id": "c018-a-e1",
+      "gold": "create_reminder/ACT/",
+      "annotator": "create_reminder/CLARIFY/date"
+    },
+    {
+      "id": "c018-b-e1",
+      "gold": "create_reminder/CLARIFY/date",
+      "annotator": "create_reminder/CLARIFY/time"
+    },
+    {
+      "id": "c020-b-po1",
+      "gold": "create_reminder/CLARIFY/reminder_text",
+      "annotator": "create_reminder/CLARIFY/date,time,reminder_text"
+    },
+    {
+      "id": "c023-b-h18",
+      "gold": "create_reminder/CLARIFY/am_pm",
+      "annotator": "create_reminder/CLARIFY/date,time"
+    },
+    {
+      "id": "c025-b-d1",
+      "gold": "create_alarm/ACT/",
+      "annotator": "create_alarm/CLARIFY/am_pm"
+    },
+    {
+      "id": "c026-b-7b",
+      "gold": "create_alarm/CLARIFY/date",
+      "annotator": "create_alarm/CLARIFY/date,time"
+    },
+    {
+      "id": "c029-b-h18",
+      "gold": "create_reminder/ACT/",
+      "annotator": "create_reminder/CLARIFY/date"
+    },
+    {
+      "id": "c030-b-po1",
+      "gold": "create_reminder/CLARIFY/date",
+      "annotator": "create_reminder/CLARIFY/am_pm"
+    },
+    {
+      "id": "c035-b-b2",
+      "gold": "create_reminder/CLARIFY/reminder_text",
+      "annotator": "create_alarm/CLARIFY/reminder_text"
+    },
+    {
+      "id": "c038-b-f2",
+      "gold": "create_reminder/CLARIFY/reminder_text",
+      "annotator": "create_reminder/CLARIFY/time,reminder_text"
+    },
+    {
+      "id": "c038-b-pcs1",
+      "gold": "create_reminder/CLARIFY/reminder_text",
+      "annotator": "create_reminder/CLARIFY/time,reminder_text"
+    },
+    {
+      "id": "c042-b-pas",
+      "gold": "create_reminder/CLARIFY/date",
+      "annotator": "create_reminder/CLARIFY/time"
+    },
+    {
+      "id": "c042-b-r2",
+      "gold": "create_reminder/CLARIFY/date",
+      "annotator": "create_reminder/CLARIFY/am_pm"
+    },
+    {
+      "id": "c047-b-pf1",
+      "gold": "create_alarm/CLARIFY/date",
+      "annotator": "create_alarm/CLARIFY/date,time"
+    },
+    {
+      "id": "c048-a-7b",
+      "gold": "create_alarm/CLARIFY/date",
+      "annotator": "create_alarm/ACT/"
+    },
+    {
+      "id": "c052-a-c1",
+      "gold": "create_alarm/CLARIFY/date",
+      "annotator": "create_alarm/ACT/"
+    },
+    {
+      "id": "c052-a-h18",
+      "gold": "create_reminder/ACT/",
+      "annotator": "unsupported/ABSTAIN/"
+    },
+    {
+      "id": "c052-b-c1",
+      "gold": "create_alarm/CLARIFY/time",
+      "annotator": "create_alarm/CLARIFY/date,time"
+    },
+    {
+      "id": "c052-b-h18",
+      "gold": "create_reminder/CLARIFY/time",
+      "annotator": "unsupported/ABSTAIN/"
+    },
+    {
+      "id": "c053-b-pcs1",
+      "gold": "create_reminder/CLARIFY/reminder_text",
+      "annotator": "create_reminder/CLARIFY/date,time,reminder_text"
+    },
+    {
+      "id": "c056-b-pas",
+      "gold": "create_reminder/CLARIFY/reminder_text",
+      "annotator": "create_reminder/CLARIFY/date,time,reminder_text"
+    },
+    {
+      "id": "c056-b-r2",
+      "gold": "create_reminder/CLARIFY/reminder_text",
+      "annotator": "create_reminder/CLARIFY/am_pm,reminder_text"
+    },
+    {
+      "id": "c076-b-h18",
+      "gold": "create_alarm/CLARIFY/am_pm",
+      "annotator": "create_reminder/CLARIFY/am_pm"
+    },
+    {
+      "id": "c090-b-w4",
+      "gold": "create_alarm/CLARIFY/am_pm",
+      "annotator": "create_alarm/CLARIFY/date,am_pm"
+    },
+    {
+      "id": "c090-b-w5",
+      "gold": "create_alarm/CLARIFY/date",
+      "annotator": "create_alarm/CLARIFY/am_pm"
+    },
+    {
+      "id": "c091-b-k1",
+      "gold": "create_reminder/CLARIFY/time",
+      "annotator": "create_reminder/CLARIFY/date,time"
+    },
+    {
+      "id": "c097-b-b2",
+      "gold": "create_reminder/CLARIFY/past",
+      "annotator": "create_alarm/CLARIFY/am_pm"
+    },
+    {
+      "id": "c097-b-c1",
+      "gold": "create_alarm/CLARIFY/time",
+      "annotator": "create_alarm/CLARIFY/date,time"
+    },
+    {
+      "id": "c100-a-h18",
+      "gold": "create_reminder/ACT/",
+      "annotator": "unsupported/ABSTAIN/"
+    },
+    {
+      "id": "c100-b-h18",
+      "gold": "create_reminder/ACT/",
+      "annotator": "unsupported/ABSTAIN/"
+    },
+    {
+      "id": "c102-b-d1",
+      "gold": "create_reminder/CLARIFY/reminder_text",
+      "annotator": "create_reminder/CLARIFY/date,time,reminder_text"
+    },
+    {
+      "id": "c106-b-7b",
+      "gold": "create_reminder/CLARIFY/date",
+      "annotator": "create_reminder/CLARIFY/date,am_pm"
+    },
+    {
+      "id": "c106-b-pm12",
+      "gold": "create_reminder/CLARIFY/date",
+      "annotator": "create_reminder/CLARIFY/time"
+    },
+    {
+      "id": "c129-a-h18",
+      "gold": "create_reminder/ACT/",
+      "annotator": "unsupported/ABSTAIN/"
+    }
+  ]
+}

@@ -1,0 +1,889 @@
+{
+ "protocol": "docs/protocol_natural.md (log 2026-11-01)",
+ "items": 247,
+ "adjudicated": 66,
+ "decisions": {
+  "A": 13,
+  "I": 39,
+  "other": 14
+ },
+ "rows": [
+  {
+   "id": "c023-a-h18",
+   "differs": [
+    "datetime"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_alarm",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c090-a-w5",
+   "differs": [
+    "datetime"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_alarm",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c007-a-w5",
+   "differs": [
+    "route",
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_alarm",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c056-b-pas",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "date time reminder_text",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c007-a-w4",
+   "differs": [
+    "datetime"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c015-b-7b",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "date time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c128-a-e1",
+   "differs": [
+    "unsupported_reason"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "unsupported",
+    "route": "ABSTAIN",
+    "clarify_targets": "",
+    "unsupported_reason": "deletion"
+   }
+  },
+  {
+   "id": "c035-b-b2",
+   "differs": [
+    "intent",
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_alarm",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c102-b-d1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "date time reminder_text",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c052-b-c1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "A",
+   "final": {
+    "intent": "create_alarm",
+    "route": "CLARIFY",
+    "clarify_targets": "time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c127-a-w4",
+   "differs": [
+    "unsupported_reason"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "unsupported",
+    "route": "ABSTAIN",
+    "clarify_targets": "",
+    "unsupported_reason": "deletion"
+   }
+  },
+  {
+   "id": "c140-a-k1",
+   "differs": [
+    "unsupported_reason"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "unsupported",
+    "route": "ABSTAIN",
+    "clarify_targets": "",
+    "unsupported_reason": "modification"
+   }
+  },
+  {
+   "id": "c047-a-pf1",
+   "differs": [
+    "datetime"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_alarm",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c017-b-h18",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "past",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c091-b-k1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "A",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c056-b-r2",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "am_pm reminder_text",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c010-a-c1",
+   "differs": [
+    "route",
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_reminder",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c008-b-k1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "time reminder_text",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c029-b-h18",
+   "differs": [
+    "route",
+    "clarify_targets"
+   ],
+   "decision": "A",
+   "final": {
+    "intent": "create_reminder",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c010-b-c1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "A",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "am_pm",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c090-b-w4",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "A",
+   "final": {
+    "intent": "create_alarm",
+    "route": "CLARIFY",
+    "clarify_targets": "am_pm",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c053-b-pcs1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "time reminder_text",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c017-a-w5",
+   "differs": [
+    "route",
+    "clarify_targets"
+   ],
+   "decision": "A",
+   "final": {
+    "intent": "create_reminder",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c004-a-pf1",
+   "differs": [
+    "reminder_text"
+   ],
+   "decision": "A",
+   "final": {
+    "intent": "create_reminder",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c052-a-h18",
+   "differs": [
+    "intent",
+    "route"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "unsupported",
+    "route": "ABSTAIN",
+    "clarify_targets": "",
+    "unsupported_reason": "other"
+   }
+  },
+  {
+   "id": "c035-a-c1",
+   "differs": [
+    "datetime"
+   ],
+   "decision": "A",
+   "final": {
+    "intent": "create_reminder",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c100-a-h18",
+   "differs": [
+    "intent",
+    "route"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "unsupported",
+    "route": "ABSTAIN",
+    "clarify_targets": "",
+    "unsupported_reason": "other"
+   }
+  },
+  {
+   "id": "c020-b-po1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "time reminder_text",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c126-a-7b",
+   "differs": [
+    "unsupported_reason"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "unsupported",
+    "route": "ABSTAIN",
+    "clarify_targets": "",
+    "unsupported_reason": "deletion"
+   }
+  },
+  {
+   "id": "c012-b-pas",
+   "differs": [
+    "intent",
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_alarm",
+    "route": "CLARIFY",
+    "clarify_targets": "time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c003-b-r2",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "date time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c042-b-r2",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "am_pm",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c012-a-h18",
+   "differs": [
+    "intent",
+    "route"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "unsupported",
+    "route": "ABSTAIN",
+    "clarify_targets": "",
+    "unsupported_reason": "other"
+   }
+  },
+  {
+   "id": "c038-b-f2",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "time reminder_text",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c026-b-7b",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_alarm",
+    "route": "CLARIFY",
+    "clarify_targets": "time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c052-b-h18",
+   "differs": [
+    "intent",
+    "route",
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "unsupported",
+    "route": "ABSTAIN",
+    "clarify_targets": "",
+    "unsupported_reason": "other"
+   }
+  },
+  {
+   "id": "c097-b-c1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "A",
+   "final": {
+    "intent": "create_alarm",
+    "route": "CLARIFY",
+    "clarify_targets": "time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c009-b-po1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_alarm",
+    "route": "CLARIFY",
+    "clarify_targets": "date time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c129-a-h18",
+   "differs": [
+    "intent",
+    "route"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "unsupported",
+    "route": "ABSTAIN",
+    "clarify_targets": "",
+    "unsupported_reason": "multi_action"
+   }
+  },
+  {
+   "id": "c025-b-d1",
+   "differs": [
+    "route",
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_alarm",
+    "route": "CLARIFY",
+    "clarify_targets": "am_pm",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c003-a-pas",
+   "differs": [
+    "reminder_text"
+   ],
+   "decision": "A",
+   "final": {
+    "intent": "create_reminder",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c049-a-w5",
+   "differs": [
+    "datetime"
+   ],
+   "decision": "A",
+   "final": {
+    "intent": "create_alarm",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c089-a-7b",
+   "differs": [
+    "reminder_text"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c018-a-k1",
+   "differs": [
+    "datetime",
+    "reminder_text"
+   ],
+   "decision": "A",
+   "final": {
+    "intent": "create_reminder",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c076-b-h18",
+   "differs": [
+    "intent"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "am_pm",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c023-b-h18",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "date time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c052-a-c1",
+   "differs": [
+    "route",
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_alarm",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c042-b-pas",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c038-b-pcs1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "time reminder_text",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c127-a-w5",
+   "differs": [
+    "unsupported_reason"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "unsupported",
+    "route": "ABSTAIN",
+    "clarify_targets": "",
+    "unsupported_reason": "deletion"
+   }
+  },
+  {
+   "id": "c129-a-q1",
+   "differs": [
+    "unsupported_reason"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "unsupported",
+    "route": "ABSTAIN",
+    "clarify_targets": "",
+    "unsupported_reason": "deletion"
+   }
+  },
+  {
+   "id": "c047-b-pf1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_alarm",
+    "route": "CLARIFY",
+    "clarify_targets": "time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c090-b-w5",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_alarm",
+    "route": "CLARIFY",
+    "clarify_targets": "am_pm",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c018-a-e1",
+   "differs": [
+    "route",
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "date",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c106-b-7b",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "date am_pm",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c030-b-po1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "am_pm",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c015-b-pm12",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "date time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c035-b-c1",
+   "differs": [
+    "datetime"
+   ],
+   "decision": "A",
+   "final": {
+    "intent": "create_reminder",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c042-a-pas",
+   "differs": [
+    "reminder_text"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c018-b-e1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "date time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c106-b-pm12",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c008-b-e1",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "am_pm reminder_text",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c100-b-h18",
+   "differs": [
+    "intent",
+    "route"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "unsupported",
+    "route": "ABSTAIN",
+    "clarify_targets": "",
+    "unsupported_reason": "other"
+   }
+  },
+  {
+   "id": "c048-a-7b",
+   "differs": [
+    "route",
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_alarm",
+    "route": "ACT",
+    "clarify_targets": "",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c003-b-pas",
+   "differs": [
+    "clarify_targets"
+   ],
+   "decision": "other",
+   "final": {
+    "intent": "create_reminder",
+    "route": "CLARIFY",
+    "clarify_targets": "date time",
+    "unsupported_reason": ""
+   }
+  },
+  {
+   "id": "c097-b-b2",
+   "differs": [
+    "intent",
+    "clarify_targets"
+   ],
+   "decision": "I",
+   "final": {
+    "intent": "create_alarm",
+    "route": "CLARIFY",
+    "clarify_targets": "am_pm",
+    "unsupported_reason": ""
+   }
+  }
+ ]
+}
