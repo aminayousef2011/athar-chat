@@ -3,7 +3,9 @@
 **Keyword rules, lexical classifiers and Jais 2 / Jais 3 on a locked, author-written test set**
 
 Amina Yousef, Applied NLP course project. Final results 2026-10-19; revised 2026-10-20 with
-post hoc analyses (section 7) and a disclosure of how the test set was written (section 3.2).
+post hoc analyses (section 7) and a disclosure of how the test set was written (section 3.2);
+extended 2026-11-02 with a pre-registered evaluation on 247 messages from 17 other native speakers
+(section 8).
 
 ---
 
@@ -25,8 +27,20 @@ selection on a 40-item drafted dev set chose over-regularized classifiers. The c
 pipeline system is the shared extractor (0.808 with gold intents). Its failures come almost
 entirely from one framing-lexicon gap; fixing it would raise that ceiling to 0.925. End-to-end
 Jais 3 fails in the complementary place: it extracts arguments well but often does not ask when it
-should. The test set is one writer's templated phrasing, so all conclusions are about that
+should. The test set is one writer's templated phrasing, so these conclusions are about that
 distribution.
+
+We then tested the conclusions on new writers in a second pre-registered evaluation. The
+hypotheses, the improved systems and the analysis code were frozen before any new message was
+labelled. 17 screened native speakers wrote 247 messages (238 confirmatory) for the same scenarios;
+two annotators labelled them independently (route κ 0.913, intent κ 0.938). The rules again beat
+TF-IDF (0.718 vs 0.513; +0.206, Holm p = 0.0003). A hybrid that lets the deterministic policy
+overrule Jais-3-7B tool calling beat tool calling alone (0.702 vs 0.599; +0.102, Holm p = 0.001).
+The rule fixes derived from the author's test failures did not transfer (+0.004, one item; p = 1.0):
+they raised STS on the author's own items to 0.974 but left the contributors' items unchanged. Every
+system scored lower on the contributors' messages except three S4 models; Jais 2 (−0.140) and
+end-to-end tool calling (−0.126) lost the most. Both confirmed findings hold when each writer is
+left out in turn.
 
 ---
 
@@ -51,6 +65,9 @@ rules (S1)?
    trigger-word shift, dev-set selection of the regularization strength, and one extractor gap.
 4. The first reported evaluation, to our knowledge, of Jais 3 on Egyptian Arabic intent recognition
    and tool calling. It shows two complementary failure profiles that motivate a hybrid design.
+5. A second, pre-registered evaluation on 247 independently screened and double-annotated messages
+   from 17 native speakers. It replicates the rules-over-classifiers result, confirms the hybrid,
+   and shows that error-analysis fixes made on the author's own test did not transfer (section 8).
 
 ## 2. Related work
 
@@ -126,7 +143,7 @@ right time on the right task, so section 7.3 also separates genuinely wrong exec
   collection was
   therefore not used (protocol log 2026-10-10), and the whole test split is written by one person,
   who also designed the system. A second, screened collection is the subject of a separate,
-  pre-registered evaluation ([protocol_natural.md](protocol_natural.md)).
+  pre-registered evaluation ([protocol_natural.md](protocol_natural.md)), reported in section 8.
 
 **How the test texts were written (disclosed after the test run).** The author wrote the requests
 from scenario cards in two passes. The first pass (kept in `data/author/discarded/`) was discarded,
@@ -387,7 +404,8 @@ on CLARIFY and weak on ACT; end-to-end Jais 3 (S8) is the reverse.*
 
 The rule-based core is conservative but brittle on the test's phrasing. The LLM extracts arguments
 well but does not follow the clarification protocol. A hybrid, with LLM argument extraction and the
-deterministic policy deciding when to execute and when to ask, is the natural next step (section 9).
+deterministic policy deciding when to execute and when to ask, was pre-registered as S9 and tested
+on new writers (section 8).
 
 ---
 
@@ -495,7 +513,8 @@ lexicon changes no item for the worse on train, dev or test:
 | oracle on train / dev | 0.963 / 1.000 | 0.973 / 1.000 |
 
 These numbers were obtained after looking at test failures, so they are not results. They show where
-the ceiling is, and they motivate a v2 core evaluated on new data (section 9).
+the ceiling is. They motivated core v1.1, which was frozen and then tested on new writers; there
+the fix changed one item (section 8.3).
 
 **Safety reading.**
 - No pipeline system executed at a wrong instant or executed an out-of-scope request.
@@ -548,13 +567,229 @@ annotator agreed with gold on all four.
 
 ---
 
-## 8. Limitations and threats to validity
+## 8. Pre-registered evaluation on natural phrasing from 17 writers
 
-1. **One templated writer.** The test is one person's second-pass phrasing from a small set of
-   frames (section 3.2), and that person also wrote S1's lexicon and designed the system. All
-   conclusions are conditional on that distribution. Mitigating: S1's rules were frozen on
-   2026-10-07, before any test item was written; the independent native set supports S1 on
-   out-of-scope requests. Not mitigated for in-scope requests.
+Sections 6 and 7 rest on one writer's templated test. This section reports a second, separate
+evaluation on messages written by other native speakers for the same scenarios. It answers three
+questions: does H1 replicate; did the fixes derived from the test analysis (section 7.3) generalize;
+and does a hybrid of LLM tool calling and the deterministic policy beat tool calling alone? Design:
+[protocol_natural.md](protocol_natural.md); every number below is generated from committed outputs by
+`scripts/natural_tables.py` (`results/natural/tables.md`).
+
+### 8.1 What was fixed in advance
+
+| When | What | Record |
+|---|---|---|
+| 2026-10-26 | protocol, hypotheses N1-N3, screening rules, minimum size (60 items, 3 writers) | commit `1c1fbbe` |
+| 2026-10-26 | **v2 systems and the evaluation command frozen** (`models_v2/freeze.json`, `8caa1e86…`) | commit `c97afa5` |
+| 2026-10-29 | sampling rule (registered before the draw) | commit `de5c069` |
+| 2026-11-01 | adjudication rule (before adjudication); gold locked (`1de694ae…`); GPU run settings | protocol log |
+| 2026-11-02 | each GPU system run once; `athar-v2 evaluate` run once | `results/natural/` |
+
+**v2 systems** (all frozen before any contributor message was labelled):
+- **Core v1.1**: the section 7.3 framing fix (want-verbs and «اعمللي» before a tool noun), five more
+  fillers, and no period word read as a time inside a purpose clause after a clock time.
+- **S1 v1.1**: S1 with core v1.1 and the out-of-scope verbs S1 missed on the v1 test (section 7.5).
+- **S2-gcv, S3-gcv**: S2/S3 with core v1.1, selected by family-grouped 5-fold cross-validation on
+  train+dev instead of dev (section 7.2) and refit on train+dev. Chosen: C = 0.3, word 1-2-grams;
+  C = 1, word 1-2-grams + char 2-5-grams.
+- **S9 hybrid**, computed from each S8 seed's stored output with no further GPU run. S8's decline is
+  kept. Otherwise the intent is the tool S8 named (S1 v1.1's intent if S8 answered in plain text),
+  and the route comes from the deterministic policy on the core-v1.1 extraction: any blocking gap →
+  CLARIFY. On ACT, S8's arguments are used when S8 made the matching call.
+- **Hypotheses** (Holm over the three, α = 0.05, on the confirmatory items): **N1** S1 > S2 (replicates
+  H1, frozen v1 systems); **N2** S1 v1.1 > S1; **N3** S9 > S8 (per-item mean over the 3 seeds).
+
+S4, S7, S2/S3-gcv and every other comparison are descriptive. S9's design was informed by the v1
+test profile (section 6.6) and checked on dev only (S9 0.925-0.975 vs S8 0.700-0.725 on the stored
+dev traces) before the freeze.
+
+### 8.2 Data: collection, screening, sampling, labels
+
+**Collection.** Google Forms showed each contributor scenario cards from the 71 test scenarios
+(one block of about 15 in wave 2), the typing moment in words, and an A/B design: version B is the
+same wish rewritten without what the card says is missing. Contributors were asked to write as they text, without AI tools and without
+seeing others' answers.
+
+**Screening** (rules in protocol section 3, applied unchanged to every export): near-duplicates
+across submissions, copied form dates, B identical to A, copies of reference texts, and
+submission-level rules for copying writers and the author's own codes. The rules were written after
+inspecting the first export and are disclosed as such. The pool after screening was **474 messages
+from 34 writers**. Forms were regenerated once, before most responses (wave 2b), because the first
+version displayed a full date that contributors copied.
+
+**Sample.** Labelling all 474 by two annotators was not feasible in time. A registered rule drew 2
+writers per scenario block with a fixed seed, keeping all their messages: **247 messages from 17
+writers**. Of these, **238 are confirmatory** (scenario family in neither train nor dev): 70 families,
+10-21 items per writer, ACT 91 / CLARIFY 88 / ABSTAIN 59, 84 code-switched, 187 project-management.
+
+**Labels.** The author and a second native annotator (Ibrahim) labelled all 247 items independently
+from blank sheets with the unchanged annotation guide. A first pair of returned sheets was rejected
+before any analysis: the two sheets were identical, and ACT datetimes copied the sending time.
+Agreement before adjudication (`results/natural/agreement.md`):
+
+| Field | n | Agreement | Cohen's κ |
+|---|---|---|---|
+| intent | 247 | 96.0% | 0.938 |
+| route | 247 | 94.3% | 0.913 |
+| unsupported reason (both unsupported) | 57 | 89.5% | 0.870 |
+| target set (both CLARIFY) | 91 | 64.8% | |
+| reminder text (both ACT reminders) | 46 | 89.1% | |
+| datetime (both ACT) | 85 | 71.8% | |
+
+The datetime figure counts 11 of the second annotator's daylight-saving offset slips as
+disagreements. A frequent target-set disagreement was one annotator adding `date` where no day was
+given, which the guide does not treat as a gap.
+
+**Adjudication** (`results/natural/adjudication.json`, ids only). 66 items met the pre-set rule. The
+author entered a final label for each; an AI assistant then checked each against the guide and the
+contract and corrected 24 where a written rule was broken, and drafted the one-line reasons. The
+author approved the result. Final labels: the author's on 13 items, the second annotator's on 39, a
+third label on 14. **Deviation:** the protocol planned adjudication by discussion between the two
+annotators; the second annotator's part in the decisions is not recorded.
+
+### 8.3 Confirmatory results
+
+The minimum size was met (238 items, 17 writers), so N1-N3 are tested.
+
+| | Difference [95% CI] | p | Holm p | Writer-clustered p | McNemar (only A / only B right) |
+|---|---|---|---|---|---|
+| **N1** S1 vs S2 | **+0.206** [+0.129, +0.287] | 0.0001 | **0.0003** | 0.0012 | 56 / 7 |
+| N2 S1 v1.1 vs S1 | +0.004 [+0.000, +0.013] | 1.0 | 1.0 | 1.0 | 1 / 0 |
+| **N3** S9 vs S8 | **+0.102** [+0.051, +0.156] | 0.0005 | **0.001** | 0.0021 | (seed means) |
+
+- **N1 supported.** The rules beat TF-IDF by more than on the author's test (+0.206 vs +0.167). S1 >
+  S2 for 13 of 17 writers and in all 17 leave-one-writer-out analyses.
+- **N2 not supported.** Core v1.1 and the extra verbs changed one confirmatory item. Section 8.5
+  shows why.
+- **N3 supported.** S9 > S8 in each seed (0.702 / 0.710 / 0.693 vs 0.584 / 0.626 / 0.588), for 14 of
+  17 writers, and in all 17 leave-one-writer-out analyses.
+- **Exposure check.** Writer H18's messages (21 confirmatory) were read during screening on
+  2026-10-26, before the v2 freeze that day. Without H18: S1 0.700, S1 v1.1 0.705, S2 0.512, S8 0.618,
+  S9 0.717; the conclusions are unchanged.
+
+### 8.4 All systems
+
+238 confirmatory items; family-level bootstrap intervals. Multi-seed systems: the per-item mean over
+seeds. *Executed non-ACT*: executions on items whose gold route is CLARIFY or ABSTAIN.
+
+| System | STS [95% CI] | Intent acc. | Unsafe exec. | Executed non-ACT | Success ACT / CLARIFY / ABSTAIN |
+|---|---|---|---|---|---|
+| oracle v1.1 | 0.790 [0.720, 0.856] | 1.000 | 0.130 | 7 | 0.692 / 0.750 / 1.000 |
+| oracle | 0.786 [0.715, 0.851] | 1.000 | 0.134 | 8 | 0.692 / 0.739 / 1.000 |
+| S4 Jais-3-3.7B | 0.744 [0.671, 0.812] | 0.933 | 0.134 | 10 | 0.681 / 0.693 / 0.915 |
+| S7 Jais 2 + QLoRA (seeds 0.697 / 0.739 / 0.752) | 0.730 [0.660, 0.797] | 0.940 | 0.148 | 11.7 | 0.685 / 0.682 / 0.870 |
+| S1 v1.1 | 0.723 [0.652, 0.789] | 0.933 | 0.147 | 11 | 0.637 / 0.727 / 0.847 |
+| **S1** | **0.718** [0.648, 0.785] | 0.933 | 0.151 | 12 | 0.637 / 0.716 / 0.847 |
+| S4 Qwen3 8B | 0.718 [0.649, 0.786] | 0.920 | 0.160 | 13 | 0.648 / 0.693 / 0.864 |
+| **S9 hybrid** (3 seeds) | **0.702** [0.635, 0.768] | 0.930 | 0.181 | 12.3 | 0.619 / 0.727 / 0.791 |
+| S4 Jais-3-7B | 0.664 [0.582, 0.744] | 0.815 | 0.113 | 7 | 0.615 / 0.500 / 0.983 |
+| S4 Nile-Chat 4B | 0.664 [0.591, 0.736] | 0.870 | 0.189 | 21 | 0.692 / 0.727 / 0.525 |
+| S4 Jais 2 8B | 0.618 [0.534, 0.700] | 0.765 | 0.206 | 24 | 0.670 / 0.659 / 0.475 |
+| **S8 Jais-3-7B tool calling** (3 seeds) | **0.599** [0.546, 0.654] | 0.833 | 0.227 | 22.7 | 0.634 / 0.500 / 0.695 |
+| S3-gcv | 0.580 [0.502, 0.655] | 0.773 | 0.223 | 20 | 0.582 / 0.625 / 0.508 |
+| S2-gcv | 0.546 [0.472, 0.619] | 0.731 | 0.227 | 18 | 0.527 / 0.557 / 0.559 |
+| S3 | 0.513 [0.447, 0.577] | 0.706 | 0.239 | 22 | 0.462 / 0.545 / 0.542 |
+| **S2** | **0.513** [0.444, 0.580] | 0.702 | 0.218 | 20 | 0.495 / 0.500 / 0.559 |
+
+S4 rows use the primary setting (6-shot `prior`, dev τ), S7 the frozen run-6b adapters, both scored
+on the stored item results of their single GPU run. Rebuilding all 54 stored S4/S7 scores on CPU from
+their predicted intents reproduced every one exactly.
+
+- **The ranking of the core systems holds:** oracle > S1 > S3 ≈ S2. Grouped-CV selection with core
+  v1.1 lifts the classifiers by 0.03-0.07 but leaves them 0.14-0.17 below S1 (descriptive; selection
+  rule, core and training data change together).
+- **LLM intent recognition does not beat the rules here.** No S4 or S7 interval lies above S1's
+  point estimate; Jais 2's lies below it. Jais-3-3.7B and S7 are nominally highest.
+- **Out-of-scope requests separate the S4 models.** Jais 2 and Nile-Chat decline only 0.475 and 0.525
+  of the gold-ABSTAIN items, against 0.96 recall on the native set of appendix A.3. The out-of-scope
+  items here sit inside the reminder domain (recurring 18, deletion 8, modification 8, other tool 10,
+  several actions 5, other 8, another person 2), while the native set consists of requests for other
+  assistant tasks.
+- **The shared core still executes some incomplete requests.** Even the oracle executes 7-8 items
+  whose gold route is CLARIFY.
+
+### 8.5 What changed from the author's test
+
+The two sets differ in items, writers and route mix (v1 test: 50 / 50 / 20), so this is descriptive.
+
+| System | v1 test (author, 120) | Natural (contributors, 238) | Change |
+|---|---|---|---|
+| oracle | 0.808 | 0.786 | −0.023 |
+| S1 | 0.767 | 0.718 | −0.048 |
+| S2 / S3 | 0.600 / 0.625 | 0.513 / 0.513 | −0.087 / −0.112 |
+| S7 (3 seeds) | 0.786 | 0.730 | −0.056 |
+| S8 (3 seeds) | 0.725 | 0.599 | −0.126 |
+| S4 Jais 2 8B | 0.758 | 0.618 | −0.140 |
+| S4 Nile-Chat 4B | 0.742 | 0.664 | −0.078 |
+| S4 Jais-3-3.7B | 0.742 | 0.744 | +0.002 |
+| S4 Qwen3 8B | 0.700 | 0.718 | +0.018 |
+| S4 Jais-3-7B | 0.550 | 0.664 | +0.114 |
+
+**The fixes fitted the author, not the task.** On the 117 (card, version) slots both wrote, the v1.1
+systems reach 0.974 (S1 v1.1, oracle v1.1) on the author's items and 0.715 / 0.785 on the
+contributors'. The v1 systems show gaps of 0.04-0.11 on the same slots; the v1.1 systems 0.19-0.26.
+Because v1.1 was built from the error analysis of exactly those author items, its author score is
+not a held-out result. The pattern is the expected signature of fixing errors on a test set: the
+framing gap of section 7.3 was a property of the author's frames, and on contributors' messages the
+fixed patterns changed the outcome of one item. This is the outcome N2 was registered to detect.
+
+**S8's argument-extraction advantage did not transfer.** On the author's test S8 succeeded on
+0.907 of ACT items against the oracle's 0.680 (section 6.6). On contributors' messages it reached
+0.634, below the oracle's 0.692. Its CLARIFY success stayed low (0.527 → 0.500). Plain-text answers
+without a tool call were 23-25 per seed (10% of items). The complementary-profile picture of
+section 6.6 is therefore partly a property of the author's phrasing: on natural requests, complete
+requests are hard for both the LLM and the rules.
+
+**Jais-3-7B's chat-turn exemplar problem replicates** (descriptive): inline exemplars 0.723 vs chat
+turns 0.664, 21 / 7 discordant items, exact McNemar p = 0.013. For the other four models the
+difference is small and not significant (Jais 2 +0.025; Jais-3-3.7B, Nile-Chat and Qwen3 −0.009 to
+−0.034).
+
+### 8.6 Where the hybrid gains
+
+Item-level comparison of S9 with S8, per seed:
+
+| | Seed 0 | Seed 1 | Seed 2 |
+|---|---|---|---|
+| S9 right, S8 wrong | 39 | 28 | 35 |
+| S8 right, S9 wrong | 11 | 8 | 10 |
+| of which on CLARIFY items (S9 only / S8 only) | 29 / 9 | 22 / 6 | 30 / 6 |
+| on ABSTAIN items | 9 / 0 | 5 / 0 | 3 / 0 |
+| on ACT items | 1 / 2 | 1 / 2 | 2 / 4 |
+| S8 answers without a tool call / of these, S9 right | 23 / 22 | 24 / 16 | 25 / 18 |
+
+The gain comes from the policy deciding *when* to act, not from better arguments. S9 asks when a
+detail is missing (CLARIFY), turns plain-text answers into a valid route, and keeps S8's declines.
+On complete requests it is slightly worse than S8: in every such loss, core v1.1 reported a gap on
+a request that S8 had executed correctly, and S9 asked instead. A hybrid that also used the LLM's arguments when the core reports a gap that the
+LLM resolved is the obvious next variant; it was not pre-registered and is not evaluated here.
+
+### 8.7 Integrity and deviations
+
+- **Order of events.** Systems, evaluation code and hypotheses were committed before labelling
+  started. The gold was locked before any system saw it. GPU outputs were committed before
+  `athar-v2 evaluate`, which ran once and refuses to overwrite its output.
+- **GPU runs.** Five Kaggle commits (2× T4), each with notebook 2026-10-26a, the locked set
+  (`1de694ae…`) and the pinned model revisions, as recorded in each run's `environment.json`. The
+  settings of each commit were logged before the runs. To avoid hand-editing slips, they were
+  generated by `scripts/natural_run_notebooks.py`. Two commits did not score the set and are logged:
+  one ran the default dev prompt check, and one S7 attempt stopped before scoring because the
+  adapter dataset was not attached; it was re-run unchanged.
+- **Reproduction checks.** S7's dev rescoring reproduced run 6b exactly. The CPU rebuild reproduced
+  all stored S4/S7 scores.
+- **Deviations** (all logged with timing): the wave-2b form change; early collection close (target
+  exceeded); a labelled sample instead of all items; the rejected first sheets; adjudication without
+  a recorded joint discussion, with AI-assisted rule checking.
+
+---
+
+## 9. Limitations and threats to validity
+
+1. **One templated writer (sections 6-7).** The locked test is one person's second-pass phrasing
+   from a small set of frames (section 3.2), and that person also wrote S1's lexicon and designed
+   the system. Section 8 tests the main conclusions on 17 other writers: H1 replicates; the
+   extractor fixes and S8's argument advantage do not.
 2. **Statistical dependence.** The pre-registered family clustering ignores shared frames. Under
    frame clustering, H1/H2 are borderline (section 6.2).
 3. **Selection on a tiny drafted dev set.** Dev (40 items, 17 families) chose the classifiers'
@@ -574,31 +809,63 @@ annotator agreed with gold on all four.
 11. **S5/S6** (sentence embeddings, fine-tuned MARBERTv2) are implemented but were not fit on the
     final split, and are not reported.
 
+**Limits of the natural-phrasing evaluation (section 8).**
+
+12. **Elicited, not organic, requests.** Contributors wrote for the author's scenario cards with an
+    A/B design. Wording is theirs; scenarios, route mix and the kind of missing detail are not.
+    Messages from real assistant use may differ further.
+13. **Who the writers are.** Contributors were recruited through the author's network and are
+    identified by code only; dialect region, age and typing habits were not recorded. Screening
+    rules were written after inspecting the first export (disclosed), and the 17 writers are a
+    seeded sample of 34.
+14. **The labels involve the author.** The author is one of the two annotators and approved every
+    adjudicated label; the second annotator's part in adjudication is not recorded, and an AI
+    assistant checked the adjudicated labels against the guide (section 8.2). Agreement before
+    adjudication was high for intent and route (κ 0.94 / 0.91) and lower for target sets (65%) and
+    datetimes (72%), so the CLARIFY and ACT details carry more label uncertainty than the routes.
+15. **The contract's coverage.** Contributors used expressions the frozen contract does not resolve
+    («بعد اسبوع», «بعد شهر», «الخميس بعد الجاي», «بدقايق»). They are labelled as gaps by the guide's
+    "never guess" rule; another contract could label them ACT.
+16. **Same-system comparison in N3.** S9 is built from S8's own outputs, so N3 measures what the
+    policy adds to S8, not a comparison between independent systems.
+
 ---
 
-## 9. Conclusion and future work
+## 10. Conclusion and future work
 
 On a locked test written by the author, keyword rules beat TF-IDF classifiers for safe routing of
-Egyptian Arabic reminder and alarm requests. The difference is consistent and large (0.14-0.17 STS),
-but its statistical strength depends on how template dependence is treated. Its size partly reflects
-model selection on a small, AI-drafted dev set. Three findings are more robust than the headline:
+Egyptian Arabic reminder and alarm requests (0.14-0.17 STS). The statistical strength of that result
+depended on how template dependence was treated, and its size partly reflected model selection on a
+small, AI-drafted dev set. A second pre-registered evaluation on 17 other native speakers settles
+the direction: the gap was larger there (+0.206, Holm p = 0.0003) and held for every
+leave-one-writer-out analysis. What we take from the two evaluations together:
 
-1. **A drafted dev set selected the wrong systems.** Every system dropped from dev to test, and the
-   rankings reversed.
-2. **The shared extractor, not intent recognition, is the ceiling.** One framing-lexicon gap accounts
-   for 15 of its 23 failures.
-3. **LLM tool calling fails where the deterministic core is strong.** Jais 3 extracts arguments well
-   but does not ask when it should; the core asks well but extracts brittlely.
+1. **For this task, rules plus a deterministic core are a strong baseline that small supervised
+   classifiers trained on drafted data do not reach.** Better selection (grouped cross-validation)
+   narrows the gap without closing it.
+2. **A drafted dev set selected the wrong systems, and fixes made on a seen test do not transfer.**
+   Dev rankings reversed on test (section 7.1); the extractor fixes from the test error analysis
+   raised the author's items to 0.974 and changed one contributor item (N2). Error analysis on a
+   test set is useful for finding a ceiling, but it is not evidence that the fix generalizes.
+3. **End-to-end LLM tool calling needs a policy around it.** Jais-3-7B's advantage on complete
+   requests did not survive natural phrasing, and it handled only half of the incomplete requests
+   correctly. Letting the
+   deterministic policy decide when to act added +0.102 STS (N3), mostly by asking and declining.
+4. **The shared extractor is the ceiling on new writers too.** The oracle reaches 0.69 on ACT items
+   and executes 7-8 incomplete requests; no intent recognizer can fix that.
 
-**Next steps (v2, to be pre-registered before any new test exists):**
-- a new test set of 100-150 requests from 3-5 native speakers other than the author, checked for
-  repeated frames before labelling;
-- core v1.1 with the framing fix of section 7.3 and a lexicon-variant pass;
-- classifier selection by family-grouped cross-validation, and training data with the missing cue
-  forms;
-- a hybrid system: LLM argument extraction with the deterministic policy deciding, plus a validator
-  that turns plain-text answers into clarifications;
-- S8 with greedy decoding and exemplars, and S4 on raw (unnormalized) text.
+**Next steps.**
+- A contract version that resolves the day-scale expressions contributors used («بعد اسبوع»,
+  «بعد شهر», «X بعد الجاي»), decided from a held-out sample, not from this set.
+- Extractor improvements developed on the 227 screened but unlabelled contributor messages (from
+  writers not in the sample) and tested on newly collected messages, so section 8 stays untouched.
+- A hybrid that also uses the LLM's arguments when the core reports a gap the LLM resolved, and a
+  validator that turns plain-text answers into clarifications; S8 with greedy decoding and exemplars.
+- Classifiers trained on contributor-style data with the missing cue forms; S4 on raw text.
+- **Reminder text at notification time.** The contract stores the reminder text in the user's own
+  words («اراجع الـ slides»), which keeps scoring objective. A deployed assistant should render it
+  as an action addressed to the user when the reminder fires («راجع الـ slides»). This is a separate
+  generation step on top of the stored text and needs its own evaluation.
 
 ---
 
@@ -607,10 +874,16 @@ model selection on a small, AI-drafted dev set. Three findings are more robust t
 - **Training and dev data.** The 300 assistant-drafted requests (261 train, 39 dev) were written by
   an AI assistant and marked `source: assistant_draft`; none is in the test split.
 - **Code and documents.** The code, tests and documentation were developed with Claude Code (an AI
-  coding assistant) as a pair-programmer; commits it helped write carry a `Co-Authored-By` line.
-  The post hoc analyses and this revision were also prepared with it.
-- **Author's role.** The author designed the study, wrote all 120 test requests and the gold labels,
-  ran the GPU experiments and is responsible for every claim.
+  coding assistant) as a pair-programmer. Earlier commits it helped write carry a `Co-Authored-By`
+  line; later commits do not, and this statement covers all of them. The post hoc analyses, the
+  natural-phrasing tooling and analysis, and the revisions of this report were also prepared with it.
+- **Natural-phrasing labels (section 8).** The contributors' messages were written by people. In
+  adjudication, the AI assistant checked the author's final labels against the annotation guide and
+  the contract, corrected 24 that broke a written rule, and drafted the one-line reasons; the author
+  approved them. No AI system labelled any message from scratch.
+- **Author's role.** The author designed the study, wrote all 120 test requests and their gold
+  labels, recruited the contributors, labelled the natural set, ran the GPU experiments and is
+  responsible for every claim.
 
 ## References
 
@@ -768,6 +1041,9 @@ templates.
 | Post hoc outputs | `results/error_analysis/`, `results/posthoc/`, `docs/figures/`; record: [posthoc_analyses.md](posthoc_analyses.md) |
 | Dev outputs | `results/dev/` (the external Egyptian test file is not copied; the notebook downloads it at a pinned revision) |
 | Details | [jais3.md](jais3.md) (LLM runs), [evaluation_protocol.md](evaluation_protocol.md) (design, deviations), [data_card.md](data_card.md), [agreement.md](agreement.md) |
+| Natural set (section 8) | `data/natural/natural.jsonl`, manifest `data/natural/manifest.json` (`1de694ae…`); sample record `data/natural/sample.json` |
+| v2 freeze | `models_v2/freeze.json`, `8caa1e86…` (`athar-v2 verify`) |
+| Natural outputs | `results/natural/` (`evaluation.json`, `tables.md`, `agreement.*`, `adjudication.json`, `kaggle/1-s8 … 5-s7/`); design and dated log: [protocol_natural.md](protocol_natural.md) |
 
 ### How each result was produced
 
@@ -786,6 +1062,14 @@ is read from each run's own `environment.json`. Flags not listed were off.
 | 7a S4 Jais 3 | **test** | 2026-10-17a | `SPLIT="test"`, `UNLOCK_TEST`, `RUN_S4`, `RUN_MODELS=["jais3-7b","jais3-3.7b"]`, `GATE_TAU` from runs 2-3 | `results/s4/7a-jais3/` |
 | 7b S4 other models | **test** | 2026-10-17a | as 7a, `RUN_MODELS=["jais2-8b","nile-4b","qwen3-8b"]` | `results/s4/7b-others/` |
 | 7c+7d S7 frozen, S8 | **test** | 2026-10-18b | `SPLIT="test"`, `UNLOCK_TEST`, `RUN_S7_QLORA` (`S7_FROZEN`), `RUN_S8` | `results/s4/7cd-s7-s8/` |
+| nat-1 S8 | natural | 2026-10-26a | `EVAL_MANIFEST` = natural, `SPLIT="test"`, `UNLOCK_TEST`, `RUN_S8` | `results/natural/kaggle/1-s8/` |
+| nat-2 S4 Jais 3 | natural | 2026-10-26a | as nat-1, `RUN_S4`, `RUN_MODELS=["jais3-7b","jais3-3.7b"]`, v1 `GATE_TAU` | `results/natural/kaggle/2-s4-jais3/` |
+| nat-3 S4 Jais 2 | natural | 2026-10-26a | as nat-2, `RUN_MODELS=["jais2-8b"]` | `results/natural/kaggle/3-s4-jais2/` |
+| nat-4 S4 Nile, Qwen | natural | 2026-10-26a | as nat-2, `RUN_MODELS=["nile-4b","qwen3-8b"]` | `results/natural/kaggle/4-s4-nile-qwen/` |
+| nat-5 S7 frozen | natural | 2026-10-26a | as nat-1, `RUN_S7_QLORA` (`S7_FROZEN`) instead of `RUN_S8` | `results/natural/kaggle/5-s7/` |
+
+The natural runs' notebooks are generated by `scripts/natural_run_notebooks.py`; only the settings
+lines differ from `notebooks/kaggle_s4_llm.ipynb`.
 
 CPU, local:
 
@@ -797,3 +1081,6 @@ CPU, local:
 | Error analysis (post hoc) | `uv run python scripts/error_analysis.py` | `results/error_analysis/` |
 | Sensitivity, overlap, C sweep, extractor fix (post hoc) | `uv run python scripts/posthoc_analysis.py` | `results/posthoc/` |
 | Figures | `uv run --with matplotlib python scripts/make_figures.py` | `docs/figures/` |
+| Natural set: N1-N3 and every system, once (2026-11-02) | `athar-v2 evaluate --natural data/natural/manifest.json --s8-traces <3 traces> --llm-results <S4/S7 reports> --out results/natural/evaluation.json` (refuses to overwrite) | `results/natural/evaluation.json` |
+| Natural set: report tables | `uv run python scripts/natural_tables.py` | `results/natural/tables.md` |
+| Natural set: agreement, adjudication | `athar-data kappa …`; `scripts/adjudicate_natural.py sheet / apply` | `results/natural/agreement.*`, `adjudication.json` |
