@@ -1,0 +1,4 @@
+system,STS,STS_low,STS_high,intent_F1,unsafe,invalid,ECE,STS_PM,F1_PM,precision
+S8-jais3-7b-s0,0.571,0.508,0.634,0.857,0.243,25,,0.578,0.868,fp16
+S8-jais3-7b-s1,0.619,0.554,0.687,0.872,0.215,24,,0.63,0.875,fp16
+S8-jais3-7b-s2,0.575,0.504,0.647,0.858,0.251,28,,0.578,0.863,fp16
