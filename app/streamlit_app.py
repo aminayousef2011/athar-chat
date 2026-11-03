@@ -121,12 +121,13 @@ with test_tab:
     names = sorted({r["system"] for r in rows}, key=lambda n: (not n.startswith(("S1", "S2", "S3", "oracle")), n))
     system = st.selectbox("System", names)
     counts = demo.cause_counts(rows, system)
-    cause = st.selectbox("Cause", ["all"] + [f"{c} ({n})" for c, n in counts.items()])
+    cause = st.selectbox("Failure type (by outcome)", ["all"] + [f"{c} ({n})" for c, n in counts.items()])
     shown = [r for r in rows if r["system"] == system and (cause == "all" or cause.startswith(r["cause"] + " ("))]
     cols = ["id", "text", "cause", "gold_route", "pred_route", "gold_intent", "pred_intent",
             "gold_canonical", "pred_canonical", "gold_targets", "pred_targets"]
     st.dataframe(pd.DataFrame(shown)[cols], hide_index=True)
-    st.caption("Rebuilt exactly from the locked runs by scripts/error_analysis.py (report section 7.3).")
+    st.caption("Rebuilt exactly from the locked runs by scripts/error_analysis.py. Grouped by outcome; report "
+               "section 7.3 groups the oracle's same 23 failures by root cause.")
 
 with natural_tab:
     facts = demo.natural_facts(RESULTS)

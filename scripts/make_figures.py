@@ -197,6 +197,54 @@ def fig_failure_profiles(out: Path) -> None:
     plt.close(fig)
 
 
+def fig_natural_routes(out: Path) -> None:
+    """Success by gold route on the locked test (author) and the natural set (17 writers)."""
+    routes = ("ACT", "CLARIFY", "ABSTAIN")
+    core = _json(RES / "test_results.json")["systems"]
+    s8_v1 = [m["metrics"]["success_by_gold_route"]
+             for m in _json(RES / "s4" / "7cd-s7-s8" / "s4_results" / "s8_jais3-7b.json")["systems"].values()]
+    nat = _json(RES / "natural" / "evaluation.json")["systems"]
+
+    def by_route(names: list[str]) -> dict[str, float]:
+        out_: dict[str, float] = {}
+        for r in routes:
+            vals = [float(x["success"]) for n in names for x in nat[n]["items"] if x["gold_route"] == r]
+            out_[r] = _mean(vals)
+        return out_
+
+    systems = [("oracle", core["oracle"]["metrics"]["success_by_gold_route"], by_route(["oracle"])),
+               ("S1 rules", core["S1"]["metrics"]["success_by_gold_route"], by_route(["S1"])),
+               ("S2 TF-IDF", core["S2"]["metrics"]["success_by_gold_route"], by_route(["S2"])),
+               ("S8 tool calling", {r: _mean([m[r] for m in s8_v1]) for r in routes},
+                by_route([f"S8-s{k}" for k in range(3)])),
+               ("S9 hybrid", None, by_route([f"S9-s{k}" for k in range(3)]))]
+    n_v1 = {r: sum(x["gold_route"] == r for x in core["S1"]["items"]) for r in routes}
+    n_nat = {r: sum(x["gold_route"] == r for x in nat["S1"]["items"]) for r in routes}
+    fig, axes = plt.subplots(1, 3, figsize=(9.6, 3.9), sharey=True)
+    h = 0.38
+    for ax, r in zip(axes, routes, strict=True):
+        for k, (_label, v1, v2) in enumerate(systems):
+            y = len(systems) - 1 - k
+            if v1 is not None:
+                ax.barh(y + h / 2, v1[r], height=h * 0.9, color=AMBER, label="locked test (author)" if k == 0 else None)
+                ax.text(v1[r] + 0.02, y + h / 2, f"{v1[r]:.2f}", va="center", fontsize=7.5, color=INK)
+            ax.barh(y - h / 2, v2[r], height=h * 0.9, color=BLUE, label="natural set (17 writers)" if k == 0 else None)
+            ax.text(v2[r] + 0.02, y - h / 2, f"{v2[r]:.2f}", va="center", fontsize=7.5, color=INK)
+        ax.set_title(f"{r} (gold n = {n_v1[r]} / {n_nat[r]})", loc="left", fontsize=9.5, color=INK)
+        ax.set_xlim(0, 1.18)
+        ax.set_xticks([0, 0.5, 1.0])
+        ax.grid(axis="y", visible=False)
+    axes[0].set_yticks(range(len(systems)), [s[0] for s in reversed(systems)])
+    axes[1].set_xlabel("success rate (Safe Task Success on items of that gold route)")
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper left", ncols=2, frameon=False, fontsize=8.5, bbox_to_anchor=(0.005, 0.93))
+    fig.suptitle("Success by gold route: S8's lead on complete requests disappears on new writers",
+                 x=0.01, ha="left", y=0.985, fontsize=10.5, color=INK)
+    fig.tight_layout(rect=(0, 0, 1, 0.84))
+    fig.savefig(out / "natural_routes.png", dpi=200)
+    plt.close(fig)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     ap.add_argument("--out", default=str(ROOT / "docs" / "figures"))
@@ -205,6 +253,7 @@ def main(argv: list[str] | None = None) -> int:
     fig_dev_vs_test(out)
     fig_regularization(out)
     fig_failure_profiles(out)
+    fig_natural_routes(out)
     print("wrote", sorted(p.name for p in out.glob("*.png")))
     return 0
 

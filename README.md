@@ -184,7 +184,15 @@ uv run athar-data import-contrib data/raw/private/contrib/kept.csv --cards contr
 uv run athar-data lock data/natural/natural.jsonl --out data/natural/manifest.json --note "..."
 uv run athar-v2 evaluate --natural data/natural/manifest.json --s8-traces T0 T1 T2 `
     --llm-results R.json ... --out results/natural/evaluation.json   # once
+uv run python scripts/natural_tables.py                            # report tables -> results/natural/tables.md
+uv run --with openpyxl python scripts/natural_sensitivity.py       # post hoc -> results/natural/sensitivity.md
+uv run --with matplotlib python scripts/make_figures.py            # figures, incl. docs/figures/natural_routes.png
 ```
+
+Status (2026-11-02): 247 messages from 17 writers locked (238 confirmatory); every system scored
+once. N1 (S1 > S2) and N3 (S9 > S8) supported, N2 (S1 v1.1 > S1) not; see report section 8 and
+`results/natural/`. The labelling sheets are private (`data/raw/private/`), so
+`natural_sensitivity.py` runs only where they exist.
 
 ## Training and freezing (Phase 3)
 
