@@ -1,9 +1,10 @@
-"""ATHAR Chat local demo: the frozen systems side by side, and the locked test results.
+"""ATHAR Chat local demo: the frozen systems side by side, the locked test results, and the
+pre-registered evaluation on 17 other native speakers.
 
     uv run --extra ui streamlit run app/streamlit_app.py
 
-CPU only. The LLM systems (S4/S7/S8) need GPUs; their locked-test failures are browsable in the
-second tab from the committed result files.
+CPU only. The LLM systems (S4/S7/S8/S9) need GPUs or stored GPU outputs; their results are read
+from the committed result files.
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ from athar import demo
 from athar.intent.train import FreezeError, read_freeze
 
 ROOT = Path(__file__).resolve().parents[1]
-MODELS, RESULTS = ROOT / "models", ROOT / "results"
+MODELS, MODELS_V2, RESULTS = ROOT / "models", ROOT / "models_v2", ROOT / "results"
 TZ = "Africa/Cairo"
 ROUTE_COLOR = {"ACT": "#1a7f37", "CLARIFY": "#9a6700", "ABSTAIN": "#cf222e"}
 
@@ -33,7 +34,7 @@ st.markdown("<style>.stTextArea textarea {direction: rtl; text-align: right; fon
 
 @st.cache_resource
 def systems() -> list[demo.Frozen]:
-    return demo.load_systems(MODELS)
+    return [*demo.load_systems(MODELS), demo.load_v11(MODELS_V2)]
 
 
 def rtl(text: str) -> None:
@@ -47,11 +48,13 @@ def badge(route: str) -> str:
 
 
 st.title("ATHAR Chat: safe tool routing for Egyptian Arabic")
-st.caption("Reminders and alarms are simulated: nothing is created. Course project; results in docs/report.md.")
+st.caption("Reminders and alarms are simulated: nothing is created. Course project; results in docs/report.md. "
+           "New here? Open the Help tab.")
 
 try:
     loaded = systems()
     freeze_id = read_freeze(MODELS)["freeze_sha256"][:12]
+    freeze_v2 = read_freeze(MODELS_V2)["freeze_sha256"][:12]
 except FreezeError as e:
     st.error(f"The frozen models failed verification, so the demo will not run them: {e}")
     st.stop()
@@ -68,11 +71,12 @@ with st.sidebar:
         ref = dt.datetime.combine(day, clock, tzinfo=ZoneInfo(TZ))
     st.write(f"`{ref.isoformat()}`")
     st.divider()
-    st.caption(f"Frozen models verified: `models/freeze.json` {freeze_id}…")
+    st.caption(f"Frozen models verified: `models/freeze.json` {freeze_id}…, `models_v2/freeze.json` {freeze_v2}…")
     st.caption("Confidence gate τ (chosen on dev): " +
                ", ".join(f"{s.name} {s.tau if s.tau is not None else 'n/a'}" for s in loaded))
 
-try_tab, test_tab, about_tab = st.tabs(["Try a request", "Locked test results", "About"])
+try_tab, test_tab, natural_tab, help_tab = st.tabs(
+    ["Try a request", "Locked test (author, 120)", "New writers (17 speakers, 238)", "Help"])
 
 with try_tab:
     labels = ["(write your own)"] + [e.text for e in demo.EXAMPLES]
@@ -124,20 +128,78 @@ with test_tab:
     st.dataframe(pd.DataFrame(shown)[cols], hide_index=True)
     st.caption("Rebuilt exactly from the locked runs by scripts/error_analysis.py (report section 7.3).")
 
-with about_tab:
+with natural_tab:
+    facts = demo.natural_facts(RESULTS)
+    tables = demo.natural_tables(RESULTS)
+    st.subheader(f"Pre-registered evaluation: {facts['confirmatory']} confirmatory messages from "
+                 f"{facts['writers']} other native speakers")
+    st.markdown(
+        "Hypotheses, systems and analysis code were frozen before any message was labelled; two annotators "
+        "labelled every message independently; every system was scored once. Design: "
+        "`docs/protocol_natural.md`; full write-up: report section 8. "
+        f"Locked set `data/natural/manifest.json` {facts['manifest']}….")
+    st.markdown("**Pre-registered hypotheses** (family-level paired randomization, Holm over N1-N3)")
+    st.dataframe(pd.DataFrame(demo.natural_hypotheses(RESULTS)), hide_index=True)
+    st.markdown(
+        "- **N1:** the keyword rules beat TF-IDF again, by more than on the author's test.\n"
+        "- **N2:** the rule fixes found by studying the locked test's failures changed one item here.\n"
+        "- **N3:** letting the deterministic policy decide when Jais-3-7B's tool calls may act (S9) beats "
+        "tool calling alone (S8), mostly by asking when a detail is missing.")
+    st.markdown("**Every system** (238 items; multi-seed systems averaged per item)")
+    st.markdown(tables["Main results (238 confirmatory items)"])
+    with st.expander("Locked test vs new writers, per system (descriptive)"):
+        st.markdown(tables[next(k for k in tables if k.startswith("v1 locked test"))])
+    with st.expander("Same scenarios, author's items vs contributors' items"):
+        st.markdown(tables[next(k for k in tables if k.startswith("Same scenario slots"))])
+    with st.expander("Where the hybrid gains over tool calling"):
+        st.markdown(tables[next(k for k in tables if k.startswith("S9 vs S8"))])
+    with st.expander("Per writer"):
+        st.markdown(tables[next(k for k in tables if k.startswith("Per writer"))])
+    st.caption("Tables from results/natural/tables.md (scripts/natural_tables.py), read from the committed outputs.")
+
+with help_tab:
     st.markdown(
         """
-**What runs here.** S1 (keyword rules), S2 (word TF-IDF + logistic regression) and S3 (S2 + character
-n-grams), loaded from `models/` after the freeze is verified, followed by the shared normalizer, time and
-argument extractor, execution policy and Arabic reply templates. All three systems share everything except
-intent recognition. Answers are shown ungated, as in the pre-registered metrics.
+### How to use this demo
 
-**What does not run here.** The LLM systems (Jais 2, Jais 3, Nile-Chat, Qwen3; QLoRA Jais 2; Jais 3 tool
-calling) need GPUs. Their locked-test failures are in the failure browser; full results are in
-`docs/report.md`.
+1. **Set the reference time** in the sidebar. Relative words («بكرة», «الخميس», «بعد ساعتين») are resolved
+   from this moment in Africa/Cairo. Tick *Use the current time* to use your clock.
+2. **Pick an example or type your own request** in Egyptian Arabic; English words are fine
+   («remind me بكرة الساعة 3 العصر»). Each example says what it illustrates.
+3. **Read the four answers side by side.** Each column shows the route, the recognized intent, the
+   Arabic reply, and, for ACT, the simulated tool call. A warning appears when the systems disagree.
+4. **Browse the results tabs**: the locked test written by the author, and the evaluation on 17 other
+   native speakers.
 
-**Routes.** ACT executes a simulated `create_reminder` or `create_alarm`. CLARIFY asks for the missing
-slots. ABSTAIN declines out-of-scope requests (deletion, modification, recurrence, another person,
-several actions, other tools).
+### What each answer means
+
+| Route | Meaning |
+|---|---|
+| **ACT** | Every detail is known: a simulated `create_reminder(datetime, reminder_text)` or `create_alarm(datetime)` |
+| **CLARIFY** | Something is missing (`date`, `time`, `am_pm`, `past`, `reminder_text`): the system asks instead of guessing |
+| **ABSTAIN** | Out of scope (deletion, modification, recurrence, another person, several actions, other tools): a polite decline |
+
+*Confidence* is the classifier's probability for its intent (rules have none). *Confidence gate* says
+what the dev-chosen threshold would do; the answers themselves are ungated, as in the metrics.
+
+### What runs here
+
+- **S1**: keyword rules; **S2**: word TF-IDF + logistic regression; **S3**: S2 + character n-grams. Loaded from
+  `models/` after `models/freeze.json` verifies.
+- **S1 v1.1**: S1 with the extractor fixes and extra out-of-scope verbs from the error analysis (core v1.1),
+  loaded after `models_v2/freeze.json` verifies.
+- All four share the normalizer, time and argument extractor, execution policy and Arabic reply templates;
+  S1-S3 use the frozen v1 core.
+
+The LLM systems (Jais 2, Jais 3, Nile-Chat, Qwen3, QLoRA Jais 2, Jais 3 tool calling and the S9 hybrid)
+need GPUs. Their results are shown from the committed outputs of their single scored runs.
+
+### Good to know
+
+- Requests are typed right to left; mixed Arabic and English stays in order.
+- Nothing is created: the tool calls are simulated.
+- The reminder text is stored in the user's own words («اراجع الميزانية»), as the task contract requires.
+- Every number in the results tabs comes from a committed file; the report (`docs/report.md`) gives the
+  confidence intervals, the statistics and the limitations.
 """
     )

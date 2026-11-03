@@ -80,6 +80,26 @@ def test_locked_results_are_read_from_the_committed_files():
                                                  "executed an incomplete request": 3, "asked although complete": 3}
 
 
+def test_s1_v11_loads_verified_and_shows_what_the_fixes_change(frozen):
+    systems = [*frozen, demo.load_v11(ROOT / "models_v2")]
+    framing = by_system("عايز تذكير بكرة الساعة 5 العصر علشان اراجع الميزانية", systems)
+    assert framing["S1"].response.tool_call.reminder_text == "عايز علشان اراجع الميزانية"
+    assert framing["S1-v1.1"].response.tool_call.reminder_text == "اراجع الميزانية"
+    deletion = by_system("الغيلي المنبه بتاع بكرة", systems)
+    assert deletion["S1"].response.route == "CLARIFY" and deletion["S1-v1.1"].response.route == "ABSTAIN"
+
+
+def test_natural_results_are_read_from_the_committed_files():
+    h = {r["hypothesis"]: r for r in demo.natural_hypotheses(ROOT / "results")}
+    assert h["N1 S1 vs S2"]["supported"] and h["N3 S9 vs S8"]["supported"]
+    assert not h["N2 S1-v1.1 vs S1"]["supported"]
+    assert h["N1 S1 vs S2"]["difference"] == 0.206
+    assert demo.natural_facts(ROOT / "results")["confirmatory"] == 238
+    tables = demo.natural_tables(ROOT / "results")
+    assert "Main results (238 confirmatory items)" in tables
+    assert "| S1 | 0.718 [0.648, 0.785]" in tables["Main results (238 confirmatory items)"]
+
+
 def test_streamlit_app_runs_headless():
     pytest.importorskip("streamlit")
     from streamlit.testing.v1 import AppTest
