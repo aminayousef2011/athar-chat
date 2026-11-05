@@ -22,6 +22,12 @@ phrasing. The classifiers were trained on mostly AI-drafted text and over-regula
 dev set. The shared extractor caps every pipeline system at 0.808 (oracle); one framing-lexicon gap causes 15
 of its 23 failures. Post hoc analyses: [docs/posthoc_analyses.md](docs/posthoc_analyses.md).
 
+On 238 messages from 17 other native speakers (pre-registered), the rules again beat TF-IDF (+0.206,
+Holm p = 0.0003), and putting the deterministic policy around Jais-3-7B tool calling adds +0.102.
+Post hoc (report section 9): the classifiers' deficit comes mostly from their AI-drafted training
+data. With about 215 human messages from other writers added (leave one writer out), S3 reaches
+0.697 against the rules' 0.723, a difference that is not significant.
+
 **Research question:** does lightweight text classification (S2: word TF-IDF + logistic
 regression; S3: S2 + character n-grams) improve *Safe Task Success* over keyword rules (S1) when
 all systems share the same normalizer, argument extractor, execution policy and templates?

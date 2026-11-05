@@ -3,7 +3,7 @@
 Outputs of the development runs, as downloaded from Kaggle or written locally. Nothing here is a test
 result: the locked test outputs are in `results/test_results.json` and `results/s4/`.
 
-Which run produced each folder, with its notebook version and flags: `docs/report.md`, section 13
+Which run produced each folder, with its notebook version and flags: `docs/report_supplement.md`, appendix D
 ("How each result was produced"). Each folder's `environment.json` records the GPUs, library versions,
 model revisions, manifest hash and notebook version of that run.
 

@@ -1,0 +1,142 @@
+[
+ {
+  "phenomenon": "all confirmatory items",
+  "n": 238,
+  "oracle": 0.786,
+  "S1": 0.718,
+  "S2": 0.513,
+  "S8 (3 seeds)": 0.599,
+  "S9 (3 seeds)": 0.702,
+  "S4 Jais-3-3.7B": 0.744
+ },
+ {
+  "phenomenon": "code-switched (Latin script)",
+  "n": 84,
+  "oracle": 0.738,
+  "S1": 0.667,
+  "S2": 0.488,
+  "S8 (3 seeds)": 0.599,
+  "S9 (3 seeds)": 0.706,
+  "S4 Jais-3-3.7B": 0.679
+ },
+ {
+  "phenomenon": "English time/period token (am, pm, meeting, deadline…)",
+  "n": 6,
+  "oracle": 0.833,
+  "S1": 0.833,
+  "S2": 0.5,
+  "S8 (3 seeds)": 0.5,
+  "S9 (3 seeds)": 0.778,
+  "S4 Jais-3-3.7B": 0.833
+ },
+ {
+  "phenomenon": "Arabic-Indic digits (٠-٩)",
+  "n": 13,
+  "oracle": 0.692,
+  "S1": 0.692,
+  "S2": 0.462,
+  "S8 (3 seeds)": 0.487,
+  "S9 (3 seeds)": 0.538,
+  "S4 Jais-3-3.7B": 0.538
+ },
+ {
+  "phenomenon": "no digits (hour in words or none)",
+  "n": 47,
+  "oracle": 0.809,
+  "S1": 0.766,
+  "S2": 0.532,
+  "S8 (3 seeds)": 0.631,
+  "S9 (3 seeds)": 0.773,
+  "S4 Jais-3-3.7B": 0.787
+ },
+ {
+  "phenomenon": "spelled-out hour or fraction (ونص، وربع، الا ربع، تلاتة…)",
+  "n": 2,
+  "oracle": 1.0,
+  "S1": 1.0,
+  "S2": 1.0,
+  "S8 (3 seeds)": 0.667,
+  "S9 (3 seeds)": 1.0,
+  "S4 Jais-3-3.7B": 0.5
+ },
+ {
+  "phenomenon": "verb trigger (فكرني، ذكرني، صحيني، نبهني)",
+  "n": 133,
+  "oracle": 0.684,
+  "S1": 0.639,
+  "S2": 0.534,
+  "S8 (3 seeds)": 0.561,
+  "S9 (3 seeds)": 0.647,
+  "S4 Jais-3-3.7B": 0.662
+ },
+ {
+  "phenomenon": "tool noun request (تذكير، منبه، alarm, reminder)",
+  "n": 106,
+  "oracle": 0.915,
+  "S1": 0.84,
+  "S2": 0.509,
+  "S8 (3 seeds)": 0.714,
+  "S9 (3 seeds)": 0.846,
+  "S4 Jais-3-3.7B": 0.868
+ },
+ {
+  "phenomenon": "want-verb (عايز، عاوز، محتاج)",
+  "n": 76,
+  "oracle": 0.75,
+  "S1": 0.605,
+  "S2": 0.5,
+  "S8 (3 seeds)": 0.667,
+  "S9 (3 seeds)": 0.763,
+  "S4 Jais-3-3.7B": 0.737
+ },
+ {
+  "phenomenon": "politeness (لو سمحت، من فضلك، please)",
+  "n": 0,
+  "oracle": null,
+  "S1": null,
+  "S2": null,
+  "S8 (3 seeds)": null,
+  "S9 (3 seeds)": null,
+  "S4 Jais-3-3.7B": null
+ },
+ {
+  "phenomenon": "relative time (بعد ساعة، بعد شوية، كمان…)",
+  "n": 3,
+  "oracle": 0.667,
+  "S1": 0.333,
+  "S2": 0.667,
+  "S8 (3 seeds)": 0.556,
+  "S9 (3 seeds)": 0.667,
+  "S4 Jais-3-3.7B": 0.667
+ },
+ {
+  "phenomenon": "day-scale expression (بعد اسبوع، الجاي، اللي جاي)",
+  "n": 31,
+  "oracle": 0.581,
+  "S1": 0.581,
+  "S2": 0.452,
+  "S8 (3 seeds)": 0.527,
+  "S9 (3 seeds)": 0.538,
+  "S4 Jais-3-3.7B": 0.548
+ },
+ {
+  "phenomenon": "letter elongation (e.g. ااا)",
+  "n": 0,
+  "oracle": null,
+  "S1": null,
+  "S2": null,
+  "S8 (3 seeds)": null,
+  "S9 (3 seeds)": null,
+  "S4 Jais-3-3.7B": null
+ },
+ {
+  "phenomenon": "long message (> 12 words)",
+  "n": 88,
+  "oracle": 0.75,
+  "S1": 0.705,
+  "S2": 0.443,
+  "S8 (3 seeds)": 0.648,
+  "S9 (3 seeds)": 0.735,
+  "S4 Jais-3-3.7B": 0.716
+ }
+]

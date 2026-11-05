@@ -57,7 +57,7 @@ EXAMPLES: tuple[Example, ...] = (
             "7.5 and 8.1)."),
     Example("فكرني اجدد الرخصة بعد اسبوع",
             "A day-scale offset. The systems ask only for the time; the contract does not resolve «بعد "
-            "اسبوع», so the new writers' labels treat the day as missing too (report section 9)."),
+            "اسبوع», so the new writers' labels treat the day as missing too (report section 10, limitation 15)."),
 )
 
 

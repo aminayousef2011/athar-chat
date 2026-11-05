@@ -33,3 +33,23 @@ analyses read only their stored outputs, the frozen models and the data.
 restored to `data/agreement/` byte-identical from commit `5fba0c9`; later revisions and the
 discarded first author attempt are moved out of the repository root with READMEs; stale statements
 in `data/draft/README.md` and `docs/data_card.md` are corrected.
+
+## 2026-11-05: review-driven analyses, after the natural-phrasing evaluation
+
+**Trigger.** A review of the report asked whether the classifier arm was a fair test of supervised
+learning (the S5/S6 encoders were implemented but never reported), why the classifiers were trained
+on AI-drafted data when human-written data existed, and which properties of Egyptian Arabic make
+the task hard.
+
+**Timing.** After the locked test (2026-10-18) and the locked natural evaluation (2026-11-02). These
+analyses read the frozen models and data, fit new models only in memory, and change no frozen
+system, split, label or locked output. Report section 9.
+
+| Analysis | Script → output | Finding |
+|---|---|---|
+| S5 (e5-small + LR) and S6 (MARBERTv2, 5 seeds), fit exactly as `configs/train.yaml` specified on the frozen train split; scored on the locked test and the 238 confirmatory natural items | `scripts/posthoc_encoders_human.py encoders` → `encoders.json` | report section 9.1 |
+| Leave-one-writer-out over the 17 contributors: train+dev vs train+dev + other writers' messages vs other writers only, with the held-out writer's scenario families removed from training; hyper-parameters fixed (S2-gcv, S3-gcv, S5 C = 1) | `scripts/posthoc_encoders_human.py human` → `human_training.json` | Human messages add +0.12 to +0.14 STS (Holm p ≤ 0.002); S3 + contributors 0.697 vs S1 v1.1 0.723 (p = 0.49) |
+| STS by surface phenomenon (regex tags) from the stored natural outputs | `scripts/posthoc_phenomena.py` → `phenomena.{md,json}` | Verb triggers (oracle 0.684) far below tool nouns (0.915); day-scale expressions hardest (0.45-0.58) |
+
+**Consequence for the data.** Section 9.2 trains on folds of the natural set, so the natural set is
+no longer untouched evidence for any system built after 2026-11-05.

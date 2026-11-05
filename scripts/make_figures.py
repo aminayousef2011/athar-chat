@@ -78,7 +78,7 @@ def spread(values: list[float], gap: float) -> list[float]:
 
 
 def dev_test_pairs() -> list[tuple[str, float, float, str]]:
-    """(label, dev STS, test STS, colour) for every system in report section 9."""
+    """(label, dev STS, test STS, colour) for every system in report section 7.1."""
     dev = load_split(ROOT / "data" / "splits" / "manifest.json", "dev")
     core = _json(RES / "test_results.json")["systems"]
     rows = []

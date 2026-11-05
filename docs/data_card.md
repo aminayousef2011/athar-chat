@@ -70,7 +70,11 @@ so the requests are written for this project.
   a training item, 51 of them through the author's 37 training items. Read the test as one
   writer's templated phrasing, not a sample of natural requests (report, section 3.2).
 - **Assistant-drafted items (300)**: training and development data only; the splitter keeps
-  them out of test. The 20 pilot items are not part of the dataset.
+  them out of test. The 20 pilot items are not part of the dataset. They fill the training set
+  because the only human texts that existed at the split (the author's 158) were needed for the
+  all-human test split. The human sheets in the repository are labels and agreement sheets for those
+  same texts, and the independent contributors' messages arrived after the freeze (report section
+  3.2). Training on those messages is studied post hoc in report section 9.2.
 - They are written requests, not collected from users, so they are plausible requests, not a
   sample of real traffic. One writer produced the whole test split (protocol 4.2, threats).
 - Labels follow the task contract. Gold datetimes are resolved by hand, not by the system.

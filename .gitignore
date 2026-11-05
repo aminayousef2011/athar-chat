@@ -28,3 +28,15 @@ models/S6/
 
 # macOS
 .DS_Store
+
+# Understand-Anything knowledge graph (generated)
+.ua/
+.understand-anything/
+
+# graphify knowledge graph (generated)
+graphify-out/
+
+# Local-only guides and assistant instructions (not part of the project)
+.github/copilot-instructions.md
+docs/study_guide.md
+docs/llm_reviewer_brief.md
