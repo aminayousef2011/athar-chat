@@ -65,7 +65,7 @@ prompts S4 used: normalized text, the notebook's train exemplars, and 0-shot, 6-
 6-shot inline. For 40 requests × 3 labels per setting, it compares `tok(prompt) + tok(label)` with
 `tok(prompt + label)` → `results/posthoc/label_tokenization.json`.
 
-**Result.** No difference for Jais-3-7B, Jais-3-3.7B, Nile-Chat 4B and Qwen3 8B: 0 of 120 pairs in
-every setting, and `answer_consistent` holds for all four. The S4 results of report sections 6.3 and
-8.4 need no correction for these models. Jais 2 8B is gated and was not checked; it needs a Hugging
-Face token.
+**Result.** No difference for any of the five S4 models (Jais-3-7B, Jais-3-3.7B, Jais 2 8B,
+Nile-Chat 4B, Qwen3 8B): 0 of 120 pairs in every setting, and `answer_consistent` holds for all five.
+The S4 and S7 results of report sections 6.3, 6.4 and 8.4 need no correction. Jais 2, which is gated,
+was checked on 2026-11-06 with the author's token.
