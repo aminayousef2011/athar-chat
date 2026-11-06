@@ -33,8 +33,10 @@ Post hoc analyses locate the cause of the classifiers' deficit in the training d
 the model class. 88% of the training set was drafted by an AI assistant, because every human-written
 request available at the freeze was needed for the test set. In a leave-one-writer-out experiment,
 adding about 215 human messages from other writers raised the classifiers by 0.12-0.14 STS. The
-best of them then came within 0.025 of the rules, a difference that is not significant (p = 0.49). A
-fine-tuned dialectal encoder did not beat the rules when trained on the drafted data. The ceiling
+best of them then came within 0.025 of the rules, a difference that is not significant (p = 0.49).
+A fine-tuned dialectal encoder (MARBERTv2) trained on the drafted data tied the rules on the
+author's test (0.775 vs 0.767) but fell 0.10 short on new writers, mostly by accepting
+out-of-scope requests. The ceiling
 for every pipeline system is the shared rule-based extractor (oracle 0.79 on new writers). Its
 weakest points are reminder-text boundaries after verb triggers and day-scale expressions. All
 results are Safe Task Success under the task contract that the gold labels follow.
@@ -55,7 +57,7 @@ are exploratory.
 | Does the deterministic policy improve LLM tool calling? | (not tested) | yes, +0.102 (N3), robust as N1 | confirmatory |
 | Do fixes from the test error analysis generalize? | (not testable on the same test) | no: one item changed (N2) | confirmatory |
 | Does training on human-written messages close the gap? | (no human training data available) | mostly: +0.12 to +0.14; S3 within 0.025 of the rules, not significant (section 9.2) | post hoc |
-| Does a dialectal encoder (MARBERTv2) fix it without human data? | see section 9.1 | see section 9.1 | post hoc |
+| Does a dialectal encoder (MARBERTv2) fix it without human data? | yes: ties the rules, 0.775 vs 0.767 (section 9.1) | no: −0.104, mostly accepting out-of-scope requests (section 9.1) | post hoc |
 | Is LLM tool calling better on complete requests? | yes, 0.91 vs 0.68 for the core | no, 0.63 vs 0.69; both lose most of them on the reminder wording | descriptive |
 
 ---
@@ -720,7 +722,44 @@ final split. Here both are fit exactly as configured on the frozen 298-item trai
 scored through the same shared core as S2/S3: core v1 on both sets, and also core v1.1 on the
 natural set.
 
-S6_TABLE_PLACEHOLDER
+MARBERTv2's tokenizer left no word piece unknown (UNK rate 0.000), and S6's dev intent F1 was
+0.90-0.97 over seeds. S6 is the mean over 5 seeds (± SD); intervals are family-level bootstraps.
+Numbers are from `results/posthoc/encoders_run1.json`. CPU fine-tuning is seeded but not bit-exact:
+retraining seed 0 gave 0.792 instead of 0.800 on the locked test and 0.618 instead of 0.626 on the
+natural set, about one item each, which is well inside the seed SD.
+
+| System | Locked test STS (intent acc.) | Natural STS, core v1 (intent acc.) | Natural, core v1.1 | ACT / CLARIFY / ABSTAIN, natural |
+|---|---|---|---|---|
+| S1 rules | 0.767 (0.958) | 0.718 (0.933) | 0.723 | 0.637 / 0.716 / 0.847 |
+| **S6 MARBERTv2** (5 seeds) | **0.775 ± 0.019** (0.965) | **0.614 ± 0.021** (0.825) | 0.618 ± 0.021 | 0.622 / 0.698 / 0.478 |
+| S5 e5-small + LR (C = 10) | 0.683 [0.595, 0.769] (0.850) | 0.483 [0.410, 0.557] (0.689) | 0.487 | 0.473 / 0.500 / 0.475 |
+| S3 TF-IDF + char | 0.625 (0.767) | 0.513 (0.706) | | 0.462 / 0.545 / 0.542 |
+| S2 TF-IDF | 0.600 (0.758) | 0.513 (0.702) | | 0.495 / 0.500 / 0.559 |
+
+Paired family-level tests (S6: per-item seed mean; unadjusted p, descriptive):
+
+| Comparison | Locked test: difference [95% CI], p | Natural: difference [95% CI], p |
+|---|---|---|
+| S6 vs S1 | +0.008 [−0.036, +0.055], 0.79 | **−0.104** [−0.163, −0.048], 0.0009 |
+| S6 vs S2 | **+0.175** [+0.109, +0.245], 0.0001 | **+0.102** [+0.022, +0.183], 0.021 |
+| S5 vs S1 | −0.083 [−0.161, −0.008], 0.065 | **−0.235** [−0.318, −0.159], 0.0001 |
+| S5 vs S2 | +0.083 [0.000, +0.164], 0.074 | −0.029 [−0.087, +0.026], 0.39 |
+
+- **The dialectal encoder fixes what the lexical classifiers could not on the author's test.** S6
+  reaches test intent accuracy 0.965, against 0.758 for S2, and ties the rules (+0.008, p = 0.79).
+  Like fine-tuned Jais 2 (S7, 0.925-0.992), it bridges most of the cue shift between the drafted
+  training data and the author's phrasing (section 3.2), which the lexical classifiers did not.
+- **It does not transfer to new writers.** On the contributors' messages S6 is 0.104 below the
+  rules. The loss is concentrated on out-of-scope requests: it declines only 0.478 of them, against
+  0.847 for S1. These requests mostly sit inside the reminder domain (recurring, deletion,
+  modification, another tool; section 8.4), where the rules' explicit verb lists decide better.
+  Jais 2 and Nile-Chat fail in the same place (0.475, 0.525).
+- **The frozen sentence encoder is no better than TF-IDF on new writers** (S5 0.483 vs S2 0.513,
+  p = 0.39). A general multilingual embedding does not separate the three intents in this dialect.
+- **S6 lands where the other strong learned systems do.** On the author's test it ties the rules,
+  and on new writers it is clearly worse. Section 9.2 shows what does close the gap on new writers:
+  human training data. TF-IDF trained with contributors (0.672-0.697, core v1.1) beats MARBERTv2
+  trained without them (0.618).
 
 ### 9.2 Training on human-written messages
 
@@ -826,8 +865,9 @@ extractor was not built in this project (section 11).
 - **Narrowed.** The claim is about classifiers trained on drafted data, not about supervised intent
   classification in general.
 - **Added.** Human-written training data matter more than the model class here. A dialectal
-  encoder trained on the drafted data does not reach the rules (section 9.1), while the TF-IDF
-  model trained with about 215 human messages comes within the uncertainty of this set.
+  encoder trained on the drafted data ties the rules on the author's test but is 0.104 below them on
+  new writers (section 9.1). The TF-IDF model trained with about 215 human messages comes within the
+  uncertainty of this set (section 9.2).
 
 ---
 
@@ -881,7 +921,8 @@ leave-one-writer-out analysis. What we take from the two evaluations and the pos
 
 1. **For this task, rules plus a deterministic core are a strong baseline that classifiers trained
    on drafted data do not reach.** Better selection (grouped cross-validation) narrows the gap
-   without closing it, and so does a dialectal encoder (section 9.1). **The limiting factor is the
+   without closing it. A dialectal encoder closes it on the author's test but not on new writers
+   (0.614 vs 0.718; section 9.1). **The limiting factor is the
    training data.** About 215 human messages raise the classifiers by 0.12-0.14 STS and bring S3
    within 0.025 of the rules (section 9.2, post hoc). For a new dialectal task, collecting a few
    hundred real messages is worth more than a better model trained on synthetic requests.

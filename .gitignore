@@ -40,3 +40,6 @@ graphify-out/
 .github/copilot-instructions.md
 docs/study_guide.md
 docs/llm_reviewer_brief.md
+
+# per-seed cache of an in-progress S6 rerun (scripts/posthoc_encoders_human.py)
+results/posthoc/encoders_cache/

@@ -145,17 +145,31 @@ def encoders(seeds: Sequence[int]) -> dict[str, Any]:
     s5_res = record("S5", dict(zip(texts, s5.predict(texts), strict=True)),
                     {"params": params, "dev_grid": table})
 
+    # Each seed's predictions are cached as soon as it finishes, so an interrupted run resumes at
+    # the next seed instead of starting over. Training is seeded but not bit-exact on CPU: a rerun
+    # of a seed can differ by about one item (seed 0: test 0.800 vs 0.792), so never mix cached and
+    # retrained seeds silently; the report cites results/posthoc/encoders_run1.json.
+    cache = OUT / "encoders_cache"
+    cache.mkdir(parents=True, exist_ok=True)
     s6_res = []
     for seed in seeds:
+        path = cache / f"S6-s{seed}.json"
+        if path.exists():
+            saved = json.loads(path.read_text(encoding="utf-8"))
+            log(f"S6 seed {seed}: cached predictions from {path.relative_to(REPO)}")
+            s6_res.append(record(f"S6-s{seed}", saved["predictions"], saved["extra"]))
+            continue
         log(f"S6 seed {seed}: fine-tuning MARBERTv2 on {len(xtr)} items")
         net, tok = N.load_pretrained(CFG["S6"]["model"], CFG["S6"]["revision"])
         unk = N.unk_rate(tok, xtr)
         t0 = time.time()
         model = N.fine_tune(net, tok, xtr, ytr, CFG["S6"], seed, log=log)
         dev_f1 = scores(ydv, model.predict(xdv))
-        s6_res.append(record(f"S6-s{seed}", dict(zip(texts, model.predict(texts), strict=True)),
-                             {"seed": seed, "unk_rate": round(unk, 4), "train_seconds": round(time.time() - t0),
-                              "dev": dev_f1}))
+        preds = dict(zip(texts, model.predict(texts), strict=True))
+        extra = {"seed": seed, "unk_rate": round(unk, 4), "train_seconds": round(time.time() - t0), "dev": dev_f1}
+        path.write_text(json.dumps({"predictions": preds, "extra": extra}, ensure_ascii=False, indent=1),
+                        encoding="utf-8")
+        s6_res.append(record(f"S6-s{seed}", preds, extra))
 
     # seed means and paired tests against the systems the report compares with
     refs = {"S1": KeywordIntent(), "S2": load_recognizer("S2", REPO / "models"),

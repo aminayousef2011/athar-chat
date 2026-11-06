@@ -630,6 +630,6 @@ CPU, local:
 | Natural set: report tables | `uv run python scripts/natural_tables.py` | `results/natural/tables.md` |
 | Natural set: sensitivity (post hoc) | `uv run --with openpyxl python scripts/natural_sensitivity.py` (needs the private labelling sheets) | `results/natural/sensitivity.md`, `.json` |
 | Natural set: agreement, adjudication | `athar-data kappa …`; `scripts/adjudicate_natural.py sheet / apply` | `results/natural/agreement.*`, `adjudication.json` |
-| S5/S6 on the locked test and the natural set (post hoc, section 9.1) | `uv run --extra neural python scripts/posthoc_encoders_human.py encoders` (MARBERTv2 and e5-small at the pinned revisions; about 20 min per S6 seed on CPU) | `results/posthoc/encoders.json` |
+| S5/S6 on the locked test and the natural set (post hoc, section 9.1) | `uv run --extra neural python scripts/posthoc_encoders_human.py encoders` (MARBERTv2 and e5-small at the pinned revisions; about 20 min per S6 seed on CPU; not bit-exact across reruns) | `results/posthoc/encoders.json`; the report cites the first run, `encoders_run1.json` |
 | Training on contributors, leave-one-writer-out (post hoc, section 9.2) | `uv run --extra neural python scripts/posthoc_encoders_human.py human` | `results/posthoc/human_training.json` |
 | STS by phenomenon (post hoc, section 9.3) | `uv run python scripts/posthoc_phenomena.py` | `results/posthoc/phenomena.md`, `.json` |
