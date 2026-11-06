@@ -1,0 +1,87 @@
+{
+ "protocol": "docs/protocol_v3.md",
+ "protocol_sha256": "9c1b3c117bb50894a069b9b99529c8b968422bbe5090b209a34754e937df857e",
+ "v3_set_sha256": "b1802ea829bd77018776ae8b7575bd1b275404d035ef4ce57a49de02f475a7b0",
+ "v3_items": 236,
+ "natural_manifest": "1de694ae9bfaf727c24ac0a635067fcabfa8c7a4a1d23bcface3f62da6873869",
+ "config_sha256": "894274222fa01a66cfa0e44e30fcb7e39f92eb35510bcf870ecced5987f546ad",
+ "sources": {
+  "src/athar/v3/controls.py": "0c1e5c433f9a1d1211305bf4dd23e4b91604c11cd064e2bdb9e564bb5c1f313d",
+  "src/athar/v3/amend.py": "a77c880aa4214e713ddf7ad03ee769a75a58dc844360a4299e7a357dfe82e9a7",
+  "src/athar/v3/__init__.py": "77fd5c4f7355ed77dc27ab622a92511bb45251f7475236312de5a60079a055e6",
+  "src/athar/v3/data.py": "84fe9094325e304f4ce042fb9c6e50cb19cc2466c56b1495f09c2f525fecf998",
+  "src/athar/v3/systems.py": "350b34e853dc61bfa663ec18a6e8900acf0335354a450c60fdcd2323b3d300f1",
+  "src/athar/v3/__main__.py": "e5b6115bb587634d92acb802477aa2dc3613825cd3812359861bef1495ee1523",
+  "src/athar/v2/core.py": "2f96aa785220ac6d8bb26a5312e455f261a8c177b768ec48bade7a1eaac5a116",
+  "src/athar/v2/rules.py": "6f2778d0caf351c51ee320f9547adb39c327158f6ab98adf0e0ec22a2a743a5a",
+  "src/athar/v2/gcv.py": "e2e1bc80849554a679e70f907c91377d1e886f7b17f65b60f166d7fd4b807842"
+ },
+ "amendment": "A4",
+ "amendments_bytes": 4171,
+ "amendments_sha256": "e1ca16445b40d68bc4bb2caf97e0d4772c7fa40a7238103a4372e15ce617a1c5",
+ "gate": "G2+G3 (control)",
+ "params": {
+  "class_weight": "balanced",
+  "max_iter": 2000,
+  "sublinear_tf": true,
+  "min_df": 1,
+  "C": 1,
+  "char_ngram": [
+   2,
+   5
+  ],
+  "word_ngram": [
+   1,
+   2
+  ]
+ },
+ "models": {
+  "S3-contrib-only-block1": {
+   "file": "S3-contrib-only-block1.joblib",
+   "sha256": "f9780c79d736fd62457d2b1bbc028ff3542087d26c6ba49606768b02b69e58ee",
+   "n_train": 218
+  },
+  "S3-contrib-only-block2": {
+   "file": "S3-contrib-only-block2.joblib",
+   "sha256": "03a315703da930668fbdb4249512b86c1ca0e82843bc93e986ed8d73115b277e",
+   "n_train": 222
+  },
+  "S3-contrib-only-block3": {
+   "file": "S3-contrib-only-block3.joblib",
+   "sha256": "9a92fd935666894258abf466cb22127ec1565202b1375fa938619d2a7ace086a",
+   "n_train": 214
+  },
+  "S3-contrib-only-block4": {
+   "file": "S3-contrib-only-block4.joblib",
+   "sha256": "2fada77cacc0dfacfe284843b7d029eda0c2ec2ad582b09e72b4b1ffea5d252e",
+   "n_train": 221
+  },
+  "S3-contrib-only-block5": {
+   "file": "S3-contrib-only-block5.joblib",
+   "sha256": "7b981991d077d56a1aad08135242dc0a29bb2c2a1867afe2e9b261c1e794c83a",
+   "n_train": 217
+  },
+  "S3-contrib-only-block6": {
+   "file": "S3-contrib-only-block6.joblib",
+   "sha256": "6dfcbddc0f723aa9c4c8e6ab0cf9520175847db7ed83830c936c1d356ff27bb4",
+   "n_train": 216
+  },
+  "S3-contrib-only-block7": {
+   "file": "S3-contrib-only-block7.joblib",
+   "sha256": "499f243605fd2919fbe5714ef8f989157760d713870eb673fd4cdd2d62c8c341",
+   "n_train": 217
+  },
+  "S3-contrib-only-block8": {
+   "file": "S3-contrib-only-block8.joblib",
+   "sha256": "0958f5c858e4f111833cb80412d37ed052911fbf8a84f4356b4fd57fff52f30a",
+   "n_train": 213
+  }
+ },
+ "predictions": {
+  "S3-contrib-only": {
+   "file": "results/v3/predictions/S3-contrib-only.json",
+   "sha256": "cf6a49c469cfb7402a6cc046dee4ab2aec68bd4d1b19e3075f9842bc2200324b"
+  }
+ },
+ "freeze_sha256": "4903560e799dd241a31c7873e4bc0fbafb839d9053ea013c1bf3c211da078d04"
+}
