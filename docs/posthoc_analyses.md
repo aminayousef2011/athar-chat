@@ -53,3 +53,19 @@ system, split, label or locked output. Report section 9.
 
 **Consequence for the data.** Section 9.2 trains on folds of the natural set, so the natural set is
 no longer untouched evidence for any system built after 2026-11-05.
+
+## 2026-11-06: label tokenization check (plan step 1.4)
+
+**Question.** S4 (`athar.intent.llm.LLMIntent.token_logprobs`) tokenizes the prompt and each label
+verbalizer separately and concatenates the ids. Does a tokenizer split the joined text differently
+at the boundary, so that the scored ids are not the ones the model would see?
+
+**Method.** `scripts/check_label_tokenization.py` (tokenizers only, pinned revisions). It uses the
+prompts S4 used: normalized text, the notebook's train exemplars, and 0-shot, 6-shot turns and
+6-shot inline. For 40 requests × 3 labels per setting, it compares `tok(prompt) + tok(label)` with
+`tok(prompt + label)` → `results/posthoc/label_tokenization.json`.
+
+**Result.** No difference for Jais-3-7B, Jais-3-3.7B, Nile-Chat 4B and Qwen3 8B: 0 of 120 pairs in
+every setting, and `answer_consistent` holds for all four. The S4 results of report sections 6.3 and
+8.4 need no correction for these models. Jais 2 8B is gated and was not checked; it needs a Hugging
+Face token.

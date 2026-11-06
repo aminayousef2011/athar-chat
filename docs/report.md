@@ -183,7 +183,7 @@ own training data. The table lists every human source, with what it contributed 
 | Agreement sheets (`data/agreement/sheet_Ibrahim_*.xlsx`) | a second annotator's labels on 60 of them | 2026-10-15 | agreement (κ), no new texts |
 | First author attempt (`data/author/discarded/`) | requests that mostly copied the card's sending moment | before the split | discarded (protocol log) |
 | Contributor form, wave 1 (21 responses, 9-11 October) | not independent: one export repeated the drafted set (97% identical texts), and 19 responses shared one writing pattern | 2026-10-10 | excluded (protocol log 2026-10-10) |
-| Contributor forms, waves 2/2b (34 screened writers, 474 messages, with a consent box) | independent texts | **from 2026-10-26**, after the freeze | 247 labelled by two annotators: the locked evaluation set of section 8. 227 unlabelled |
+| Contributor forms, waves 2/2b (34 screened writers, 474 confirmatory messages, with a consent box) | independent texts | **from 2026-10-26**, after the freeze | 247 labelled by two annotators: the locked evaluation set of section 8 (238 confirmatory + 9 on train/dev scenarios). The other 17 writers' 236 messages are unlabelled |
 
 When the training set was frozen (split 2026-10-12, commit `bf1be8f`; models frozen before the test run), the only
 human texts that could be trained on were the author's, and the test split needed 120 of them. The
@@ -960,8 +960,9 @@ does not cover (section 8.7). All conclusions are about Safe Task Success under 
   where the reminder text starts and ends, which is the largest single failure source (section 9.3).
 - **A third, untouched evaluation.** The natural set has now been used for training in section 9.2.
   Classifiers and MARBERTv2 trained on all 247 contributor messages should be frozen and tested on
-  new writers. The 227 screened but unlabelled messages come from writers outside the sample and can
-  serve as that set once double-annotated. S4 on raw text belongs in the same run.
+  new writers. The 236 screened but unlabelled messages come from the 17 writers outside the sample
+  and can serve as that set once double-annotated ([protocol_v3.md](protocol_v3.md), draft). S4 on
+  raw text belongs in the same run.
 - **Reminder text at notification time.** The contract stores the reminder text in the user's own
   words («اراجع الـ slides»), which keeps scoring objective. A deployed assistant should render it
   as an action addressed to the user when the reminder fires («راجع الـ slides»). This is a separate

@@ -1,0 +1,161 @@
+{
+ "note": "plan step 1.4; tokenizers only; prompts as S4 built them (normalized text, train exemplars, notebook seed)",
+ "n_requests": 40,
+ "models": {
+  "inception42/Jais-3-7B": {
+   "status": "checked",
+   "revision": "94d69f49b4af702d42fcee122cc06e493a6fe7e1",
+   "label_ids": {
+    "create_reminder": [
+     302,
+     157402
+    ],
+    "create_alarm": [
+     883,
+     3834
+    ],
+    "unsupported": [
+     4135,
+     190413
+    ]
+   },
+   "answer_consistent": true,
+   "settings": {
+    "0shot": {
+     "pairs": 120,
+     "differ": 0,
+     "first_difference": null
+    },
+    "6shot-turns": {
+     "pairs": 120,
+     "differ": 0,
+     "first_difference": null
+    },
+    "6shot-inline": {
+     "pairs": 120,
+     "differ": 0,
+     "first_difference": null
+    }
+   }
+  },
+  "inception42/Jais-3-3.7B": {
+   "status": "checked",
+   "revision": "3d5754d5db87cd3a59f0f5b09c7ac39b351ff5ed",
+   "label_ids": {
+    "create_reminder": [
+     302,
+     157402
+    ],
+    "create_alarm": [
+     883,
+     3834
+    ],
+    "unsupported": [
+     4135,
+     190413
+    ]
+   },
+   "answer_consistent": true,
+   "settings": {
+    "0shot": {
+     "pairs": 120,
+     "differ": 0,
+     "first_difference": null
+    },
+    "6shot-turns": {
+     "pairs": 120,
+     "differ": 0,
+     "first_difference": null
+    },
+    "6shot-inline": {
+     "pairs": 120,
+     "differ": 0,
+     "first_difference": null
+    }
+   }
+  },
+  "inception42/Jais-2-8B-Chat": {
+   "status": "skipped",
+   "reason": "OSError: You are trying to access a gated repo."
+  },
+  "MBZUAI-Paris/Nile-Chat-4B": {
+   "status": "checked",
+   "revision": "2a365667659bbd6786c2760d868e37c506d76ce3",
+   "label_ids": {
+    "create_reminder": [
+     236889,
+     137740,
+     4938
+    ],
+    "create_alarm": [
+     8527,
+     14909
+    ],
+    "unsupported": [
+     36195,
+     19198,
+     236941,
+     5169
+    ]
+   },
+   "answer_consistent": true,
+   "settings": {
+    "0shot": {
+     "pairs": 120,
+     "differ": 0,
+     "first_difference": null
+    },
+    "6shot-turns": {
+     "pairs": 120,
+     "differ": 0,
+     "first_difference": null
+    },
+    "6shot-inline": {
+     "pairs": 120,
+     "differ": 0,
+     "first_difference": null
+    }
+   }
+  },
+  "Qwen/Qwen3-8B": {
+   "status": "checked",
+   "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+   "label_ids": {
+    "create_reminder": [
+     14293,
+     55334,
+     31073,
+     93543
+    ],
+    "create_alarm": [
+     123904,
+     126751
+    ],
+    "unsupported": [
+     125179,
+     23364,
+     125239,
+     123963
+    ]
+   },
+   "answer_consistent": true,
+   "settings": {
+    "0shot": {
+     "pairs": 120,
+     "differ": 0,
+     "first_difference": null
+    },
+    "6shot-turns": {
+     "pairs": 120,
+     "differ": 0,
+     "first_difference": null
+    },
+    "6shot-inline": {
+     "pairs": 120,
+     "differ": 0,
+     "first_difference": null
+    }
+   }
+  }
+ }
+}
