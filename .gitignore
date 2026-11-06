@@ -43,3 +43,6 @@ docs/llm_reviewer_brief.md
 
 # per-seed cache of an in-progress S6 rerun (scripts/posthoc_encoders_human.py)
 results/posthoc/encoders_cache/
+
+# Kaggle output of the v3 S6 run: contains the private v3 texts (outputs are copied into models_v3/ and results/v3/)
+results_V6.zip

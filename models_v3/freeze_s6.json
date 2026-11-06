@@ -1,0 +1,268 @@
+{
+ "protocol": "docs/protocol_v3.md",
+ "protocol_sha256": "9c1b3c117bb50894a069b9b99529c8b968422bbe5090b209a34754e937df857e",
+ "v3_set_sha256": "b1802ea829bd77018776ae8b7575bd1b275404d035ef4ce57a49de02f475a7b0",
+ "v3_items": 236,
+ "natural_manifest": "1de694ae9bfaf727c24ac0a635067fcabfa8c7a4a1d23bcface3f62da6873869",
+ "config_sha256": "894274222fa01a66cfa0e44e30fcb7e39f92eb35510bcf870ecced5987f546ad",
+ "sources": {
+  "src/athar/v3/__init__.py": "77fd5c4f7355ed77dc27ab622a92511bb45251f7475236312de5a60079a055e6",
+  "src/athar/v3/data.py": "84fe9094325e304f4ce042fb9c6e50cb19cc2466c56b1495f09c2f525fecf998",
+  "src/athar/v3/systems.py": "350b34e853dc61bfa663ec18a6e8900acf0335354a450c60fdcd2323b3d300f1",
+  "src/athar/v3/__main__.py": "e5b6115bb587634d92acb802477aa2dc3613825cd3812359861bef1495ee1523",
+  "src/athar/v2/core.py": "2f96aa785220ac6d8bb26a5312e455f261a8c177b768ec48bade7a1eaac5a116",
+  "src/athar/v2/rules.py": "6f2778d0caf351c51ee320f9547adb39c327158f6ab98adf0e0ec22a2a743a5a",
+  "src/athar/v2/gcv.py": "e2e1bc80849554a679e70f907c91377d1e886f7b17f65b60f166d7fd4b807842"
+ },
+ "gate": "G2+G3 (S6)",
+ "recipe": {
+  "model": "UBC-NLP/MARBERTv2",
+  "revision": "fe88db9db8ccdb0c4e1627495f405c44a5f89066",
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "epochs": 20,
+  "batch_size": 16,
+  "learning_rate": 2e-05,
+  "weight_decay": 0.01,
+  "warmup_ratio": 0.1,
+  "max_length": 64
+ },
+ "device": "cuda",
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4
+ ],
+ "models": {
+  "S6-drafted-s0": {
+   "weights_sha256": "53c59ad1214542aec3dae211a9d334fa82f3909380cbe226ed58239addbd7ce4",
+   "n_train": 338
+  },
+  "S6-human-s0-block1": {
+   "weights_sha256": "ce8876667c73def4a83b089771b367018890e7bb6e12228e76413a18657b6bd3",
+   "n_train": 556
+  },
+  "S6-human-s0-block2": {
+   "weights_sha256": "2e17d486d7274b3204a422ccc1aa6420215f35259fc61d9b4bf1e49276a63278",
+   "n_train": 560
+  },
+  "S6-human-s0-block3": {
+   "weights_sha256": "a7b054af0ef007a2c930a396c0c49cd296e39e42c091fa2e251e3f7b59e8b77e",
+   "n_train": 552
+  },
+  "S6-human-s0-block4": {
+   "weights_sha256": "e7e768ba71e0ef4af8aada9591066b4a62eaa717a67f7994aec4609e6603aff0",
+   "n_train": 559
+  },
+  "S6-human-s0-block5": {
+   "weights_sha256": "e0ee0a91dc3eb7ff0df2bb6b84a9f7085183eb0f4f175e267872acd7d907b1e2",
+   "n_train": 555
+  },
+  "S6-human-s0-block6": {
+   "weights_sha256": "9b3ae14762e3c51b5b4e3415c74862f479cc81367080de64fb07715b1a8e7128",
+   "n_train": 554
+  },
+  "S6-human-s0-block7": {
+   "weights_sha256": "e6fa4c97c19a08de6582a07dc1d5c8faef9841c38fc7be2e4a465e7562f615f3",
+   "n_train": 555
+  },
+  "S6-human-s0-block8": {
+   "weights_sha256": "719601382ba60d8af1f5c80793772f9d78f413b8a1b288636574c7bb27915994",
+   "n_train": 551
+  },
+  "S6-drafted-s1": {
+   "weights_sha256": "fe6410ed6fba8d5fc0242daa34b517e24641512c9edfdf5214965fb6501a598a",
+   "n_train": 338
+  },
+  "S6-human-s1-block1": {
+   "weights_sha256": "62486696ddbfe964617e8290b9a9c9cb334d5f44f52783771ebfc6f6a6e0d03c",
+   "n_train": 556
+  },
+  "S6-human-s1-block2": {
+   "weights_sha256": "037c020e53f38c5c44b7ca4c59c645ec7f02e6f55bfbbd7f63457d9f78b410b1",
+   "n_train": 560
+  },
+  "S6-human-s1-block3": {
+   "weights_sha256": "91e98eaaaba925cffc0888e79f523229773967a9856eec25a25edf30cb8fb830",
+   "n_train": 552
+  },
+  "S6-human-s1-block4": {
+   "weights_sha256": "c8839cb0946b30ac0fb0956c918dd2ac07dec990685c54ee12366406e6d2118e",
+   "n_train": 559
+  },
+  "S6-human-s1-block5": {
+   "weights_sha256": "2c5c80c624e3e4d1bb7520f7f9dc6623a7418439e21f75983a9396db763ca4d1",
+   "n_train": 555
+  },
+  "S6-human-s1-block6": {
+   "weights_sha256": "59009ce2db3723264cefb13564acdd90ac11403565af52e001d4e5128301c1bb",
+   "n_train": 554
+  },
+  "S6-human-s1-block7": {
+   "weights_sha256": "ba0339ac453eab73e65ec4eebfa2a4fc8147e22da47834a712fb2de4af7a7090",
+   "n_train": 555
+  },
+  "S6-human-s1-block8": {
+   "weights_sha256": "a3640afd5fc6ab0b2bb97a31505ec5077b1a73e1c5a2b0449cd94492df47734f",
+   "n_train": 551
+  },
+  "S6-drafted-s2": {
+   "weights_sha256": "ce12432d62128ac8964d905a91ce08b21ed7ef5de7ce87af2627152aa6c8c330",
+   "n_train": 338
+  },
+  "S6-human-s2-block1": {
+   "weights_sha256": "7da038ed7e3ce33a85707a894de31245d99169ae9d4a9ffb75ca7d1e6707541a",
+   "n_train": 556
+  },
+  "S6-human-s2-block2": {
+   "weights_sha256": "fba961d69baaeac65276075c3a2d4a1686cf59a6cbbbb2f89aa3c365c4f25341",
+   "n_train": 560
+  },
+  "S6-human-s2-block3": {
+   "weights_sha256": "02babec0da82b101a4c339eb9d31d463381bf12e77b67f0345b07ce782634c2e",
+   "n_train": 552
+  },
+  "S6-human-s2-block4": {
+   "weights_sha256": "d2a6eaee02bb532f31f48394743c2c093842a0dbe9e97249fe21383da3040f1c",
+   "n_train": 559
+  },
+  "S6-human-s2-block5": {
+   "weights_sha256": "8baaf8e2b602c48321ca64aa9b18c886d0eeb2215a368ef457c311a7299f8f45",
+   "n_train": 555
+  },
+  "S6-human-s2-block6": {
+   "weights_sha256": "f9ccd167410b328e4a9b84e4a56520e841cbd9aeab6ab4442ab4207cd571c57f",
+   "n_train": 554
+  },
+  "S6-human-s2-block7": {
+   "weights_sha256": "f3371b3e9ccb20dd1a9195000df08b99087321ec14d3e18a85cc08f39fad08c1",
+   "n_train": 555
+  },
+  "S6-human-s2-block8": {
+   "weights_sha256": "3841683b069b601a9d78138e8a54f933b9aee566082465a1a5cb9d61139be924",
+   "n_train": 551
+  },
+  "S6-drafted-s3": {
+   "weights_sha256": "f82e7912b2e5cefa0d96fdff2b8a4d8387e01eb774a22cfa26b5d8d4ced1156a",
+   "n_train": 338
+  },
+  "S6-human-s3-block1": {
+   "weights_sha256": "82f52b0f25f6b425d189811e4b91744aff1cd770bf512177423cf4a6900d1ed7",
+   "n_train": 556
+  },
+  "S6-human-s3-block2": {
+   "weights_sha256": "b46fcc2f5a674dc54ae84d25b61539e2e61d2885b4ed69069c78cd5310679e5e",
+   "n_train": 560
+  },
+  "S6-human-s3-block3": {
+   "weights_sha256": "a3988df4e9b5c1de838ab7e7b4b494a35689fd64bf9e087b896a2d4fe54d5383",
+   "n_train": 552
+  },
+  "S6-human-s3-block4": {
+   "weights_sha256": "b96d94f917035f4d8917960e978178d09313b14b024aad71107c63446b1571b4",
+   "n_train": 559
+  },
+  "S6-human-s3-block5": {
+   "weights_sha256": "0fd38ef3a9fcd9dffda1e813be8ea7d9b5a288e5bdae72773b9b9567036abfc8",
+   "n_train": 555
+  },
+  "S6-human-s3-block6": {
+   "weights_sha256": "834de3b974161421203c326edcb6e8ccd022b119e5cf59d0bbeae0037a1cf7f7",
+   "n_train": 554
+  },
+  "S6-human-s3-block7": {
+   "weights_sha256": "b71f90d2e48023306cad979bd35751f4640fd65f3ee64fddeb991655e19bee80",
+   "n_train": 555
+  },
+  "S6-human-s3-block8": {
+   "weights_sha256": "b0b2efe6f9f9ee6525a44c3bfb39ee8979833a746da44b0c92b82caa9d87cda2",
+   "n_train": 551
+  },
+  "S6-drafted-s4": {
+   "weights_sha256": "a80bfcaa80ac4cc6901af73fd017d7a80a0896afed16935be6c21db966299bd7",
+   "n_train": 338
+  },
+  "S6-human-s4-block1": {
+   "weights_sha256": "76f86f1138774a61e74db8c48834b0c2facafba39996782d992227627e3ce5ff",
+   "n_train": 556
+  },
+  "S6-human-s4-block2": {
+   "weights_sha256": "ac4b7bffb9e169e5e9bf9edaa9cf8eabc8d89a5d845b5cd01c0493d03c4fb6f4",
+   "n_train": 560
+  },
+  "S6-human-s4-block3": {
+   "weights_sha256": "673a7e638ce7587776fa5be8103ff5ac48523bdf495d8722835b1e0e9c5c9f6c",
+   "n_train": 552
+  },
+  "S6-human-s4-block4": {
+   "weights_sha256": "76f98c167db56a0fd0235b346694f70ef6170127b907a271b957a530b97ebee5",
+   "n_train": 559
+  },
+  "S6-human-s4-block5": {
+   "weights_sha256": "05849a2abc957a0a016ee49e2e443b0c6a844ceb2250d7f8ee3abd485dd0e90e",
+   "n_train": 555
+  },
+  "S6-human-s4-block6": {
+   "weights_sha256": "e3573055be30236f47fcfa6e4ee3c39039d8d10ef03b331dda2242b348d83661",
+   "n_train": 554
+  },
+  "S6-human-s4-block7": {
+   "weights_sha256": "00184f8f405e078e43cbddfc20cf4ad42dd2d360b02a1423659c355d2a6f9b83",
+   "n_train": 555
+  },
+  "S6-human-s4-block8": {
+   "weights_sha256": "11b78f7ab2a9e4794409f53608f312ed8aeb879d87675d99ed90464b6794d503",
+   "n_train": 551
+  }
+ },
+ "predictions": {
+  "S6-drafted-s0": {
+   "file": "results/v3/predictions/S6-drafted-s0.json",
+   "sha256": "e25657b0b93693bbf2c37c679d6c78db0e1f588f7b96c98aa048bba2cbeb3c0f"
+  },
+  "S6-human-s0": {
+   "file": "results/v3/predictions/S6-human-s0.json",
+   "sha256": "f39fbb889d4c1fdc57318e9fc3b875ba519db2bf3e0fc527f3ce10acbc53cb47"
+  },
+  "S6-drafted-s1": {
+   "file": "results/v3/predictions/S6-drafted-s1.json",
+   "sha256": "8950e1470c51f870fed8bf167ef3dde461c2f34a58289025d7a7f2e539219290"
+  },
+  "S6-human-s1": {
+   "file": "results/v3/predictions/S6-human-s1.json",
+   "sha256": "e88abccf73e1d73e04d76fabc5c408a8a1bd8143c25b4ede8459ade4c16b0919"
+  },
+  "S6-drafted-s2": {
+   "file": "results/v3/predictions/S6-drafted-s2.json",
+   "sha256": "931730eb9d00de03dadf47ad8f42c1748e73a8193f97ae1e47f87abef5b8683b"
+  },
+  "S6-human-s2": {
+   "file": "results/v3/predictions/S6-human-s2.json",
+   "sha256": "4f6c35d63074c99734d819e0a4a11753e06a534c65267d07c77e8d7a8b9756cc"
+  },
+  "S6-drafted-s3": {
+   "file": "results/v3/predictions/S6-drafted-s3.json",
+   "sha256": "07d0bd60bce24797d43388d2c59c0a6000755c69b3691a999d100b8a34348b99"
+  },
+  "S6-human-s3": {
+   "file": "results/v3/predictions/S6-human-s3.json",
+   "sha256": "4af7d06ee1458e507cae410227ad2d113f44ed688dcfcadd1d21dfea150c909c"
+  },
+  "S6-drafted-s4": {
+   "file": "results/v3/predictions/S6-drafted-s4.json",
+   "sha256": "8b662122c11f1a0aea8434cf5de449cf0c2dd7e8a1b30ee57bc0cdea90aca7a0"
+  },
+  "S6-human-s4": {
+   "file": "results/v3/predictions/S6-human-s4.json",
+   "sha256": "3aa8ad4ce869ca7648d3cd48149a42fbe04e5895abb7c38be21e67265803ca44"
+  }
+ },
+ "freeze_sha256": "2f15552fb2f031d94381589f4685223d5143d330e591539716bf517597f5ea4c"
+}
