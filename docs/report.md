@@ -724,9 +724,11 @@ natural set.
 
 MARBERTv2's tokenizer left no word piece unknown (UNK rate 0.000), and S6's dev intent F1 was
 0.90-0.97 over seeds. S6 is the mean over 5 seeds (± SD); intervals are family-level bootstraps.
-Numbers are from `results/posthoc/encoders_run1.json`. CPU fine-tuning is seeded but not bit-exact:
-retraining seed 0 gave 0.792 instead of 0.800 on the locked test and 0.618 instead of 0.626 on the
-natural set, about one item each, which is well inside the seed SD.
+Numbers are from `results/posthoc/encoders_run1.json`. **Reproduction check:** a complete second
+run (`encoders_run2.json`) reproduced S5 and S6 seeds 1-4 exactly. Seed 0 differed by one item
+(locked test 0.792 vs 0.800, natural 0.618 vs 0.626), because CPU fine-tuning is seeded but not
+bit-exact. The seed means (0.773 / 0.613) and every test below agree with run 1 to within 0.002 in
+the difference; S6 vs S1 on the natural set is −0.106, p = 0.0008.
 
 | System | Locked test STS (intent acc.) | Natural STS, core v1 (intent acc.) | Natural, core v1.1 | ACT / CLARIFY / ABSTAIN, natural |
 |---|---|---|---|---|
