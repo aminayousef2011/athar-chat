@@ -1,0 +1,185 @@
+{
+ "protocol": "docs/protocol_v3.md",
+ "protocol_sha256": "9c1b3c117bb50894a069b9b99529c8b968422bbe5090b209a34754e937df857e",
+ "v3_set_sha256": "b1802ea829bd77018776ae8b7575bd1b275404d035ef4ce57a49de02f475a7b0",
+ "v3_items": 236,
+ "natural_manifest": "1de694ae9bfaf727c24ac0a635067fcabfa8c7a4a1d23bcface3f62da6873869",
+ "config_sha256": "894274222fa01a66cfa0e44e30fcb7e39f92eb35510bcf870ecced5987f546ad",
+ "sources": {
+  "src/athar/v3/__init__.py": "77fd5c4f7355ed77dc27ab622a92511bb45251f7475236312de5a60079a055e6",
+  "src/athar/v3/data.py": "84fe9094325e304f4ce042fb9c6e50cb19cc2466c56b1495f09c2f525fecf998",
+  "src/athar/v3/systems.py": "350b34e853dc61bfa663ec18a6e8900acf0335354a450c60fdcd2323b3d300f1",
+  "src/athar/v3/__main__.py": "e5b6115bb587634d92acb802477aa2dc3613825cd3812359861bef1495ee1523",
+  "src/athar/v2/core.py": "2f96aa785220ac6d8bb26a5312e455f261a8c177b768ec48bade7a1eaac5a116",
+  "src/athar/v2/rules.py": "6f2778d0caf351c51ee320f9547adb39c327158f6ab98adf0e0ec22a2a743a5a",
+  "src/athar/v2/gcv.py": "e2e1bc80849554a679e70f907c91377d1e886f7b17f65b60f166d7fd4b807842"
+ },
+ "gate": "G2+G3 (S3)",
+ "params": {
+  "class_weight": "balanced",
+  "max_iter": 2000,
+  "sublinear_tf": true,
+  "min_df": 1,
+  "C": 1,
+  "char_ngram": [
+   2,
+   5
+  ],
+  "word_ngram": [
+   1,
+   2
+  ]
+ },
+ "models": {
+  "S3-drafted": {
+   "file": "S3-drafted.joblib",
+   "sha256": "47afa6026dcb6a2b498385bf2a70ce80da334d5a102a3dee59f0640a266f5df2",
+   "n_train": 338
+  },
+  "S3-human-block1": {
+   "file": "S3-human-block1.joblib",
+   "sha256": "ac988c7213403aeeaafbfbae89a6ec6557ddc96f9e33dca5ee249d3ae7616ef4",
+   "n_train": 556,
+   "natural_in_pool": 218,
+   "excluded_cards": [
+    "fam-c008",
+    "fam-c018",
+    "fam-c029",
+    "fam-c050",
+    "fam-c091",
+    "fam-c110",
+    "fam-c128",
+    "fam-c140",
+    "fam-c156"
+   ]
+  },
+  "S3-human-block2": {
+   "file": "S3-human-block2.joblib",
+   "sha256": "39becfb3c31f4ba96976912f7ed58fde2bfb67ab36c99a6c94d173e885efb754",
+   "n_train": 560,
+   "natural_in_pool": 222,
+   "excluded_cards": [
+    "fam-c009",
+    "fam-c020",
+    "fam-c030",
+    "fam-c051",
+    "fam-c092",
+    "fam-c121",
+    "fam-c129",
+    "fam-c148",
+    "fam-c160"
+   ]
+  },
+  "S3-human-block3": {
+   "file": "S3-human-block3.joblib",
+   "sha256": "8903b7aeacdee6716fe9891a08755233cd88b4d508ad4989ab27279bb369ead6",
+   "n_train": 552,
+   "natural_in_pool": 214,
+   "excluded_cards": [
+    "fam-c001",
+    "fam-c010",
+    "fam-c021",
+    "fam-c035",
+    "fam-c052",
+    "fam-c097",
+    "fam-c134",
+    "fam-c164",
+    "fam-c168"
+   ]
+  },
+  "S3-human-block4": {
+   "file": "S3-human-block4.joblib",
+   "sha256": "2b4946ce8a4c634d9c2e0e9a0cd73ddca9bfdc52d035bfc86be708b6bcc5e05d",
+   "n_train": 559,
+   "natural_in_pool": 221,
+   "excluded_cards": [
+    "fam-c002",
+    "fam-c011",
+    "fam-c022",
+    "fam-c038",
+    "fam-c053",
+    "fam-c098",
+    "fam-c136",
+    "fam-c170"
+   ]
+  },
+  "S3-human-block5": {
+   "file": "S3-human-block5.joblib",
+   "sha256": "63a8b49e5eaa791b0e10cec007fc6b2613dc1fe46e3ee023e83c2ff3a7c99e9d",
+   "n_train": 555,
+   "natural_in_pool": 217,
+   "excluded_cards": [
+    "fam-c003",
+    "fam-c012",
+    "fam-c024",
+    "fam-c042",
+    "fam-c056",
+    "fam-c099",
+    "fam-c137",
+    "fam-c171",
+    "fam-c174"
+   ]
+  },
+  "S3-human-block6": {
+   "file": "S3-human-block6.joblib",
+   "sha256": "a601ff5febe20a2af9387e64bba6b5f16f69dae734b532cbf9657f2c76268062",
+   "n_train": 554,
+   "natural_in_pool": 216,
+   "excluded_cards": [
+    "fam-c004",
+    "fam-c014",
+    "fam-c025",
+    "fam-c047",
+    "fam-c075",
+    "fam-c102",
+    "fam-c142",
+    "fam-c172",
+    "fam-c175"
+   ]
+  },
+  "S3-human-block7": {
+   "file": "S3-human-block7.joblib",
+   "sha256": "7c34c57e98c392aa3da75c4d001c0c8c198e3a10002fb72c5056889434b9269d",
+   "n_train": 555,
+   "natural_in_pool": 217,
+   "excluded_cards": [
+    "fam-c006",
+    "fam-c015",
+    "fam-c026",
+    "fam-c048",
+    "fam-c076",
+    "fam-c089",
+    "fam-c106",
+    "fam-c126",
+    "fam-c143"
+   ]
+  },
+  "S3-human-block8": {
+   "file": "S3-human-block8.joblib",
+   "sha256": "a5defffef4c5caed9d652b30fe23bdfd71d3fb71298fc01811864949c3e5ec10",
+   "n_train": 551,
+   "natural_in_pool": 213,
+   "excluded_cards": [
+    "fam-c007",
+    "fam-c017",
+    "fam-c027",
+    "fam-c049",
+    "fam-c090",
+    "fam-c109",
+    "fam-c127",
+    "fam-c144"
+   ]
+  }
+ },
+ "predictions": {
+  "S3-drafted": {
+   "file": "results/v3/predictions/S3-drafted.json",
+   "sha256": "bb0e19815067da1b6201706bfa3d210c4d19ca2a4e9b70d1f75b3ff96aefc3ef"
+  },
+  "S3-human": {
+   "file": "results/v3/predictions/S3-human.json",
+   "sha256": "5193a62646d55c838b4fbc1e4d17d1659bb9e617e49133370079766fcb5f78d2"
+  }
+ },
+ "freeze_sha256": "39339331e75513c48f1ad94267072ed2fe99bb9c95fe84892ae2f06640f778e0"
+}
