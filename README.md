@@ -14,7 +14,12 @@ three outcomes:
 Two simulated tools: `create_reminder(datetime, reminder_text)` and `create_alarm(datetime)`.
 No real reminders or alarms are created.
 
-**Results:** [docs/report.md](docs/report.md). On the locked test (120 author-written requests), the keyword
+**Final report (4 pages + appendices):** built from the committed results by
+[docs/final_report/build_report.py](docs/final_report/build_report.py)
+(`uv run --with python-docx python docs/final_report/build_report.py --pdf`; the PDF step uses
+Microsoft Word on Windows). The full technical report is [docs/report.md](docs/report.md).
+
+**Results:** On the locked test (120 author-written requests), the keyword
 rules (S1, STS 0.767) beat both classifiers (S2 0.600, S3 0.625). The gap is significant under the
 pre-registered family-clustered test (Holm p ≤ 0.005) but only borderline when test items that share a
 sentence frame are treated as dependent (post hoc, Holm p 0.05-0.11): the test is one writer's templated

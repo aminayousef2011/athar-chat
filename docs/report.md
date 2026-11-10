@@ -81,8 +81,9 @@ rules (S1)?
    family-clustered statistics and a dated deviations log.
 3. An analysis of why systems selected on AI-drafted data failed on the author's requests:
    trigger-word shift, dev-set selection of the regularization strength, and one extractor gap.
-4. The first reported evaluation, to our knowledge, of Jais 3 on Egyptian Arabic intent recognition
-   and tool calling. It shows two complementary failure profiles that motivate a hybrid design.
+4. An evaluation of Jais 3, released after our systems were frozen, on Egyptian Arabic intent
+   recognition and tool calling. It shows two complementary failure profiles that motivate a hybrid
+   design.
 5. A second, pre-registered evaluation on 247 independently screened and double-annotated messages
    from 17 native speakers. It replicates the rules-over-classifiers result, confirms the hybrid,
    and shows that error-analysis fixes made on the author's own test did not transfer (section 8).
@@ -107,8 +108,9 @@ as selective prediction (Geifman & El-Yaniv 2017), including under domain shift 
 
 **Tool use by LLMs.** Toolformer (Schick et al. 2023), Gorilla (Patil et al. 2023) and ToolLLM
 (Qin et al. 2024) evaluate whether models pick the right API and arguments, mostly in English and
-mostly without a requirement to ask before acting. We score tool calls with the same safety-aware
-metric as the pipeline systems.
+mostly without a requirement to ask before acting. When2Call (Ross et al. 2025) evaluates exactly
+that decision in English: whether to call a tool, ask a follow-up question or decline. Our three
+routes follow it. We score tool calls with the same safety-aware metric as the pipeline systems.
 
 **Arabic dialects.** Dialectal Arabic differs from Modern Standard Arabic in lexicon and spelling
 (Bouamor et al. 2018). Pretrained dialectal encoders such as MARBERT (Abdul-Mageed et al. 2021) and
@@ -238,9 +240,9 @@ task itself.
 | S2 | word TF-IDF + logistic regression (C = 0.3, chosen on dev) | train | H1, H3 |
 | S3 | S2 + character 2-4-grams (C = 0.1, chosen on dev) | train | H2, H3 |
 | S5 | frozen multilingual-e5-small sentence embeddings + logistic regression (C chosen on dev) | train | post hoc (section 9.1); recipe fixed before the test |
-| S6 | MARBERTv2 fine-tuned with fixed settings (20 epochs, LR 2e-5, 5 seeds; no search) | train | post hoc (section 9.1); recipe fixed before the test |
+| S6 | MARBERTv2 fine-tuned with fixed settings (20 epochs, LR 2e-5, 5 seeds; no search; small-data recipe after Mosbach et al. 2021) | train | post hoc (section 9.1); recipe fixed before the test |
 | S4 | instruction-tuned LLM scoring Arabic label verbalizers: **Jais 2 8B** (proposal), **Jais-3-7B**, **Jais-3-3.7B**, Nile-Chat 4B (Egyptian), Qwen3 8B | 6 exemplars from train | extended, reported separately |
-| S7 | Jais 2 8B + QLoRA | train | exploratory |
+| S7 | Jais 2 8B + QLoRA (Dettmers et al. 2023) | train | exploratory |
 | S8 | Jais-3-7B end to end through native tool calling | none | exploratory |
 | oracle | gold intent + shared core | | ceiling of the shared core |
 
@@ -961,7 +963,10 @@ does not cover (section 8.7). All conclusions are about Safe Task Success under 
 - **A third, untouched evaluation.** The natural set has now been used for training in section 9.2.
   Classifiers and MARBERTv2 trained on all 247 contributor messages should be frozen and tested on
   new writers. The 236 screened but unlabelled messages come from the 17 writers outside the sample
-  and can serve as that set once double-annotated ([protocol_v3.md](protocol_v3.md), draft). S4 on
+  and can serve as that set once double-annotated. Its protocol ([protocol_v3.md](protocol_v3.md))
+  was registered on 2026-11-06; its S3 and S6 systems and a contributors-only control are frozen
+  with committed predictions, and its GPU systems are specified but not yet run. No v3 message is
+  labelled yet and no v3 result exists. S4 on
   raw text belongs in the same run.
 - **Reminder text at notification time.** The contract stores the reminder text in the user's own
   words («اراجع الـ slides»), which keeps scoring objective. A deployed assistant should render it
@@ -989,7 +994,7 @@ does not cover (section 8.7). All conclusions are about Safe Task Success under 
 
 ## References
 
-Abdellatif, M. *Egyptian NLU* (Hugging Face dataset, CC BY 4.0).
+Abdellatif, A. *Egyptian NLU* (Hugging Face dataset `Alhasan/egyptian-nlu`, CC BY 4.0).
 Abdul-Mageed, M., Elmadany, A. & Nagoudi, E. M. B. (2021). ARBERT & MARBERT: Deep bidirectional
 transformers for Arabic. *ACL*.
 Aliannejadi, M., Zamani, H., Crestani, F. & Croft, W. B. (2019). Asking clarifying questions in
@@ -1018,8 +1023,8 @@ with massive APIs. *arXiv:2305.15334*.
 Qin, Y. et al. (2024). ToolLLM: Facilitating large language models to master 16000+ real-world APIs.
 *ICLR*.
 Rao, S. & Daumé III, H. (2018). Learning to ask good questions. *ACL*.
-Ribeiro, M. T., Wu, T., Guestrin, C. & Singh, S. (2020). Beyond accuracy: Behavioral testing of NLP
-models with CheckList. *ACL*.
+Ross, H., Mahabaleshwarkar, A. S. & Suhara, Y. (2025). When2Call: When (not) to call tools.
+*NAACL-HLT*, 3391-3409.
 Schick, T. et al. (2023). Toolformer: Language models can teach themselves to use tools. *NeurIPS*.
 Sengupta, N. et al. (2023). Jais and Jais-chat: Arabic-centric foundation and instruction-tuned
 open generative large language models. *arXiv:2308.16149*.

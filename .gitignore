@@ -46,3 +46,7 @@ results/posthoc/encoders_cache/
 
 # Kaggle output of the v3 S6 run: contains the private v3 texts (outputs are copied into models_v3/ and results/v3/)
 results_V6.zip
+
+# built course report (docs/final_report/build_report.py writes these; submitted as a PDF)
+docs/final_report/*.docx
+docs/final_report/*.pdf
