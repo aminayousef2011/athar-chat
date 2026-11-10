@@ -235,15 +235,19 @@ class Report:
         sec.page_width, sec.page_height = Cm(21.0), Cm(29.7)
         for side in ("left_margin", "right_margin", "top_margin", "bottom_margin"):
             setattr(sec, side, Cm(2.5))
-        normal = self.doc.styles["Normal"]
-        normal.font.name, normal.font.size = FONT, Pt(12)
-        rpr = normal.element.get_or_add_rPr()
-        fonts = rpr.find(qn("w:rFonts"))
-        for attr in ("w:ascii", "w:hAnsi", "w:cs", "w:eastAsia"):
-            fonts.set(qn(attr), FONT)
-        for attr in ("w:asciiTheme", "w:hAnsiTheme", "w:cstheme", "w:eastAsiaTheme"):
-            if fonts.get(qn(attr)) is not None:
-                del fonts.attrib[qn(attr)]
+        for name, size in (("Normal", 12), ("Heading 1", 14), ("Heading 2", 12)):
+            style = self.doc.styles[name]
+            style.font.name, style.font.size = FONT, Pt(size)
+            style.font.color.rgb = RGBColor(0, 0, 0)
+            if name != "Normal":
+                style.font.bold, style.font.italic = True, False
+            rpr = style.element.get_or_add_rPr()
+            fonts = rpr.find(qn("w:rFonts"))
+            for attr in ("w:ascii", "w:hAnsi", "w:cs", "w:eastAsia"):
+                fonts.set(qn(attr), FONT)
+            for attr in ("w:asciiTheme", "w:hAnsiTheme", "w:cstheme", "w:eastAsiaTheme"):
+                if fonts.get(qn(attr)) is not None:
+                    del fonts.attrib[qn(attr)]
         self._footer(sec)
         self.table_no = 0
 
