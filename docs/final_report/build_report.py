@@ -210,8 +210,16 @@ def add_runs(p, text: str, size: float = 12, font: str = FONT, bold: bool = Fals
             continue
         if kind == "c":
             run(chunk, cb, False, False, MONO, max(10.0, size - 1))
-        elif rtl_all:
-            run(chunk, cb, ci_, True, font, size)
+        elif rtl_all:  # right-to-left paragraph: English words stay left-to-right runs
+            for seg, ar in _segments(chunk):
+                if ar or not any(c.isalpha() for c in seg):
+                    run(seg, cb, ci_, True, font, size)
+                    continue
+                core = seg.strip()
+                lead, trail = seg[:len(seg) - len(seg.lstrip())], seg[len(seg.rstrip()):]
+                for piece, rtl in ((lead, True), (core, False), (trail, True)):
+                    if piece:
+                        run(piece, cb, ci_, rtl, font, size)
         else:
             for seg, ar in _segments(chunk):
                 run(seg, cb, ci_, ar, font, size)
@@ -297,7 +305,7 @@ class Report:
     def bullets(self, items: list[str]) -> None:
         for it in items:
             p = self.doc.add_paragraph()
-            fmt(p, align=WD_ALIGN_PARAGRAPH.LEFT, after=3)
+            fmt(p, align=WD_ALIGN_PARAGRAPH.LEFT, after=6)
             p.paragraph_format.left_indent = Cm(0.5)
             p.paragraph_format.first_line_indent = Cm(-0.35)
             add_runs(p, "• " + it)
@@ -310,7 +318,7 @@ class Report:
 
     def link_para(self, before: str, url: str, after: str = "") -> None:
         p = self.doc.add_paragraph()
-        fmt(p, align=WD_ALIGN_PARAGRAPH.LEFT, after=3)
+        fmt(p, align=WD_ALIGN_PARAGRAPH.LEFT, after=6)
         p.paragraph_format.left_indent = Cm(0.5)
         p.paragraph_format.first_line_indent = Cm(-0.35)
         add_runs(p, "• " + before)
@@ -433,10 +441,9 @@ def build(commit: str) -> Report:
     R.para(
         "A reminder assistant must decide whether to execute a request, ask for missing information or "
         "decline it. We study this decision (ACT, CLARIFY, ABSTAIN) for single-turn Egyptian Arabic "
-        "reminder and alarm requests, often code-switched with English. Systems share one rule-based "
-        "extractor and deterministic policy and differ only in intent recognition. We compare keyword "
-        "rules (S1) with TF-IDF logistic regression (S2) and its "
-        "character n-gram extension (S3) using Safe Task Success (STS). On a locked 120-item test the "
+        "reminder and alarm requests, often code-switched with English. Sharing one rule-based "
+        "extractor and deterministic policy, keyword rules (S1), TF-IDF logistic regression (S2) and "
+        "its character n-gram extension (S3) are compared by Safe Task Success (STS). On a locked 120-item test the "
         f"rules outperformed both classifiers ({f3(t1['safe_task_success'])} vs "
         f"{f3(t2['safe_task_success'])} and {f3(t3['safe_task_success'])}). A pre-registered second "
         "evaluation on 238 messages from 17 other native speakers confirmed this "
@@ -454,23 +461,21 @@ def build(commit: str) -> Report:
         "what it cannot do, such as deleting a reminder. Egyptian Arabic makes "
         "this harder: messages are informal («اعمللي تذكير بعد بكرة الساعة 9 بالليل عشان اخد الدوا», "
         "\"set me a reminder the day after tomorrow at 9 pm to take my medicine\"), inconsistently "
-        "spelled and mixed with English words (*timesheet*, *sprint backlog*). Out-of-scope requests are "
-        "known to be hard "
+        "spelled and mixed with English (*timesheet*, *sprint backlog*). Out-of-scope requests are hard "
         "for intent classifiers [6], and When2Call [1] showed for English that deciding *when* to call "
-        "a tool is a problem of its own, yet no Egyptian Arabic dataset labels the act / ask / decline "
-        "decision together with tool arguments.")
+        "a tool is a problem of its own; no Egyptian Arabic dataset labels this decision with tool "
+        "arguments.")
     R.para(
         "**Intended users.** Developers and students building assistants for under-resourced dialects "
         "with little compute, who need evidence on how far inexpensive methods go; and Egyptian "
-        "professionals who write mixed Arabic and English (187 of the 247 independently written "
-        "messages here concern project-management work).")
+        "professionals who write mixed Arabic and English (187 of the 238 scored independent messages "
+        "concern project management).")
     R.para(
         "**Research question.** When all systems share the same argument extractor and execution policy, "
         "does lightweight supervised intent classification improve Safe Task Success over keyword rules? "
-        "**Objectives:** (O1) define a task contract and a safety-aware metric; (O2) build a reviewed "
-        "Egyptian Arabic benchmark with leakage-free splits; (O3) compare rules with TF-IDF classifiers "
-        "in one shared pipeline; (O4) test the result on writers other than the author; (O5) locate "
-        "the errors that limit the pipeline.")
+        "**Objectives:** (O1) a task contract and safety-aware metric; (O2) a reviewed Egyptian Arabic "
+        "benchmark with leakage-free splits; (O3) rules vs. TF-IDF classifiers in one shared pipeline; "
+        "(O4) a test on writers other than the author; (O5) the errors that limit the pipeline.")
 
     # 2 ------------------------------------------------------------------------------------------
     R.h1("2. Deliverables")
@@ -478,13 +483,12 @@ def build(commit: str) -> Report:
     R.bullets([
         "**Code:** package `athar` (normalizer, extractor, policy, systems S1-S9, evaluation), "
         "command-line tools, 366 unit tests, dependencies locked in `uv.lock` (Python 3.11).",
-        "**Data:** `data/athar.jsonl` (458 items, split manifest `data/splits/manifest.json`), the "
-        "natural set `data/natural/natural.jsonl` (247), data card, task contract and annotation guide "
-        "(`docs/`); shared with the contributors' consent for this project.",
-        "**Models, outputs, demo:** frozen classifiers (`models/`, `models_v2/`), all stored predictions "
-        "(`results/`; LLMs are public Hugging Face models at pinned revisions); a Streamlit demo "
-        "(`app/streamlit_app.py`) showing route, arguments and clarification question; the full "
-        "technical report `docs/report.md`.",
+        "**Data:** `data/athar.jsonl` (458 items; splits `data/splits/manifest.json`), "
+        "`data/natural/natural.jsonl` (247), data card, task contract and annotation guide (`docs/`), "
+        "shared with the contributors' consent.",
+        "**Models, outputs, demo:** frozen classifiers (`models/`, `models_v2/`), stored predictions "
+        "(`results/`), pinned Hugging Face models (Appendix C), a Streamlit demo "
+        "(`app/streamlit_app.py`) and the technical report `docs/report.md`.",
     ])
 
     # 3 ------------------------------------------------------------------------------------------
@@ -499,7 +503,7 @@ def build(commit: str) -> Report:
         "people's items, several actions and other tools. **Safe Task Success** counts an item only if "
         "an ABSTAIN item is declined, a CLARIFY item asks for exactly the gold slots, or an ACT item "
         "calls the gold tool at the gold instant with the gold reminder text (exact after "
-        "normalization). Invalid outputs fail.")
+        "normalization and removal of request words and fillers). Invalid outputs fail.")
 
     R.h2("3.2 Data")
     nat_fams = nat_confirmatory_families()
@@ -520,7 +524,8 @@ def build(commit: str) -> Report:
         "for each scenario. After screening out copies (474 messages, 34 writers), a seeded draw of two "
         "writers per scenario block gave 247 messages from 17 writers, 238 of them in families absent "
         "from train and dev. Two annotators labelled all of them (intent κ = 0.938, route κ = 0.913); "
-        "the author adjudicated the 66 disagreements by the guide (Appendix D).")
+        "the author adjudicated the 66 disagreements "
+        "(`results/natural/adjudication.json`).")
 
     R.h2("3.3 Pipeline and systems")
     R.para(
@@ -533,40 +538,44 @@ def build(commit: str) -> Report:
         "TF-IDF with class-balanced logistic regression [4]; **S3** adds character 2-4-grams for "
         "spelling variation. Vocabularies are fitted on train; C and n-gram ranges were chosen by dev "
         "intent macro-F1 (S2: C = 0.3; S3: C = 0.1). On a laptop CPU, fitting takes under a second, "
-        "inference under 0.3 ms per item, peak memory 141 MB. The **oracle** passes gold intents "
-        "through the same pipeline. **Extensions:** prompted LLM intent recognizers (**S4**: Jais 2 8B "
-        "[5], Jais-3-7B, Jais-3-3.7B, Nile-Chat 4B, Qwen3 8B); fine-tuned MARBERTv2 [2] "
+        "inference under 0.3 ms per item, peak memory 141 MB. The **oracle** feeds gold intents "
+        "to the same pipeline. **Extensions:** prompted LLM intent recognizers (**S4**: Jais 2 8B "
+        "[5, 11], Jais-3-7B, Jais-3-3.7B [12], Nile-Chat 4B [13], Qwen3 8B [14]); fine-tuned MARBERTv2 [2] "
         "(**S6**, five seeds, recipe after [10]); Jais 2 with QLoRA [3] (**S7**); Jais-3-7B performing "
         "the whole task by native tool calling (**S8**); and **S9**, which keeps S8's declines and "
-        "arguments but lets the policy decide when to execute.")
+        "arguments but lets the policy decide when to execute, falling back to S1 v1.1 where S8 made no valid "
+        "call (23-25 of 238 items per seed).")
 
     R.h2("3.4 Changes from the proposal")
-    R.bullets([
+    R.para(
         "**Training data:** 261 of 298 training items were AI-drafted (and marked), because the human "
-        "requests available at the freeze were needed for an all-human test.",
-        "**Evaluation:** a screened contributor collection became a second, pre-registered evaluation "
-        "(a first collection with copied answers was excluded).",
-        "**Scope:** 458 items, 34 test pairs (planned: 300, 20); LLM and encoder baselines on Kaggle "
-        "2×T4 GPUs, adding Jais 3 (released after the freeze) to the planned Jais 2; S1-S3 stayed on CPU.",
-    ])
+        "requests available at the freeze were needed for an all-human test. **Evaluation:** a "
+        "screened contributor collection became a second, pre-registered evaluation. **Scope:** 458 items and 34 test pairs (planned: 300, 20); "
+        "LLM and encoder baselines on Kaggle 2×T4 GPUs, adding Jais 3 (released after the freeze); "
+        "S1-S3 on CPU.")
 
     # 4 ------------------------------------------------------------------------------------------
     R.h1("4. Evaluation and results")
     R.h2("4.1 Evaluation data and metrics")
     R.para(
-        "**Adequacy.** Both evaluation sets hold native-written Egyptian Arabic requests for the two "
-        "tools, balanced across routes, with incomplete variants and out-of-scope requests inside the "
-        "reminder domain; 24 test and 84 natural items are code-switched. Test intervals span about "
-        "±0.09 STS, so the larger natural set (minimum size fixed in advance) carries the main "
-        "conclusion. **Separation.** Splits follow scenario families under a "
-        "hash-locked manifest; vocabularies and hyper-parameters come from train/dev only; the test was "
-        "scored once by a command that refuses changed models; natural-set systems were committed "
-        "before any labelling. **Limitations.** The test is one writer's templated phrasing (52 sentence "
-        "frames for 120 items) by the author of S1's lexicon, and the drafted training data do not "
-        "represent human phrasing (§4.3). **Metrics.** Besides STS: intent and route macro-F1, unsafe "
-        "execution (failed executions over all items), unnecessary clarification (gold ACT answered "
-        "with CLARIFY) and minimal pairs with both versions correct. Intervals are family-level "
-        "bootstraps (10,000 resamples) [8]; paired tests swap whole families [7], Holm-corrected [9].")
+        "**Adequacy.** Both evaluation sets hold native-written requests for the two tools, balanced "
+        "across routes, with incomplete variants and in-domain out-of-scope requests. Coverage is "
+        "uneven: code-switching marks 64% of training items but 20% of "
+        "the test and 35% of the natural set, and 79% of natural messages concern project-management "
+        "work. Test intervals span about ±0.09 STS, so "
+        "the larger natural set carries the main conclusion. "
+        "**Separation.** Splits follow scenario families under a hash-locked manifest; vocabularies and "
+        "hyper-parameters come from train/dev only; the test was scored once, by a command that refuses "
+        "changed models; natural-set systems were frozen before labelling. **Limitations.** The "
+        "test is one writer's templated phrasing (52 sentence frames for 120 items) by the author of "
+        "S1's lexicon. "
+        "**Metrics.** Besides STS: intent and route macro-F1; unsafe execution (a wrong or unwarranted "
+        "tool call) over all items and over predicted ACT outputs (all, ACT); unnecessary clarification (Unn. clar.: "
+        "gold ACT answered with CLARIFY, set mainly by the shared extractor); and minimal pairs with both versions correct. Intervals are "
+        "family-level bootstraps (10,000 resamples) [8]; paired tests swap whole families [7], "
+        "Holm-corrected [9]. **Hypotheses** (fixed before labelling): "
+        "N1, S1 beats S2; N2, the extractor fix drawn from the test errors (S1 v1.1) beats S1; N3, S9 "
+        "beats S8.")
 
     R.h2("4.2 Results")
     h1_, h2_ = cmp_["S2 vs S1"], cmp_["S3 vs S1"]
@@ -584,11 +593,12 @@ def build(commit: str) -> Report:
                        ("S3 + char n-grams", t3, TEST["systems"]["S3"])):
         rows.append([name, f"{m['safe_task_success']:.3f} {ci(c['ci']['safe_task_success'])}",
                      f3(m["intent_macro_f1"]), f3(m["route_macro_f1"]), f3(m["unsafe_execution_rate"]),
+                     f3(1 - m["execution_precision"]),
                      f3(m["unnecessary_clarification_rate"]), f3(m["pair_both_success"])])
-    R.table("Locked test (120 items, 34 pairs). Unsafe / Unn. clar.: unsafe execution / unnecessary "
-            "clarification.",
-            ["System", "STS [95% CI]", "Intent F1", "Route F1", "Unsafe", "Unn. clar.",
-             "Pairs"], rows, widths=[3.6, 3.4, 1.8, 1.8, 1.6, 1.9, 1.4], bold_rows={1})
+    R.table("Locked test (120 items, 34 pairs). Metrics as defined in §4.1.",
+            ["System", "STS [95% CI]", "Intent F1", "Route F1", "Unsafe (all)", "Unsafe (ACT)",
+             "Unn. clar.", "Pairs"], rows, widths=[3.3, 3.3, 1.5, 1.5, 1.6, 1.7, 1.6, 1.3],
+            bold_rows={1})
 
     nat_rows = []
     for name, key in (("oracle (gold intent)", "oracle"), ("S1 keyword rules", "S1"),
@@ -597,60 +607,65 @@ def build(commit: str) -> Report:
         c = NAT["systems"][key]["ci"]["safe_task_success"]
         r = m["success_by_gold_route"]
         nat_rows.append([name, f"{m['safe_task_success']:.3f} {ci(c)}", f3(m["route_macro_f1"]),
-                         f3(m["unsafe_execution_rate"]), f3(m["unnecessary_clarification_rate"]),
+                         f3(m["unsafe_execution_rate"]), f3(1 - m["execution_precision"]),
+                         f3(m["unnecessary_clarification_rate"]),
                          f3(m["pair_both_success"]),
                          f"{r['ACT']:.2f} / {r['CLARIFY']:.2f} / {r['ABSTAIN']:.2f}"])
-    for name, key, summ in (("S8 Jais-3-7B tool calling", "S8", s8m), ("S9 S8 + policy", "S9", s9m)):
+    for name, key, summ in (("S8 Jais-3-7B tool calls", "S8", s8m), ("S9 S8 + policy", "S9", s9m)):
         nat_rows.append([name, f"{summ['sts']:.3f} {ci(summ['ci'])}",
                          f3(nat_seed_mean(key, "route_macro_f1")),
                          f3(nat_seed_mean(key, "unsafe_execution_rate")),
+                         f3(1 - nat_seed_mean(key, "execution_precision")),
                          f3(nat_seed_mean(key, "unnecessary_clarification_rate")),
                          f3(nat_seed_mean(key, "pair_both_success")),
                          " / ".join(f"{nat_seed_route(key, r):.2f}" for r in ("ACT", "CLARIFY", "ABSTAIN"))])
-    R.table("Natural set (238 items, 17 writers, 64 pairs; S8/S9: mean of 3 seeds; success by gold "
+    R.table("Natural set (238 items, 17 writers, 64 pairs; S8/S9: 3-seed means; last: success by gold "
             "route).",
-            ["System", "STS [95% CI]", "Route F1", "Unsafe", "Unn. clar.", "Pairs",
-             "ACT/CLAR/ABST"], nat_rows, widths=[3.9, 3.3, 1.6, 1.4, 1.8, 1.3, 3.2],
+            ["System", "STS [95% CI]", "Route F1", "Unsafe (all)", "Unsafe (ACT)", "Unn. clar.",
+             "Pairs", "ACT / CLAR / ABST"], nat_rows, widths=[3.4, 3.2, 1.2, 1.3, 1.4, 1.2, 1.1, 3.2],
             bold_rows={1})
     N1, N3 = tests["N1 S1 vs S2"], tests["N3 S9 vs S8"]
     R.para(
-        "Of three pre-registered hypotheses, **N1 (rules > TF-IDF) was confirmed** with a larger gap: "
+        "**N1 was confirmed** with a larger gap: "
         f"{signed(N1['difference'])} {ci(N1['ci'])}, Holm p = {N1['p_holm']:.4f}; S1 led for 13 of 17 "
-        "writers and under every alternative labelling (Appendix A). **N3 (policy around tool calling) "
-        f"was confirmed:** {signed(N3['difference'])} {ci(N3['ci'])}, Holm p = {N3['p_holm']:.3f}. "
-        "**N2 was not:** extractor fixes derived from the test errors changed one natural item. No "
-        "extension system's interval lies above S1's estimate.")
+        "writers and under every alternative labelling (Table 7). **N3 was confirmed:** "
+        f"{signed(N3['difference'])} {ci(N3['ci'])}, Holm p = {N3['p_holm']:.3f}. **N2 was not:** the "
+        "extractor fix changed one natural item. S4 Jais-3-3.7B "
+        f"({f3(s4_nat('jais3-3.7b'))}) and S7 ({S7_NAT:.3f}) score above S1, within its interval "
+        "(untested; Table 4). Even the best systems are unsafe: "
+        f"{1 - t1['execution_precision']:.0%} of S1's test executions and "
+        f"{1 - n1['execution_precision']:.0%} of its natural ones were wrong, though 13 of its 16 wrong "
+        "test calls missed only the exact reminder text.")
 
     R.h2("4.3 Analysis and errors")
     R.para(
         "**Training data.** In the drafted training set 88% of reminders use the verb «فكرني» and 5% "
         "the noun «تذكير»; in the test, 50% and 42%. S2 sent 15 of the 62 test reminders to the alarm "
-        "tool, mostly noun forms such as «حطلي تذكير الخميس الجاي الساعة 7 الصبح». In an exploratory "
+        "tool, mostly noun forms. In exploratory "
         "leave-one-writer-out "
-        "experiment, adding about 215 human messages raised S3 on new writers from "
+        "training, about 215 added human messages raised S3 on new writers from "
         f"{hum['S3 | drafted+author']['sts']:.3f} to {hum['S3 | drafted+author+contributors']['sts']:.3f}, "
-        "within 0.025 of the rules (p = 0.49), whereas MARBERTv2 trained on the drafted data tied the "
+        "within 0.025 of the rules (S1 v1.1, p = 0.49), while MARBERTv2 trained on drafted data tied the "
         f"rules on the test ({s6['locked_test_core_v1']:.3f}) but reached only "
         f"{s6['natural_core_v1']:.3f} on new writers. Human training data mattered more than the model "
         "class.")
     R.para(
-        "**Shared pipeline.** With gold intents, 15 of the 23 test failures kept request framing "
-        "(«عايز تذكير», «اعمللي») in the reminder text. New writers failed elsewhere: after verb triggers "
-        "they add modal or emphasis words that stay in the text («فكرني ضروري بكره…» → «ضروري اجهز "
-        "الابديت…»), and day-scale expressions («بعد اسبوع») were hardest (oracle 0.58 on 31 items); "
-        "hence N2. On the natural set the oracle lost 28 complete requests (17 on the text alone, 7 at "
-        "a wrong instant, 4 not executed), executed 8 incomplete ones and declined every out-of-scope "
-        "one. S8 handled only half of the incomplete requests; S9 fixed 22-30 of them per seed.")
+        "**Failure types.** S2's 20 extra test failures are intent errors S1 never makes: 9 wrong "
+        "tools, 7 declined in-scope requests, 6 wrong-intent clarifications (Table 9). "
+        "**Shared pipeline.** With gold intents, 15 of the 23 test failures trace to request framing "
+        "the extractor does not strip («عايز تذكير» or «اعمللي»). New writers failed elsewhere: emphasis "
+        "words after the verb stay in the text («ضروري» in «فكرني ضروري بكره…»), and day-scale expressions («بعد اسبوع») were hardest (oracle 0.58 on 31 "
+        "items); hence N2's small effect; S9's gain over S8 is mostly on incomplete requests (Table 3).")
 
     # 5 ------------------------------------------------------------------------------------------
     R.h1("5. Conclusion")
     R.para(
         "We built a task contract, a safety-aware metric, a 458-item benchmark and a 247-message "
         "independent evaluation set. Keyword rules beat TF-IDF classifiers on both locked evaluations "
-        "(+0.206 STS on new writers), a gap that exploratory analyses trace to AI-drafted training data; a few "
-        "hundred human messages closed most of the gap. A deterministic policy makes LLM tool calling "
-        "safer (+0.102 STS), and the rule-based extractor limits every system. Next: a learned "
-        "reminder-text extractor and a third, untouched evaluation (protocol registered).")
+        "(+0.206 STS on new writers), a gap exploratory analyses trace to AI-drafted training data. A "
+        "deterministic policy makes LLM tool calling safer (+0.102 STS). The shared extractor limits "
+        "every system (a third of the rules' calls were wrong, mostly in the reminder text); a learned "
+        "text extractor and a third, untouched evaluation are next.")
 
     # References ----------------------------------------------------------------------------------
     R.h1("References")
@@ -674,10 +689,15 @@ def build(commit: str) -> Report:
         "Journal of Statistics* 6(2).",
         "[10] Mosbach, M., Andriushchenko, M. and Klakow, D. (2021). On the stability of fine-tuning "
         "BERT. *ICLR*.",
+        "[11] Jais-2-8B-Chat, model card. Hugging Face: inception42/Jais-2-8B-Chat.",
+        "[12] Jais-3-7B and Jais-3-3.7B, model cards. Hugging Face: inception42/Jais-3-7B, "
+        "inception42/Jais-3-3.7B.",
+        "[13] Nile-Chat-4B, model card. Hugging Face: MBZUAI-Paris/Nile-Chat-4B.",
+        "[14] Yang, A. et al. (2025). Qwen3 technical report. *arXiv:2505.09388*.",
     ]
     for ref in refs:
         p = R.doc.add_paragraph()
-        fmt(p, align=WD_ALIGN_PARAGRAPH.LEFT, after=3)
+        fmt(p, align=WD_ALIGN_PARAGRAPH.LEFT, after=6)
         add_runs(p, ref)
 
     # Appendices -----------------------------------------------------------------------------------
@@ -719,7 +739,7 @@ def build(commit: str) -> Report:
     hrows.append(["S1 rules (reference)", "", "", f"{hum['S1-v1.1']['sts']:.3f} (0.933)"])
     R.table("Exploratory leave-one-writer-out training on the natural set: STS (intent accuracy). Each "
             "held-out writer's scenario families are removed from training; about 215 contributor "
-            "messages per fold.",
+            "messages per fold; S2/S3 use grouped-CV settings; S1 is core v1.1.",
             ["Classifier", "Drafted + author (338)", "Contributors only (~215)", "Both"],
             hrows, widths=[3.5, 4.2, 4.2, 4.1])
     tsv = list(csv.DictReader((ROOT / "results/posthoc/template_sensitivity.csv").open(encoding="utf-8")))
@@ -743,7 +763,7 @@ def build(commit: str) -> Report:
             "(unadjusted p).",
             ["Labels / rule", "n", "N1 S1 − S2", "N3 S9 − S8"], vrows, widths=[7.4, 1.2, 3.7, 3.7])
 
-    R.h1("Appendix B. Representative errors")
+    R.h1("Appendix B. Representative errors and failure types")
     R.table("Real outputs of the shared pipeline with the gold intent (oracle). Arabic cells read "
             "right to left; the second line of a cell is the reminder text.",
             ["Message", "Gold", "Pipeline output", "Cause"],
@@ -760,10 +780,21 @@ def build(commit: str) -> Report:
               "ACT\n@محتاج اراجع الjira tickets قبل ميعاد ال sprint review",
               "second-person framing (new writer)"]],
             widths=[5.4, 3.6, 3.8, 3.2])
+    fails = {r["system"]: r for r in csv.DictReader(
+        (ROOT / "results/error_analysis/summary.csv").open(encoding="utf-8"))}
+    cats = ["wrong reminder text only", "wrong tool", "executed an incomplete request",
+            "asked although complete", "asked for the wrong slots", "clarified with the wrong intent",
+            "asked instead of declining", "declined an in-scope request"]
+    frows = [[c[0].upper() + c[1:]] + [fails[s][c] for s in ("oracle", "S1", "S2", "S3")] for c in cats]
+    frows.append(["All failures"] + [fails[s]["failures"] for s in ("oracle", "S1", "S2", "S3")])
+    R.table("Locked test: failures by type (counts of 120 items; from results/error_analysis).",
+            ["Failure type", "Oracle", "S1", "S2", "S3"], frows, widths=[7.6, 2.1, 2.1, 2.1, 2.1],
+            bold_rows={len(frows) - 1})
 
     R.h1("Appendix C. Reproducing the results")
     R.para("All commands run from the repository root on a CPU. The first four rebuild Tables 2, 3, 6 "
-           "and 7 from the stored outputs and reproduce the committed files exactly; the encoder "
+           "and 7 from the stored outputs and reproduce the committed files exactly (Table 7 also needs "
+           "the private labelling sheets in `data/raw/private/`, which are not shared); the encoder "
            "commands retrain S5/S6 (slow on CPU). The GPU systems were run with the notebooks in "
            "`notebooks/`.")
     R.code([
@@ -777,6 +808,16 @@ def build(commit: str) -> Report:
         "uv run --extra neural python scripts/posthoc_encoders_human.py human   # T4-5",
         "uv run --extra ui streamlit run app/streamlit_app.py        # demo",
     ])
+    R.table("Pretrained models used, with the pinned Hugging Face revisions.",
+            ["System", "Hugging Face model", "Revision"],
+            [["S4, S7", "inception42/Jais-2-8B-Chat", "da0e1639cd92b508b24120f7f77f5270a8465dc4"],
+             ["S4, S8, S9", "inception42/Jais-3-7B", "94d69f49b4af702d42fcee122cc06e493a6fe7e1"],
+             ["S4", "inception42/Jais-3-3.7B", "3d5754d5db87cd3a59f0f5b09c7ac39b351ff5ed"],
+             ["S4", "MBZUAI-Paris/Nile-Chat-4B", "2a365667659bbd6786c2760d868e37c506d76ce3"],
+             ["S4", "Qwen/Qwen3-8B", "b968826d9c46dd6066d109eabc6255188de91218"],
+             ["S5", "intfloat/multilingual-e5-small", "614241f622f53c4eeff9890bdc4f31cfecc418b3"],
+             ["S6", "UBC-NLP/MARBERTv2", "fe88db9db8ccdb0c4e1627495f405c44a5f89066"]],
+            widths=[2.2, 5.6, 8.2])
 
     R.h1("Appendix D. Use of generative AI")
     R.para(

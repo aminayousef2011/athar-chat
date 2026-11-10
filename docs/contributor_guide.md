@@ -75,7 +75,6 @@ row per card and version. Fill in:
 
 **Collect wave 1 first.** Only the locked test split (120 items) must be native-written, so
 wave 1 (90 cards, 150 requests) covers it with margin. Wave 2 is a backup and extra dev data.
-Messages for recruiting, reminders and the instructor: [contrib/messages.md](../contrib/messages.md).
 
 ```bash
 uv run athar-data cards --out contrib                    # 175 cards (column `wave`), 300 requests

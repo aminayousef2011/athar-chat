@@ -163,7 +163,7 @@ table. At runtime: `Pipeline(recognizer, gate_threshold=tau)`.
 
 ## Dataset tooling
 
-Collecting the 300 items from native speakers: [docs/contributor_guide.md](docs/contributor_guide.md).
+Collecting contributor messages: [docs/contributor_guide.md](docs/contributor_guide.md).
 
 ```powershell
 uv run athar-data cards --out contrib                         # scenario cards + collection sheet
@@ -212,7 +212,7 @@ uv run athar-train fit --manifest data/splits/manifest.json --config configs/tra
 uv run athar-train verify models     # model files, config and shared-core sources unchanged
 ```
 
-Extended baselines (implemented and dry-run on the drafts; **not fitted on the final split, not reported**): S5 frozen
+Extended baselines (fitted post hoc, after both evaluations; exploratory, final report Table 4): S5 frozen
 `multilingual-e5-small` embeddings + logistic regression, and S6 fine-tuned `MARBERTv2` over 5
 seeds. Both use pinned model revisions and need the optional `neural` extra (PyTorch CPU,
 transformers):
@@ -232,4 +232,7 @@ the Phase 4 evaluation passes. Procedure: [docs/annotation_guide.md](docs/annota
 
 ## Status
 
-See [docs/PHASES.md](docs/PHASES.md).
+Complete: locked test (2026-10-18), pre-registered natural-phrasing evaluation (2026-11-02) and
+the final report ([docs/final_report/build_report.py](docs/final_report/build_report.py)).
+Protocol v3 ([docs/protocol_v3.md](docs/protocol_v3.md)), a third evaluation on unused contributor
+messages, is registered and in progress; it is not part of the submitted results.
