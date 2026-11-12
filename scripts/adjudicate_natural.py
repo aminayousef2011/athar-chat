@@ -17,6 +17,12 @@ in. Ibrahim's labels are taken with his format slips fixed (no reminder text or 
 target on alarms; the time read as Cairo wall-clock time). It also writes
 results/natural/adjudication.json (ids and decisions, no message texts).
 Then: athar-data build natural_gold.xlsx -> validate --strict -> lock.
+
+The paths default to the natural set. Protocol v3 (docs/protocol_v3.md, section 7) uses the same
+procedure on its own sheets:
+
+    uv run --with openpyxl python scripts/adjudicate_natural.py --set v3 sheet
+    uv run --with openpyxl python scripts/adjudicate_natural.py --set v3 apply
 """
 
 from __future__ import annotations
@@ -40,6 +46,7 @@ LAB = ROOT / "data" / "raw" / "private" / "labelling"
 AUTHOR, OTHER = LAB / "natural_label_Amina_v2.xlsx", LAB / "natural_label_Ibrahim_v2.xlsx"
 SHEET, GOLD = LAB / "adjudication.xlsx", LAB / "natural_gold.xlsx"
 RECORD = ROOT / "results" / "natural" / "adjudication.json"
+PROTOCOL = "docs/protocol_natural.md (log 2026-11-01)"
 TZ = "Africa/Cairo"
 FIELDS = ("intent", "route", "clarify_targets", "unsupported_reason", "datetime", "reminder_text")
 DECISIONS = ("A", "I", "other")
@@ -186,6 +193,8 @@ def cmd_sheet(_: argparse.Namespace) -> int:
 
 
 def cmd_apply(_: argparse.Namespace) -> int:
+    if RECORD.exists():
+        raise SystemExit(f"{RECORD.relative_to(ROOT)} exists: an adjudication is applied once")
     a, b = read(AUTHOR), read(OTHER)
     ws = _openpyxl().load_workbook(SHEET, read_only=True, data_only=True)["adjudicate"]
     rows = list(ws.iter_rows(values_only=True))
@@ -237,7 +246,7 @@ def cmd_apply(_: argparse.Namespace) -> int:
                 x for x in (old, f"adjudicated: {why[i]}") if x)
     wb.save(GOLD)
     RECORD.parent.mkdir(parents=True, exist_ok=True)
-    record = {"protocol": "docs/protocol_natural.md (log 2026-11-01)", "items": len(a),
+    record = {"protocol": PROTOCOL, "items": len(a),
               "adjudicated": len(decided),
               "decisions": {k: sum(d["decision"] == k for d in decided) for k in DECISIONS},
               "rows": [{"id": d["id"], "differs": d["differs"].split(", "), "decision": d["decision"],
@@ -249,12 +258,27 @@ def cmd_apply(_: argparse.Namespace) -> int:
     return 0
 
 
+SETS = {
+    # set: author sheet, other annotator's sheet, adjudication sheet, gold sheet, record, protocol
+    "natural": (AUTHOR, OTHER, SHEET, GOLD, RECORD, PROTOCOL),
+    "v3": (ROOT / "data" / "raw" / "private" / "v3" / "v3_label_Amina.xlsx",
+           ROOT / "data" / "raw" / "private" / "v3" / "v3_label_Ibrahim.xlsx",
+           ROOT / "data" / "raw" / "private" / "v3" / "v3_adjudication.xlsx",
+           ROOT / "data" / "raw" / "private" / "v3" / "v3_gold.xlsx",
+           ROOT / "results" / "v3" / "adjudication.json", "docs/protocol_v3.md (section 7)"),
+}
+
+
 def main() -> int:
+    global AUTHOR, OTHER, SHEET, GOLD, RECORD, PROTOCOL
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    p.add_argument("--set", choices=sorted(SETS), default="natural",
+                   help="which labelled set to adjudicate (default: natural)")
     sub = p.add_subparsers(required=True)
     sub.add_parser("sheet", help="write the adjudication sheet").set_defaults(func=cmd_sheet)
     sub.add_parser("apply", help="write the gold sheet from the decisions").set_defaults(func=cmd_apply)
     a = p.parse_args()
+    AUTHOR, OTHER, SHEET, GOLD, RECORD, PROTOCOL = SETS[a.set]
     return a.func(a)
 
 

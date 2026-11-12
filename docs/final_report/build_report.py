@@ -471,7 +471,7 @@ def build(commit: str) -> Report:
         "does lightweight supervised intent classification improve Safe Task Success over keyword rules? "
         "**Objectives:** (O1) a task contract and safety-aware metric; (O2) a reviewed Egyptian Arabic "
         "benchmark with leakage-free splits; (O3) rules vs. TF-IDF classifiers in one pipeline; "
-        "(O4) a test on writers other than the author; (O5) the errors that limit the pipeline.")
+        "(O4) a test on writers other than the author; (O5) the errors limiting the pipeline.")
 
     # 2 ------------------------------------------------------------------------------------------
     R.h1("2. Deliverables")
@@ -499,7 +499,7 @@ def build(commit: str) -> Report:
         "people's items, several actions and other tools. **Safe Task Success** counts an item only if "
         "an ABSTAIN item is declined, a CLARIFY item asks for exactly the gold slots, or an ACT item "
         "calls the gold tool at the gold instant with the gold reminder text (exact after "
-        "normalization and removal of request words and fillers). Invalid outputs fail.")
+        "normalization, request words and fillers removed); invalid outputs fail.")
 
     R.h2("3.2 Data")
     nat_fams = nat_confirmatory_families()
@@ -634,34 +634,42 @@ def build(commit: str) -> Report:
         "test calls missed only the exact reminder text.")
 
     R.h2("4.3 Analysis and errors")
+    s3h = HUM["tests"]["S3 +contributors vs S1-v1.1"]
+    s3h = {**s3h, "difference": -s3h["difference"],   # report as rules minus S3, the gap to close
+           "ci": {"low": -s3h["ci"]["high"], "high": -s3h["ci"]["low"]}}
+    kinds = ("S2", "S3", "S5")
+    spread = max(max(hum[f"{k} | {p}"]["sts"] for k in kinds) - min(hum[f"{k} | {p}"]["sts"] for k in kinds)
+                 for p in ("drafted+author", "drafted+author+contributors"))
+    gains = [hum[f"{k} | drafted+author+contributors"]["sts"] - hum[f"{k} | drafted+author"]["sts"] for k in kinds]
+    lo_gain, hi_gain = min(gains), max(gains)
     R.para(
         "**Training data.** In the training set 88% of reminders use the verb «فكرني» and 5% "
         "the noun «تذكير»; in the test, 50% and 42%. S2 sent 15 of the 62 test reminders to the alarm "
         "tool (6 noun forms; Table 10). In exploratory "
         "leave-one-writer-out "
         "training, about 215 added human messages raised S3 on new writers from "
-        f"{hum['S3 | drafted+author']['sts']:.3f} to {hum['S3 | drafted+author+contributors']['sts']:.3f}, "
-        "within 0.025 of the rules (S1 v1.1, p = 0.49), while MARBERTv2 trained on drafted data matched "
-        f"the rules on the test ({s6['locked_test_core_v1']:.3f}) but reached only "
-        f"{s6['natural_core_v1']:.3f} on new writers. Human training data mattered more than the model "
-        "class.")
+        f"{hum['S3 | drafted+author']['sts']:.3f} to {hum['S3 | drafted+author+contributors']['sts']:.3f} "
+        f"(gap to the rules {signed(s3h['difference'])} {ci(s3h['ci'])}); trained on them alone "
+        f"({hum['S3 | contributors only']['sts']:.3f}) it beat the 338 drafted and author items, so source, "
+        f"not size, mattered. Human data added {lo_gain:.2f}-{hi_gain:.2f} per classifier, more than the "
+        f"{spread:.2f} between classifiers on one pool (Table 5); MARBERTv2 on drafted data: "
+        f"{s6['locked_test_core_v1']:.3f} on the test, {s6['natural_core_v1']:.3f} on new writers.")
     R.para(
         "**Failure types.** S2 fails 20 more test items than S1, through intent errors S1 never makes: 9 wrong "
         "tools, 7 declined in-scope requests, 6 wrong-intent clarifications (Table 9). "
         "**Shared pipeline.** With gold intents, 14 of the 23 test failures disappear once the "
         "extractor strips two request framings («عايز تذكير» or «اعمللي»). New writers failed elsewhere: emphasis "
-        "words after the verb stay in the text («ضروري» in «فكرني ضروري بكره…»), and day-scale expressions («بعد اسبوع») were hardest (oracle 0.58 on 31 "
-        "items); hence N2's small effect; S9's gain over S8 is mostly on incomplete requests (Table 3).")
+        "words after the verb stay in the text («ضروري»), and day-scale expressions («بعد اسبوع») were hardest (oracle 0.58 on 31 "
+        "items), hence N2's small effect.")
 
     # 5 ------------------------------------------------------------------------------------------
     R.h1("5. Conclusion")
     R.para(
         "We built a task contract, a safety-aware metric, a 458-item benchmark and a 238-message "
-        "evaluation by 17 other writers. Keyword rules beat TF-IDF classifiers on both locked evaluations "
-        "(+0.206 STS on new writers), a gap exploratory analyses trace to AI-drafted training data. A "
-        "deterministic policy makes LLM tool calling safer (+0.102 STS). The shared extractor limits "
-        "every system (a third of the rules' calls were wrong, mostly in the reminder text); a learned "
-        "text extractor and a third, untouched evaluation are next.")
+        "evaluation by 17 other writers. Keyword rules beat TF-IDF classifiers on both (+0.206 STS on new "
+        "writers), a gap exploratory analyses trace to AI-drafted training data; a deterministic policy "
+        "made LLM tool calling safer (+0.102 STS); the shared extractor limits every system. A registered "
+        "third evaluation of human training data awaits its labels.")
 
     # References ----------------------------------------------------------------------------------
     R.h1("References")

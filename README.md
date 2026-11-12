@@ -236,3 +236,29 @@ Complete: locked test (2026-10-18), pre-registered natural-phrasing evaluation (
 the final report ([docs/final_report/build_report.py](docs/final_report/build_report.py)).
 Protocol v3 ([docs/protocol_v3.md](docs/protocol_v3.md)), a third evaluation on unused contributor
 messages, is registered and in progress; it is not part of the submitted results.
+
+## Protocol v3: does human-written training data help? (gates G1-G5)
+
+| Gate | State |
+|---|---|
+| G1 protocol registered | done (`3a69bc0`) |
+| G2+G3 systems frozen, predictions committed | done for S3-drafted/-human, S6-drafted/-human (5 seeds) and the A4 control; the GPU systems of A5 were not run, so they are not scored |
+| G4 two annotations, adjudication, lock | blank sheets ready in `data/raw/private/v3/`; no label yet |
+| G5 one scoring run | `python -m athar.v3.evaluate` (amendment A6) |
+
+```powershell
+uv run python -m athar.v3 verify                     # freezes, models, predictions, sources unchanged
+uv run python -m athar.v3.amend                      # amendments file still append-only
+# G4: each annotator fills data/raw/private/v3/v3_label_<name>.xlsx alone, then together:
+uv run --with openpyxl python scripts/adjudicate_natural.py --set v3 sheet
+uv run --with openpyxl python scripts/adjudicate_natural.py --set v3 apply
+uv run --with openpyxl athar-data build data/raw/private/v3/v3_gold.xlsx --cards contrib/scenario_cards.csv --out data/raw/private/v3/v3.jsonl
+uv run athar-data validate data/raw/private/v3/v3.jsonl --strict
+uv run athar-data lock data/raw/private/v3/v3.jsonl --out data/v3/manifest.json --note "protocol v3, G4"
+# G5, once:
+uv run python -m athar.v3.evaluate --manifest data/v3/manifest.json --check
+uv run python -m athar.v3.evaluate --manifest data/v3/manifest.json
+```
+
+The post hoc version of this question (leave one writer out on the natural set, report Table 5)
+reproduces exactly from `scripts/posthoc_encoders_human.py human` with the cached encoders.
