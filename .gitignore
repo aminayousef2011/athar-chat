@@ -53,4 +53,5 @@ docs/final_report/*.pdf
 
 # Kaggle kits and working-folder downloads of protocol v3: they contain the private v3 texts
 results_jais3.zip
+results_v3_GPU.zip
 v3_gpu_outputs*.zip
