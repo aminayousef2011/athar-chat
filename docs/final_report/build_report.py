@@ -101,6 +101,15 @@ def s8_test() -> list[float]:
     return [d[f"S8-jais3-7b-s{i}"]["metrics"]["safe_task_success"] for i in range(3)]
 
 
+S4_DIRS = {"jais2-8b": "7b-others", "nile-4b": "7b-others", "qwen3-8b": "7b-others",
+           "jais3-7b": "7a-jais3", "jais3-3.7b": "7a-jais3"}
+
+
+def precision(rel: str) -> str:
+    """Numeric format a GPU result recorded for its model (2x T4 has no bf16)."""
+    return str(load(rel)["model"]["precision"])
+
+
 def s4_nat(model: str) -> float:
     return NAT["llm_with_core_v1.1"][f"S4-{model}-6shot-prior"]["stored"]
 
@@ -547,8 +556,8 @@ def build(commit: str) -> Report:
         "**Training data:** 261 of 298 training items were AI-drafted (and marked), because the human "
         "requests available at the freeze were needed for an all-human test. **Evaluation:** a "
         "screened contributor collection became a second, pre-registered evaluation. **Scope:** 458 items and 34 test pairs (planned: 300, 20); "
-        "LLM and encoder baselines on Kaggle 2×T4 GPUs, adding Jais 3 (released after the freeze); "
-        "S1-S3 on CPU.")
+        "LLM baselines on Kaggle 2×T4 GPUs, adding Jais 3 (released after the freeze); S1-S3 and the "
+        "S5/S6 encoders on CPU.")
 
     # 4 ------------------------------------------------------------------------------------------
     R.h1("4. Evaluation and results")
@@ -708,27 +717,45 @@ def build(commit: str) -> Report:
     R.page_break()
     R.h1("Appendix A. Additional results")
     s7t, s8t, s7n = s7_test(), s8_test(), s7_nat()
+    s7_file, s8_file = ("results/s4/7cd-s7-s8/s4_results/s7_jais2_qlora_s0_test.json",
+                         "results/s4/7cd-s7-s8/s4_results/s8_jais3-7b.json")
+    s4p = {m: precision(f"results/s4/{d}/s4_results/{m}.json") for m, d in S4_DIRS.items()}
     ext = [
-        ["S1 keyword rules (reference)", f3(t1["safe_task_success"]), f3(n1["safe_task_success"])],
-        ["S4 Jais 2 8B (6-shot)", f3(s4_test("jais2-8b")), f3(s4_nat("jais2-8b"))],
-        ["S4 Jais-3-7B (6-shot)", f3(s4_test("jais3-7b")), f3(s4_nat("jais3-7b"))],
-        ["S4 Jais-3-3.7B (6-shot)", f3(s4_test("jais3-3.7b")), f3(s4_nat("jais3-3.7b"))],
-        ["S4 Nile-Chat 4B (6-shot)", f3(s4_test("nile-4b")), f3(s4_nat("nile-4b"))],
-        ["S4 Qwen3 8B (6-shot)", f3(s4_test("qwen3-8b")), f3(s4_nat("qwen3-8b"))],
-        ["S5 multilingual-e5-small + LR", f3(ENC["systems"]["S5"]["locked_test_core_v1"]["sts"]),
+        ["S1 keyword rules (reference)", "CPU", f3(t1["safe_task_success"]), f3(n1["safe_task_success"])],
+        ["S4 Jais 2 8B (6-shot)", s4p["jais2-8b"], f3(s4_test("jais2-8b")), f3(s4_nat("jais2-8b"))],
+        ["S4 Jais-3-7B (6-shot)", s4p["jais3-7b"], f3(s4_test("jais3-7b")), f3(s4_nat("jais3-7b"))],
+        ["S4 Jais-3-3.7B (6-shot)", s4p["jais3-3.7b"], f3(s4_test("jais3-3.7b")), f3(s4_nat("jais3-3.7b"))],
+        ["S4 Nile-Chat 4B (6-shot)", s4p["nile-4b"], f3(s4_test("nile-4b")), f3(s4_nat("nile-4b"))],
+        ["S4 Qwen3 8B (6-shot)", s4p["qwen3-8b"], f3(s4_test("qwen3-8b")), f3(s4_nat("qwen3-8b"))],
+        ["S5 multilingual-e5-small + LR", "CPU", f3(ENC["systems"]["S5"]["locked_test_core_v1"]["sts"]),
          f3(ENC["systems"]["S5"]["natural_core_v1"]["sts"])],
-        ["S6 MARBERTv2 fine-tuned (5 seeds)",
+        ["S6 MARBERTv2 fine-tuned (5 seeds)", "CPU",
          f"{s6['locked_test_core_v1']:.3f} ± {ENC['s6_seed_sd']['locked_test_core_v1']:.3f}",
          f"{s6['natural_core_v1']:.3f} ± {ENC['s6_seed_sd']['natural_core_v1']:.3f}"],
-        ["S7 Jais 2 + QLoRA (3 seeds)", f"{st.mean(s7t):.3f} (" + " / ".join(f3(x) for x in s7t) + ")",
+        ["S7 Jais 2 + QLoRA (3 seeds)", precision(s7_file),
+         f"{st.mean(s7t):.3f} (" + " / ".join(f3(x) for x in s7t) + ")",
          f"{S7_NAT:.3f} (" + " / ".join(f3(x) for x in s7n) + ")"],
-        ["S8 Jais-3-7B tool calling (3 seeds)", f"{st.mean(s8t):.3f} (" + " / ".join(f3(x) for x in s8t) + ")",
-         f"{s8m['sts']:.3f}"],
-        ["S9 S8 + deterministic policy (3 seeds)", "not run", f"{s9m['sts']:.3f}"],
+        ["S8 Jais-3-7B tool calling (3 seeds)", precision(s8_file),
+         f"{st.mean(s8t):.3f} (" + " / ".join(f3(x) for x in s8t) + ")", f"{s8m['sts']:.3f}"],
+        ["S9 S8 + deterministic policy (3 seeds)", precision(s8_file), "not run¹", f"{s9m['sts']:.3f}"],
     ]
-    R.table("Safe Task Success of the extension systems on both locked sets (S4: primary setting, "
-            "6 examples with prior calibration; S5/S6 fitted after both evaluations, exploratory).",
-            ["System", "Locked test (120)", "Natural (238)"], ext, widths=[7.0, 4.5, 4.5])
+    R.table("Safe Task Success of the extension systems on both locked sets, with the numeric format "
+            "each model ran in (S4: primary setting, 6 examples with prior calibration; S5/S6 fitted after "
+            "both evaluations, exploratory). ¹S9 uses core v1.1, whose fix was drawn from the test errors.",
+            ["System", "Precision", "Locked test (120)", "Natural (238)"], ext, widths=[5.8, 2.0, 4.1, 4.1])
+    j3 = load("results/s4/7a-jais3/s4_results/jais3-7b.json")["systems"]
+    j3_inline = j3["S4-jais3-7b-6shot-inline-prior"]["metrics"]["safe_task_success"]
+    j3_declined = next(r for r in csv.DictReader((ROOT / "results/error_analysis/summary.csv").open(encoding="utf-8"))
+                       if r["system"] == "S4-jais3-7b-6shot-prior")["declined an in-scope request"]
+    s8_invalid = [load(s8_file)["systems"][f"S8-jais3-7b-s{i}"]["metrics"]["invalid_outputs"] for i in range(3)]
+    R.para(
+        "**Precision.** Kaggle's T4 GPUs have no bf16, so the models ran in different formats: Jais 2 "
+        "overflowed in fp16 and ran 4-bit, Jais-3-7B and Qwen3 ran in fp16, the smaller models in fp32. "
+        "Differences between these models may therefore partly reflect precision. **Jais-3-7B.** In its "
+        f"primary setting it declined {j3_declined} in-scope test requests; with the exemplars listed in "
+        f"the user message (a secondary analysis declared before the test was opened) it scored "
+        f"{j3_inline:.3f}. As S8 it made no valid call on " + ", ".join(map(str, s8_invalid[:-1]))
+        + f" and {s8_invalid[-1]} of the 120 test items.")
     R.para(
         "Out-of-scope requests separate the learned systems on new writers: S6, Jais 2 and Nile-Chat "
         "declined only about half of them (0.48, 0.48 and 0.53), against 0.85 for the rules. These "
