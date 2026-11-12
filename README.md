@@ -24,7 +24,7 @@ rules (S1, STS 0.767) beat both classifiers (S2 0.600, S3 0.625). The gap is sig
 pre-registered family-clustered test (Holm p ≤ 0.005) but only borderline when test items that share a
 sentence frame are treated as dependent (post hoc, Holm p 0.05-0.11): the test is one writer's templated
 phrasing. The classifiers were trained on mostly AI-drafted text and over-regularized by a 40-item drafted
-dev set. The shared extractor caps every pipeline system at 0.808 (oracle); one framing-lexicon gap causes 15
+dev set. The shared extractor caps every pipeline system at 0.808 (oracle); fixing one framing-lexicon gap repairs 14
 of its 23 failures. Post hoc analyses: [docs/posthoc_analyses.md](docs/posthoc_analyses.md).
 
 On 238 messages from 17 other native speakers (pre-registered), the rules again beat TF-IDF (+0.206,

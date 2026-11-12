@@ -343,7 +343,7 @@ Section 6.2 qualifies how strongly that can be claimed.
   | S2 | 41 / **15** / 6 | 0 / 37 / 1 | 6 / 1 / 13 |
   | S3 | 40 / **13** / 9 | 0 / 37 / 1 | 4 / 1 / 15 |
 
-  S2 sends 15 of 62 reminders to the alarm tool and declines 6. These are mostly noun-form requests
+  S2 sends 15 of 62 reminders to the alarm tool and declines 6. Six of the 15 are noun-form requests
   such as «حطلي تذكير الخميس الجاي الساعة 7 الصبح عشان احضر الستاند اب», the cues that are rare in
   training (section 3.2).
 - **Subgroups** (descriptive). The classifiers do *better* on code-switched items (S2 0.708, S3
