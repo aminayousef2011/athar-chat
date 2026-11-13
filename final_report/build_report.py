@@ -5,9 +5,9 @@ text; the few figures typed into a sentence are checked against those files when
 (``require``), so a stale number stops the build. The commit hash printed in the Deliverables
 section is read from git, so the report always names the commit it was built from.
 
-    uv run --with python-docx python docs/final_report/build_report.py            # .docx only
-    uv run --with python-docx python docs/final_report/build_report.py --pdf      # + .pdf (Windows, Word)
-    uv run --with python-docx python docs/final_report/build_report.py --pdf --allow-dirty --out-dir DIR   # draft
+    uv run --with python-docx python final_report/build_report.py            # .docx only
+    uv run --with python-docx python final_report/build_report.py --pdf      # + .pdf (Windows, Word)
+    uv run --with python-docx python final_report/build_report.py --pdf --allow-dirty --out-dir DIR   # draft
 
 The build refuses to run on a working tree with uncommitted changes (``--allow-dirty`` overrides),
 because the printed commit would not match the files the report describes, and it warns when that
@@ -32,7 +32,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 OUT = Path(__file__).resolve().parent
 REPO_URL = "https://github.com/aminayousef2011/athar-chat"
 FONT = "Times New Roman"
@@ -563,6 +563,17 @@ def build(commit: str, branch: str) -> Report:
             and f"{n1['success_by_gold_route']['ABSTAIN']:.2f}" == "0.85",
             "declined out-of-scope requests: S6, Jais 2, Nile-Chat, S1")
     v3_n = 236
+    jais3_doc = (ROOT / "docs/jais3.md").read_text(encoding="utf-8")
+    require("Jais 2 8B stays the pre-registered S4 model"
+            in (ROOT / "docs/evaluation_protocol.md").read_text(encoding="utf-8")
+            and "On **2026-10-15**" in jais3_doc
+            and "after the models were frozen (2026-10-12)" in jais3_doc
+            and "**before the test split was opened**" in jais3_doc,
+            "Jais 2 pre-registered; Jais 3 released on 2026-10-15, after the freeze, before the test")
+    require(FREEZE["environment"]["platform"].startswith("Windows")
+            and all(set(load(f"results/s4/{d}/s4_results/environment.json")["gpus"]) == {"Tesla T4"}
+                    for d in ("7a-jais3", "7b-others", "7cd-s7-s8")),
+            "S1-S3 frozen on the author's Windows machine; the LLM runs on Kaggle T4 GPUs")
     require(f"**{v3_n} messages from 17 writers" in (ROOT / "docs/protocol_v3.md").read_text(encoding="utf-8")
             and (ROOT / "models_v3/freeze_s3.json").exists() and (ROOT / "models_v3/freeze_s6.json").exists()
             and not any((ROOT / "results/v3").glob("evaluation*")),
@@ -716,9 +727,12 @@ def build(commit: str, branch: str) -> Report:
         f"{drafted('train')} of {len(ITEMS['train'])} training items were AI-drafted, because the human "
         "requests available at the freeze were needed for an all-human test "
         f"({n_all} items, {t1['pairs']} test pairs; planned: 300, 20). **Evaluation:** a "
-        "screened contributor collection became a second, pre-registered evaluation. **Systems:** the "
-        "proposal excluded LLMs and GPUs; S1-S3 stayed on a laptop CPU, S4-S9 are extensions "
-        "(LLMs on Kaggle GPUs).")
+        "screened contributor collection became a second, pre-registered evaluation. **Compute and "
+        "systems:** the planned comparison S1-S3 ran on a laptop CPU, as proposed. S4-S9 are "
+        "extensions with open-weight models; every GPU run, including S7's fine-tuning, used "
+        "Kaggle T4 GPUs. Jais 2 was the pre-registered LLM baseline; Jais 3 was released on "
+        "15 October 2026, after the systems were frozen and before the test was opened, so both "
+        "were run with the same prompt and examples (S4), and its tool calling added S8 and S9.")
 
     # 4 ------------------------------------------------------------------------------------------
     R.h1("4. Evaluation and results")

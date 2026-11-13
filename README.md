@@ -15,8 +15,8 @@ Two simulated tools: `create_reminder(datetime, reminder_text)` and `create_alar
 No real reminders or alarms are created.
 
 **Final report (4 pages + appendices):** built from the committed results by
-[docs/final_report/build_report.py](docs/final_report/build_report.py)
-(`uv run --with python-docx python docs/final_report/build_report.py --pdf`; the PDF step uses
+[final_report/build_report.py](final_report/build_report.py)
+(`uv run --with python-docx python final_report/build_report.py --pdf`; the PDF step uses
 Microsoft Word on Windows). The full technical report is [docs/report.md](docs/report.md).
 
 **Results:** On the locked test (120 author-written requests), the keyword
@@ -39,10 +39,10 @@ messages come from the same collection as the evaluation set, so source and matc
 regression; S3: S2 + character n-grams) improve *Safe Task Success* over keyword rules (S1) when
 all systems share the same normalizer, argument extractor, execution policy and templates?
 
-## From Jais 2 to Jais 3
+## From the proposal (Jais 2) to Jais 3
 
-The proposal covered the CPU systems S1-S3 only. The LLM systems are extensions registered in the
-evaluation protocol, with **Jais 2 8B** as the pre-registered S4 model. On **2026-10-15**, after the models were frozen but before the test split was opened,
+The proposal named **Jais 2 8B** as the Arabic LLM baseline, and it remains the pre-registered
+S4 model. On **2026-10-15**, after the models were frozen but before the test split was opened,
 MBZUAI's Institute of Foundation Models, Inception42 and Cerebras released **Jais 3**, with native
 tool calling and selectable reasoning. The LLM track was extended to use it. The core comparison
 (H1-H3), the data and the metrics did not change:
@@ -76,7 +76,8 @@ entry: [evaluation_protocol.md](docs/evaluation_protocol.md), section 10, 2026-1
 ## Layout
 
 ```
-docs/            HLD, task contract, annotation guide, data card
+final_report/    the course report only: its builder, and the built .docx/.pdf (not committed)
+docs/            supporting documents: HLD, task contract, annotation guide, data card, protocols
 src/athar/       shared core: normalizer, time/argument extractor, policy, responses, schema;
                  agent.py = S8 end-to-end tool calling (Jais 3)
 src/athar/data/  dataset tooling (`athar-data` CLI): validator, splitter, agreement, stats
@@ -128,7 +129,7 @@ CI (`.github/workflows/ci.yml`) runs them on Linux and Windows from the frozen l
 
 | System | Models | Code |
 |---|---|---|
-| S4: LLM intent recognizer, shared pipeline | Jais-3-7B, Jais-3-3.7B, Jais 2 8B (pre-registered), Nile-Chat 4B, Qwen3 8B | `athar.intent.llm` |
+| S4: LLM intent recognizer, shared pipeline | Jais-3-7B, Jais-3-3.7B, Jais 2 8B (proposal), Nile-Chat 4B, Qwen3 8B | `athar.intent.llm` |
 | S7: QLoRA fine-tuned | Jais 2 8B | `athar.intent.llm` |
 | S8: end-to-end tool calling | Jais-3-7B | `athar.agent` |
 
@@ -236,7 +237,7 @@ the Phase 4 evaluation passes. Procedure: [docs/annotation_guide.md](docs/annota
 ## Status
 
 Complete: locked test (2026-10-18), pre-registered natural-phrasing evaluation (2026-11-02) and
-the final report ([docs/final_report/build_report.py](docs/final_report/build_report.py)).
+the final report ([final_report/build_report.py](final_report/build_report.py)).
 Protocol v3 ([docs/protocol_v3.md](docs/protocol_v3.md)), a third evaluation on unused contributor
 messages, is registered and in progress; it is not part of the submitted results.
 

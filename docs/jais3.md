@@ -5,7 +5,7 @@ Protocol entry: [evaluation_protocol.md](evaluation_protocol.md), section 10, 20
 
 ## 1. What changed, and why
 
-The project's first LLM baseline was **Jais 2 8B** (`inception42/Jais-2-8B-Chat`), and the
+The proposal named **Jais 2 8B** (`inception42/Jais-2-8B-Chat`) as the Arabic LLM baseline, and the
 pre-registered protocol keeps it as the primary S4 model. On **2026-10-15** MBZUAI's Institute of
 Foundation Models, Inception42 and Cerebras released **Jais 3**: six open models from 0.9B to 375B
 parameters (Apache-2.0), built on the K2 Horizon base, with native tool calling, selectable reasoning
@@ -14,7 +14,7 @@ Emirati, Gulf and North African Arabic, **not Egyptian**.
 
 The release came after the models were frozen (2026-10-12) and **before the test split was opened**.
 Jais 3 is therefore **added beside Jais 2, not substituted for it**. Nothing in the core comparison
-(H1-H3: S1 vs S2 vs S3) changes. Jais 3 lets the project ask two questions that the Jais 2 baseline could not:
+(H1-H3: S1 vs S2 vs S3) changes. Jais 3 lets the project ask two questions that the proposal could not:
 
 | | Question | System | Evidence |
 |---|---|---|---|
