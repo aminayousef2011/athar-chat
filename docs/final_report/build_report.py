@@ -1,13 +1,17 @@
 """Build the final course report (A4 .docx, and .pdf through Microsoft Word).
 
-Every table is filled from the committed result files, and the commit hash printed in the
-Deliverables section is read from git, so the report always names the commit it was built from.
+Every table is filled from the committed data and result files, and so are the counts quoted in the
+text; the few figures typed into a sentence are checked against those files when the report is built
+(``require``), so a stale number stops the build. The commit hash printed in the Deliverables
+section is read from git, so the report always names the commit it was built from.
 
     uv run --with python-docx python docs/final_report/build_report.py            # .docx only
     uv run --with python-docx python docs/final_report/build_report.py --pdf      # + .pdf (Windows, Word)
+    uv run --with python-docx python docs/final_report/build_report.py --pdf --allow-dirty --out-dir DIR   # draft
 
 The build refuses to run on a working tree with uncommitted changes (``--allow-dirty`` overrides),
-because the printed commit would not match the files the report describes.
+because the printed commit would not match the files the report describes, and it warns when that
+commit is not on the remote yet (a commit that was never pushed cannot be opened by a reader).
 """
 
 from __future__ import annotations
@@ -33,6 +37,7 @@ OUT = Path(__file__).resolve().parent
 REPO_URL = "https://github.com/aminayousef2011/athar-chat"
 FONT = "Times New Roman"
 MONO = "Consolas"
+MAIN_PAGE_LIMIT = 4  # abstract to conclusion; references and appendices do not count
 
 
 # ---------------------------------------------------------------- data -------------------------
@@ -121,6 +126,63 @@ def s7_nat() -> list[float]:
 def nat_confirmatory_families() -> int:
     conf = {i["id"] for i in NAT["systems"]["S1"]["items"]}
     return len({i["family_id"] for i in NAT["systems"]["S1"]["items"] if i["id"] in conf})
+
+
+def jsonl(rel: str) -> list[dict]:
+    return [json.loads(line) for line in (ROOT / rel).read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def csv_rows(rel: str) -> list[dict]:
+    with (ROOT / rel).open(encoding="utf-8") as fh:
+        return list(csv.DictReader(fh))
+
+
+def require(ok: bool, claim: str) -> None:
+    """Stop the build when the committed files no longer support a sentence of the report."""
+    if not ok:
+        sys.exit(f"report text is out of date with the committed files: {claim}")
+
+
+SPLITS = load("data/splits/manifest.json")["splits"]
+_FAMILY_SPLIT = {fam: name for name, sp in SPLITS.items() for fam in sp["families"]}
+ITEMS: dict[str, list[dict]] = {name: [] for name in SPLITS}
+for _item in jsonl("data/athar.jsonl"):
+    ITEMS[_FAMILY_SPLIT[_item["family_id"]]].append(_item)
+NAT_ITEMS = jsonl("data/natural/natural.jsonl")
+NAT_CONF_IDS = {i["id"] for i in NAT["systems"]["S1"]["items"]}
+NAT_CONF = [i for i in NAT_ITEMS if i["id"] in NAT_CONF_IDS]
+AGREE_TEST = load("docs/agreement.json")
+AGREE_NAT = load("results/natural/agreement.json")
+FREEZE = load("models/freeze.json")
+FAILS = {r["system"]: r for r in csv_rows("results/error_analysis/summary.csv")}
+
+
+def share(items: list[dict], key: str, value: object = True) -> float:
+    return sum(i.get(key) == value for i in items) / len(items)
+
+
+def drafted(split: str) -> int:
+    return sum(i.get("source") == "assistant_draft" for i in ITEMS[split])
+
+
+def split_row(split: str) -> list[str]:
+    c = SPLITS[split]["counts"]
+    return [str(len(ITEMS[split])), str(len(SPLITS[split]["families"])),
+            f"{c['ACT']} / {c['CLARIFY']} / {c['ABSTAIN']}"]
+
+
+def reminder_share(split: str, word: str) -> float:
+    rem = [i for i in ITEMS[split] if i["intent"] == "create_reminder"]
+    return sum(word in i["text"] for i in rem) / len(rem)
+
+
+def count_tests() -> int:
+    """Number of tests pytest collects in this checkout."""
+    out = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", "-q"], cwd=ROOT,
+                         capture_output=True, text=True).stdout
+    n = sum(int(m.group(1)) for m in re.finditer(r"^tests[/\\]\S+: (\d+)\s*$", out, re.M))
+    require(n > 0, "pytest collected no tests (run the build inside the project environment)")
+    return n
 
 
 # ---------------------------------------------------------------- docx helpers -----------------
@@ -324,10 +386,20 @@ class Report:
                 keep_next=i < len(lines) - 1)  # keep the listing on one page
             add_runs(p, line, size=10, font=MONO)
 
-    def link_para(self, before: str, url: str, after: str = "") -> None:
+    def link_para(self, *parts: str | tuple[str, str]) -> None:
+        """A bullet made of text parts and (url, shown text) links."""
         p = self.doc.add_paragraph()
         fmt(p, align=WD_ALIGN_PARAGRAPH.LEFT, after=6)
-        add_runs(p, "• " + before)
+        add_runs(p, "• ")
+        for part in parts:
+            if isinstance(part, str):
+                add_runs(p, part)
+            else:
+                self._hyperlink(p, *part)
+
+    @staticmethod
+    def _hyperlink(p, url: str, shown: str) -> None:
+        mono = shown != url  # the commit hash is set like the other identifiers
         hl = OxmlElement("w:hyperlink")
         hl.set(qn("r:id"), p.part.relate_to(url, "http://schemas.openxmlformats.org/officeDocument/"
                                                   "2006/relationships/hyperlink", is_external=True))
@@ -335,23 +407,21 @@ class Report:
         rpr = OxmlElement("w:rPr")
         fonts = OxmlElement("w:rFonts")
         for attr in ("w:ascii", "w:hAnsi", "w:cs"):
-            fonts.set(qn(attr), FONT)
+            fonts.set(qn(attr), MONO if mono else FONT)
         color = OxmlElement("w:color")
         color.set(qn("w:val"), "0563C1")
         u = OxmlElement("w:u")
         u.set(qn("w:val"), "single")
         sz = OxmlElement("w:sz")
-        sz.set(qn("w:val"), "24")
+        sz.set(qn("w:val"), "22" if mono else "24")
         for el in (fonts, color, u, sz):
             rpr.append(el)
         t = OxmlElement("w:t")
-        t.text = url
+        t.text = shown
         r.append(rpr)
         r.append(t)
         hl.append(r)
         p._p.append(hl)
-        if after:
-            add_runs(p, after)
 
     def page_break(self) -> None:
         p = self.doc.add_paragraph()
@@ -431,8 +501,9 @@ class Report:
 
 # ---------------------------------------------------------------- content ----------------------
 
-def build(commit: str) -> Report:
+def build(commit: str, branch: str) -> Report:
     R = Report()
+    n_tests = count_tests()
     t1, t2, t3, o = (test_metrics(s) for s in ("S1", "S2", "S3", "oracle"))
     n1, n2, n3, no = (nat_metrics(s) for s in ("S1", "S2", "S3", "oracle"))
     cmp_ = TEST["comparisons"]
@@ -440,6 +511,30 @@ def build(commit: str) -> Report:
     s8m, s9m = NAT["summary"]["S8 (seed mean)"], NAT["summary"]["S9 (seed mean)"]
     s6 = ENC["s6_seed_mean"]
     hum = HUM["systems"]
+    N1, N3 = tests["N1 S1 vs S2"], tests["N3 S9 vs S8"]
+    n_all = sum(len(v) for v in ITEMS.values())
+    n_nat, n_conf, n_writers = len(NAT_ITEMS), len(NAT_CONF), len(NAT["writers"])
+    n_drafted = drafted("train") + drafted("dev")
+    n_fit = len(ITEMS["train"]) + len(ITEMS["dev"])
+    s2cm = t2["intent_confusion"]["matrix"]
+    s8_invalid_nat = [nat_metrics(f"S8-s{i}")["invalid_outputs"] for i in range(3)]
+
+    # figures typed into the text below, checked against the committed files
+    fits = [FREEZE["systems"][s]["resources"] for s in ("S2", "S3")]
+    require(max(f["final_fit"]["cpu_seconds"] for f in fits) < 0.3
+            and max(f["predict_ms_per_item"] for f in fits) < 0.3
+            and round(FREEZE["process_peak_rss_mb"]) == 141, "S2/S3 fit time, inference time, peak memory")
+    require(load("results/posthoc/frame_overlap_summary.json")["distinct_frames_A"] == 52, "52 sentence frames")
+    require(int(FAILS["S2"]["failures"]) - int(FAILS["S1"]["failures"]) == 20
+            and [FAILS["S2"][c] for c in ("wrong tool", "declined an in-scope request",
+                                          "clarified with the wrong intent")] == ["9", "7", "6"],
+            "S2 failure types")
+    require(round(t1["unsafe_execution_rate"] * t1["n"]) == 16
+            and FAILS["S1"]["wrong reminder text only"] == "13", "13 of S1's 16 wrong test calls")
+    fix = {r["system"]: r for r in csv_rows("results/posthoc/extractor_fix.csv")}
+    require(fix["oracle"]["fixed"] == "14" and FAILS["oracle"]["failures"] == "23", "14 of 23 oracle failures")
+    require(n_drafted == sum(i.get("source") == "assistant_draft" for v in ITEMS.values() for i in v),
+            "AI-drafted items are only in train and dev")
 
     R.title("ATHAR Chat: Safe Tool Routing for Egyptian Arabic", "Amina Yousef")
 
@@ -447,14 +542,15 @@ def build(commit: str) -> Report:
     R.para(
         "A reminder assistant must decide whether to execute a request, ask for missing information or "
         "decline it. We study this decision (ACT, CLARIFY, ABSTAIN) for single-turn Egyptian Arabic "
-        "reminder and alarm requests, often code-switched with English. Sharing one rule-based "
-        "extractor and deterministic policy, keyword rules (S1), TF-IDF logistic regression (S2) and "
-        "its character n-gram extension (S3) are compared by Safe Task Success (STS). On a locked 120-item test the "
+        "reminder and alarm requests, often code-switched with English. With one shared rule-based "
+        "extractor and policy, keyword rules (S1), TF-IDF logistic regression (S2) and "
+        "its character n-gram extension (S3) are compared by Safe Task Success (STS). "
+        f"On a locked {len(ITEMS['test'])}-item test the "
         f"rules outperformed both classifiers ({f3(t1['safe_task_success'])} vs "
-        f"{f3(t2['safe_task_success'])} and {f3(t3['safe_task_success'])}). A pre-registered second "
-        "evaluation on 238 messages from 17 other native speakers confirmed this "
+        f"{f3(t2['safe_task_success'])} and {f3(t3['safe_task_success'])}). A pre-registered "
+        f"evaluation on {n_conf} messages from {n_writers} other native speakers confirmed this "
         f"(+{tests['N1 S1 vs S2']['difference']:.3f} STS, Holm p = {tests['N1 S1 vs S2']['p_holm']:.4f}) "
-        "and showed that the same deterministic policy makes end-to-end Jais-3-7B tool calling safer "
+        "and showed that the same policy makes Jais-3-7B tool calling safer "
         f"(STS {s8m['sts']:.3f} → {s9m['sts']:.3f}). Exploratory analyses trace the classifiers' "
         "deficit to their mostly AI-drafted training data and show that the shared extractor bounds "
         f"every system ({f3(no['safe_task_success'])} with gold intents).")
@@ -484,16 +580,18 @@ def build(commit: str) -> Report:
 
     # 2 ------------------------------------------------------------------------------------------
     R.h1("2. Deliverables")
-    R.link_para("**Repository:** ", REPO_URL, f" (branch `report-tier1`), commit `{commit}`.")
+    R.link_para("**Repository:** ", (REPO_URL, REPO_URL), f" (branch `{branch}`), commit ",
+                (f"{REPO_URL}/tree/{commit}", commit), ".")
     R.bullets([
         "**Code:** package `athar` (normalizer, extractor, policy, systems S1-S9, evaluation), "
-        "command-line tools, 366 unit tests, dependencies locked in `uv.lock` (Python 3.11).",
-        "**Data:** `data/athar.jsonl` (458 items; splits `data/splits/manifest.json`), "
-        "`data/natural/natural.jsonl` (247), data card, task contract and annotation guide (`docs/`), "
+        f"command-line tools, {n_tests} automated tests, dependencies locked in `uv.lock` (Python 3.11).",
+        f"**Data:** `data/athar.jsonl` ({n_all} items; splits `data/splits/manifest.json`), "
+        f"`data/natural/natural.jsonl` ({n_nat}), data card, task contract and annotation guide (`docs/`), "
         "shared with the contributors' consent.",
         "**Models, outputs, demo:** frozen classifiers (`models/`, `models_v2/`), stored predictions "
         "(`results/`), pinned Hugging Face models (Appendix C), a Streamlit demo "
-        "(`app/streamlit_app.py`) and the technical report `docs/report.md`.",
+        "(`app/streamlit_app.py`) and the technical report `docs/report.md`. The S6 and S7 weights are "
+        "not stored (size); Appendix C retrains them.",
     ])
 
     # 3 ------------------------------------------------------------------------------------------
@@ -516,21 +614,26 @@ def build(commit: str) -> Report:
         "Datasets. No scenario family crosses train, dev and test; the natural set reuses the test's "
         "scenarios.",
         ["Set", "Items", "Families", "ACT/CLAR/ABST", "Written by", "Use"],
-        [["train", "298", "137", "120 / 127 / 51", "261 AI-drafted, 37 author", "fitting"],
-         ["dev", "40", "17", "16 / 17 / 7", "39 AI-drafted, 1 author", "selection"],
-         ["test (locked)", "120", "71", "50 / 50 / 20", "author (native speaker)", "evaluation 1"],
-         ["natural (locked)", "238", str(nat_fams), "91 / 88 / 59", "17 other native speakers",
-          "evaluation 2"]],
+        [["train", *split_row("train"),
+          f"{drafted('train')} AI-drafted, {len(ITEMS['train']) - drafted('train')} author", "fitting"],
+         ["dev", *split_row("dev"),
+          f"{drafted('dev')} AI-drafted, {len(ITEMS['dev']) - drafted('dev')} author", "selection"],
+         ["test (locked)", *split_row("test"), "author (native speaker)", "evaluation 1"],
+         ["natural (locked)", str(n_conf), str(nat_fams),
+          " / ".join(str(sum(i["route"] == r for i in NAT_CONF)) for r in ("ACT", "CLARIFY", "ABSTAIN")),
+          f"{n_writers} other native speakers", "evaluation 2"]],
         widths=[2.7, 1.3, 1.6, 3.2, 4.4, 2.8])
     R.para(
         "The test was written by the author, a native speaker, from scenario cards; a second native "
-        "speaker labelled 60 items "
-        "independently (intent κ = 0.916, route κ = 1.000). The natural set was collected after the "
+        f"speaker labelled {AGREE_TEST['n_compared']} items "
+        f"independently (intent κ = {AGREE_TEST['intent']['kappa']:.3f}, route κ = "
+        f"{AGREE_TEST['route']['kappa']:.3f}). The natural set was collected after the "
         "systems were frozen: contributors wrote, without AI tools, a complete and an incomplete message "
         "for each test scenario. After screening out copies (474 messages, 34 writers), a seeded draw of two "
-        "writers per scenario block gave 247 messages from 17 writers, 238 of them in families absent "
-        "from train and dev. Two annotators labelled all of them (intent κ = 0.938, route κ = 0.913); "
-        "the author adjudicated the 66 disagreements.")
+        f"writers per group of scenarios gave {n_nat} messages from {n_writers} writers, {n_conf} of "
+        "them in families absent from train and dev. Two annotators labelled all of them (intent κ = "
+        f"{AGREE_NAT['intent']['kappa']:.3f}, route κ = {AGREE_NAT['route']['kappa']:.3f}); the author "
+        f"adjudicated the {load('results/natural/adjudication.json')['adjudicated']} disagreements.")
 
     R.h2("3.3 Pipeline and systems")
     R.para(
@@ -545,19 +648,21 @@ def build(commit: str) -> Report:
         "intent macro-F1 (S2: C = 0.3; S3: C = 0.1). On a laptop CPU, each final fit takes under 0.3 s, "
         "inference under 0.3 ms per item, peak memory 141 MB. The **oracle** feeds gold intents "
         "to the same pipeline. **Extensions:** prompted LLM intent recognizers (**S4**: Jais 2 8B "
-        "[5, 11], Jais-3-7B, Jais-3-3.7B [12], Nile-Chat 4B [13], Qwen3 8B [14]); fine-tuned MARBERTv2 [2] "
+        "[5, 11], Jais-3-7B, Jais-3-3.7B [12], Nile-Chat 4B [13], Qwen3 8B [14]); logistic regression on "
+        "frozen multilingual-e5-small embeddings (**S5**); fine-tuned MARBERTv2 [2] "
         "(**S6**, five seeds, recipe after [10]); Jais 2 with QLoRA [3] (**S7**); Jais-3-7B performing "
         "the whole task by native tool calling (**S8**); and **S9**, which keeps S8's declines and "
-        "arguments but lets the policy decide when to execute, falling back to S1 v1.1 where S8 made no valid "
-        "call (23-25 of 238 items per seed).")
+        "arguments but lets the policy decide when to execute, falling back to S1 v1.1 (S1 with the "
+        "extractor fix, §4.1) where S8 made no valid "
+        f"call ({min(s8_invalid_nat)}-{max(s8_invalid_nat)} of {n_conf} items per seed).")
 
     R.h2("3.4 Changes from the proposal")
     R.para(
-        "**Training data:** 261 of 298 training items were AI-drafted (and marked), because the human "
+        f"**Training data:** {drafted('train')} of {len(ITEMS['train'])} training items were AI-drafted, because the human "
         "requests available at the freeze were needed for an all-human test. **Evaluation:** a "
-        "screened contributor collection became a second, pre-registered evaluation. **Scope:** 458 items and 34 test pairs (planned: 300, 20); "
-        "LLM baselines on Kaggle 2×T4 GPUs, adding Jais 3 (released after the freeze); S1-S3 and the "
-        "S5/S6 encoders on CPU.")
+        "screened contributor collection became a second, pre-registered evaluation. **Scope:** "
+        f"{n_all} items and {t1['pairs']} test pairs (planned: 300, 20); LLM baselines on Kaggle T4 "
+        "GPUs, adding Jais 3 (released after the freeze).")
 
     # 4 ------------------------------------------------------------------------------------------
     R.h1("4. Evaluation and results")
@@ -565,18 +670,24 @@ def build(commit: str) -> Report:
     R.para(
         "**Adequacy.** Both evaluation sets hold native-written requests for the two tools, balanced "
         "across routes, with incomplete variants and in-domain out-of-scope requests. Coverage is "
-        "uneven: code-switching marks 64% of training items but 20% of "
-        "the test and 35% of the natural set, and 79% of natural messages concern project-management "
-        "work. Test intervals span about ±0.09 STS, so "
+        f"uneven: code-switching marks {share(ITEMS['train'], 'code_switched'):.0%} of training items but "
+        f"{share(ITEMS['test'], 'code_switched'):.0%} of the test and "
+        f"{share(NAT_CONF, 'code_switched'):.0%} of the natural set, and "
+        f"{share(NAT_CONF, 'domain', 'project_management'):.0%} of natural messages concern "
+        "project-management work. Test intervals span about ±0.09 STS, so "
         "the larger natural set carries the main conclusion. "
         "**Separation.** Splits follow scenario families under a hash-locked manifest; vocabularies and "
         "hyper-parameters come from train/dev only; the test was scored once, by a command that refuses "
         "changed models; natural-set systems were frozen before labelling. **Limitations.** The "
         "test is one writer's templated phrasing (52 sentence frames for 120 items) by the author of "
-        "S1's lexicon; the natural set has new writers but the same scenarios. "
+        "S1's lexicon; the natural set has new writers but the same scenarios. S2 and S3 were tuned on "
+        f"{len(ITEMS['dev'])} mostly drafted dev items; with grouped cross-validation settings (frozen "
+        "before labelling, with the extractor fix) they reach "
+        f"{f3(NAT['summary']['S2-gcv']['sts'])} and {f3(NAT['summary']['S3-gcv']['sts'])} there, still "
+        "below S1. "
         "**Metrics.** Besides STS: intent and route macro-F1; unsafe execution (a wrong or unwarranted "
-        "tool call) over all items and over predicted ACT outputs (all, ACT); unnecessary clarification (Unn. clar.: "
-        "gold ACT answered with CLARIFY, set mainly by the shared extractor); and minimal pairs with both versions correct. Intervals are "
+        "tool call) over all items and over predicted ACT outputs; unnecessary clarification (Unn. clar.: "
+        "gold ACT answered with CLARIFY); and minimal pairs with both versions correct. Intervals are "
         "family-level bootstraps (10,000 resamples) [8]; paired tests swap whole families [7], "
         "Holm-corrected [9]. **Hypotheses** (fixed before labelling): "
         "N1, S1 beats S2; N2, the extractor fix drawn from the test errors (S1 v1.1) beats S1; N3, S9 "
@@ -600,7 +711,7 @@ def build(commit: str) -> Report:
                      f3(m["intent_macro_f1"]), f3(m["route_macro_f1"]), f3(m["unsafe_execution_rate"]),
                      f3(1 - m["execution_precision"]),
                      f3(m["unnecessary_clarification_rate"]), f3(m["pair_both_success"])])
-    R.table("Locked test (120 items, 34 pairs). Metrics as defined in §4.1.",
+    R.table(f"Locked test ({t1['n']} items, {t1['pairs']} pairs). Metrics as defined in §4.1.",
             ["System", "STS [95% CI]", "Intent F1", "Route F1", "Unsafe (all)", "Unsafe (ACT)",
              "Unn. clar.", "Pairs"], rows, widths=[3.3, 3.3, 1.5, 1.5, 1.6, 1.7, 1.6, 1.3],
             bold_rows={1})
@@ -624,12 +735,11 @@ def build(commit: str) -> Report:
                          f3(nat_seed_mean(key, "unnecessary_clarification_rate")),
                          f3(nat_seed_mean(key, "pair_both_success")),
                          " / ".join(f"{nat_seed_route(key, r):.2f}" for r in ("ACT", "CLARIFY", "ABSTAIN"))])
-    R.table("Natural set (238 items, 17 writers, 64 pairs; S8/S9: 3-seed means; last: success by gold "
-            "route).",
+    R.table(f"Natural set ({n_conf} items, {n_writers} writers, {n1['pairs']} pairs; S8/S9: 3-seed "
+            "means; last: success by gold route).",
             ["System", "STS [95% CI]", "Route F1", "Unsafe (all)", "Unsafe (ACT)", "Unn. clar.",
              "Pairs", "ACT / CLAR / ABST"], nat_rows, widths=[3.4, 3.2, 1.2, 1.3, 1.4, 1.2, 1.1, 3.2],
             bold_rows={1})
-    N1, N3 = tests["N1 S1 vs S2"], tests["N3 S9 vs S8"]
     R.para(
         "**N1 was confirmed** with a larger gap: "
         f"{signed(N1['difference'])} {ci(N1['ci'])}, Holm p = {N1['p_holm']:.4f}; S1 led for 13 of 17 "
@@ -647,21 +757,21 @@ def build(commit: str) -> Report:
     s3h = {**s3h, "difference": -s3h["difference"],   # report as rules minus S3, the gap to close
            "ci": {"low": -s3h["ci"]["high"], "high": -s3h["ci"]["low"]}}
     kinds = ("S2", "S3", "S5")
-    spread = max(max(hum[f"{k} | {p}"]["sts"] for k in kinds) - min(hum[f"{k} | {p}"]["sts"] for k in kinds)
-                 for p in ("drafted+author", "drafted+author+contributors"))
     gains = [hum[f"{k} | drafted+author+contributors"]["sts"] - hum[f"{k} | drafted+author"]["sts"] for k in kinds]
     lo_gain, hi_gain = min(gains), max(gains)
     R.para(
-        "**Training data.** In the training set 88% of reminders use the verb «فكرني» and 5% "
-        "the noun «تذكير»; in the test, 50% and 42%. S2 sent 15 of the 62 test reminders to the alarm "
-        "tool (6 noun forms; Table 10). In exploratory "
+        f"**Training data.** In the training set {reminder_share('train', 'فكرني'):.0%} of reminders use "
+        f"the verb «فكرني» and {reminder_share('train', 'تذكير'):.0%} "
+        f"the noun «تذكير»; in the test, {reminder_share('test', 'فكرني'):.0%} and "
+        f"{reminder_share('test', 'تذكير'):.0%}. S2 sent {s2cm[0][1]} of the {sum(s2cm[0])} test "
+        "reminders to the alarm tool (Table 10). In exploratory "
         "leave-one-writer-out "
         "training, about 215 added human messages raised S3 on new writers from "
         f"{hum['S3 | drafted+author']['sts']:.3f} to {hum['S3 | drafted+author+contributors']['sts']:.3f} "
         f"(gap to the rules {signed(s3h['difference'])} {ci(s3h['ci'])}); trained on them alone "
-        f"({hum['S3 | contributors only']['sts']:.3f}) it beat the 338 drafted and author items, so source, "
-        f"not size, mattered. Human data added {lo_gain:.2f}-{hi_gain:.2f} per classifier, more than the "
-        f"{spread:.2f} between classifiers on one pool (Table 5); MARBERTv2 on drafted data: "
+        f"({hum['S3 | contributors only']['sts']:.3f}) it beat the {n_fit} drafted and author items, so source, "
+        f"not size, mattered (Table 5: {lo_gain:.2f}-{hi_gain:.2f} gained per classifier). "
+        "MARBERTv2 on drafted data: "
         f"{s6['locked_test_core_v1']:.3f} on the test, {s6['natural_core_v1']:.3f} on new writers.")
     R.para(
         "**Failure types.** S2 fails 20 more test items than S1, through intent errors S1 never makes: 9 wrong "
@@ -674,11 +784,12 @@ def build(commit: str) -> Report:
     # 5 ------------------------------------------------------------------------------------------
     R.h1("5. Conclusion")
     R.para(
-        "We built a task contract, a safety-aware metric, a 458-item benchmark and a 238-message "
-        "evaluation by 17 other writers. Keyword rules beat TF-IDF classifiers on both (+0.206 STS on new "
+        f"We built a task contract, a safety-aware metric, a {n_all}-item benchmark and a {n_conf}-message "
+        f"evaluation by {n_writers} other writers. Keyword rules beat TF-IDF classifiers on both "
+        f"({signed(N1['difference'])} STS on new "
         "writers), a gap exploratory analyses trace to AI-drafted training data; a deterministic policy "
-        "made LLM tool calling safer (+0.102 STS); the shared extractor limits every system. A registered "
-        "third evaluation of human training data awaits its labels.")
+        f"made LLM tool calling safer ({signed(N3['difference'])} STS); the shared extractor limits every "
+        "system.")
 
     # References ----------------------------------------------------------------------------------
     R.h1("References")
@@ -710,7 +821,7 @@ def build(commit: str) -> Report:
     ]
     for ref in refs:
         p = R.doc.add_paragraph()
-        fmt(p, align=WD_ALIGN_PARAGRAPH.LEFT, after=6)
+        fmt(p)
         add_runs(p, ref)
 
     # Appendices -----------------------------------------------------------------------------------
@@ -745,8 +856,7 @@ def build(commit: str) -> Report:
             ["System", "Precision", "Locked test (120)", "Natural (238)"], ext, widths=[5.8, 2.0, 4.1, 4.1])
     j3 = load("results/s4/7a-jais3/s4_results/jais3-7b.json")["systems"]
     j3_inline = j3["S4-jais3-7b-6shot-inline-prior"]["metrics"]["safe_task_success"]
-    j3_declined = next(r for r in csv.DictReader((ROOT / "results/error_analysis/summary.csv").open(encoding="utf-8"))
-                       if r["system"] == "S4-jais3-7b-6shot-prior")["declined an in-scope request"]
+    j3_declined = FAILS["S4-jais3-7b-6shot-prior"]["declined an in-scope request"]
     s8_invalid = [load(s8_file)["systems"][f"S8-jais3-7b-s{i}"]["metrics"]["invalid_outputs"] for i in range(3)]
     R.para(
         "**Precision.** Kaggle's T4 GPUs have no bf16, so the models ran in different formats: Jais 2 "
@@ -767,13 +877,13 @@ def build(commit: str) -> Report:
         hrows.append([model] + [f"{hum[f'{model} | {pool}']['sts']:.3f} ({hum[f'{model} | {pool}']['intent_accuracy']:.3f})"
                                 for pool in ("drafted+author", "contributors only",
                                              "drafted+author+contributors")])
-    hrows.append(["S1 rules (reference)", "", "", f"{hum['S1-v1.1']['sts']:.3f} (0.933)"])
+    hrows.append(["S1 rules (reference)", "", "", f"{hum['S1-v1.1']['sts']:.3f} ({hum['S1-v1.1']['intent_accuracy']:.3f})"])
     R.table("Exploratory leave-one-writer-out training on the natural set: STS (intent accuracy). Each "
             "held-out writer's scenario families are removed from training; about 215 contributor "
             "messages per fold; S2/S3 use grouped-CV settings; S1 is core v1.1.",
-            ["Classifier", "Drafted + author (338)", "Contributors only (~215)", "Both"],
+            ["Classifier", f"Drafted + author ({n_fit})", "Contributors only (~215)", "Both"],
             hrows, widths=[3.5, 4.2, 4.2, 4.1])
-    tsv = list(csv.DictReader((ROOT / "results/posthoc/template_sensitivity.csv").open(encoding="utf-8")))
+    tsv = csv_rows("results/posthoc/template_sensitivity.csv")
     srows = []
     for r in tsv:
         if r["hypothesis"] in ("H1", "H2"):
@@ -811,8 +921,7 @@ def build(commit: str) -> Report:
               "ACT\n@محتاج اراجع الjira tickets قبل ميعاد ال sprint review",
               "second-person framing (new writer)"]],
             widths=[5.4, 3.6, 3.8, 3.2])
-    fails = {r["system"]: r for r in csv.DictReader(
-        (ROOT / "results/error_analysis/summary.csv").open(encoding="utf-8"))}
+    fails = FAILS
     cats = ["wrong reminder text only", "wrong tool", "executed an incomplete request",
             "asked although complete", "asked for the wrong slots", "clarified with the wrong intent",
             "asked instead of declining", "declined an in-scope request"]
@@ -822,8 +931,7 @@ def build(commit: str) -> Report:
             ["Failure type", "Oracle", "S1", "S2", "S3"], frows, widths=[7.6, 2.1, 2.1, 2.1, 2.1],
             bold_rows={len(frows) - 1})
 
-    nat_cs = {i["id"] for i in map(json.loads, (ROOT / "data/natural/natural.jsonl").read_text(
-        encoding="utf-8").splitlines()) if i.get("code_switched")}
+    nat_cs = {i["id"] for i in NAT_ITEMS if i.get("code_switched")}
     crow = []
     for name, key in (("oracle (gold intent)", "oracle"), ("S1 keyword rules", "S1"),
                       ("S2 TF-IDF + LR", "S2"), ("S3 + char n-grams", "S3")):
@@ -848,7 +956,7 @@ def build(commit: str) -> Report:
            "`notebooks/`.")
     R.code([
         "uv sync",
-        "uv run pytest                                               # unit tests",
+        "uv run pytest                                               # tests",
         "uv run python scripts/error_analysis.py --out results/error_analysis   # T2, T9",
         "uv run python scripts/natural_tables.py                     # Table 3",
         "uv run python scripts/posthoc_analysis.py --out results/posthoc        # T6",
@@ -870,7 +978,8 @@ def build(commit: str) -> Report:
 
     R.h1("Appendix D. Use of generative AI")
     R.para(
-        "The 300 AI-drafted training and development requests were generated with an AI assistant and "
+        f"The {n_drafted} AI-drafted training and development requests were generated with an AI "
+        "assistant and "
         "are marked `source: assistant_draft`; none is in either evaluation set. The code, tests and "
         "documentation were developed with Claude Code as a programming assistant. During adjudication "
         "of the natural set, the assistant checked the author's final labels against the written "
@@ -885,24 +994,35 @@ def to_pdf(docx: Path, pdf: Path) -> None:
     ps = (f"$w = New-Object -ComObject Word.Application; $w.Visible = $false; "
           f"$d = $w.Documents.Open('{docx}'); $d.SaveAs([ref]'{pdf}', [ref]17); "
           f"$p = $d.ComputeStatistics(2); "
-          f"$r = $d.Content; $f = $r.Find; $null = $f.Execute('References'); "
-          f"Write-Output \"pages=$p references_on_page=$($r.Information(3))\"; "
+          f"$r = $d.Content; $f = $r.Find; $f.MatchCase = $true; $null = $f.Execute('References'); "
+          f"$r.Move(1, -2) | Out-Null; "  # the last character of the Conclusion
+          f"Write-Output \"pages=$p main_report_ends_on_page=$($r.Information(3))\"; "
           f"$d.Close([ref]0); $w.Quit()")
     out = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True)
     print(out.stdout.strip() or out.stderr.strip())
+    end = re.search(r"main_report_ends_on_page=(\d+)", out.stdout)
+    if end and int(end.group(1)) > MAIN_PAGE_LIMIT:
+        sys.exit(f"the main report ends on page {end.group(1)}; the limit is {MAIN_PAGE_LIMIT} pages")
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--pdf", action="store_true", help="also export a PDF with Microsoft Word")
     ap.add_argument("--allow-dirty", action="store_true")
+    ap.add_argument("--out-dir", type=Path, default=OUT, help="where to write (default: next to this script)")
     a = ap.parse_args()
-    if git("status", "--porcelain") and not a.allow_dirty:
+    dirty = bool(git("status", "--porcelain"))
+    if dirty and not a.allow_dirty:
         sys.exit("working tree has uncommitted changes; commit first so the printed hash matches")
-    commit = git("rev-parse", "HEAD")
-    docx = OUT / "ATHAR_Chat_Final_Report.docx"
-    build(commit).save(docx)
-    print(f"wrote {docx.relative_to(ROOT)} for commit {commit}")
+    commit, branch = git("rev-parse", "HEAD"), git("rev-parse", "--abbrev-ref", "HEAD")
+    a.out_dir.mkdir(parents=True, exist_ok=True)
+    docx = a.out_dir.resolve() / "ATHAR_Chat_Final_Report.docx"
+    build(commit, branch).save(docx)
+    print(f"wrote {docx} for commit {commit}")
+    if dirty:
+        print("DRAFT: uncommitted changes, so the printed commit does not hold these files; do not submit")
+    if not git("branch", "-r", "--contains", commit):
+        print(f"WARNING: commit {commit[:7]} is not on the remote yet; push before submitting")
     if a.pdf:
         to_pdf(docx, docx.with_suffix(".pdf"))
 

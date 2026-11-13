@@ -22,8 +22,8 @@ Microsoft Word on Windows). The full technical report is [docs/report.md](docs/r
 **Results:** On the locked test (120 author-written requests), the keyword
 rules (S1, STS 0.767) beat both classifiers (S2 0.600, S3 0.625). The gap is significant under the
 pre-registered family-clustered test (Holm p ≤ 0.005) but only borderline when test items that share a
-sentence frame are treated as dependent (post hoc, Holm p 0.05-0.11): the test is one writer's templated
-phrasing. The classifiers were trained on mostly AI-drafted text and over-regularized by a 40-item drafted
+sentence frame are treated as dependent (post hoc, Holm p 0.055-0.114, and 0.53 when families and frames
+are joined into 19 clusters): the test is one writer's templated phrasing. The classifiers were trained on mostly AI-drafted text and over-regularized by a 40-item drafted
 dev set. The shared extractor caps every pipeline system at 0.808 (oracle); fixing one framing-lexicon gap repairs 14
 of its 23 failures. Post hoc analyses: [docs/posthoc_analyses.md](docs/posthoc_analyses.md).
 
