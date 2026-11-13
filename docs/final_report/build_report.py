@@ -563,6 +563,11 @@ def build(commit: str, branch: str) -> Report:
     require(f"{s6_abst:.2f}" == "0.48" and "0.659 / 0.475 |" in tables and "0.727 / 0.525 |" in tables
             and f"{n1['success_by_gold_route']['ABSTAIN']:.2f}" == "0.85",
             "declined out-of-scope requests: S6, Jais 2, Nile-Chat, S1")
+    v3_n = 236
+    require(f"**{v3_n} messages from 17 writers" in (ROOT / "docs/protocol_v3.md").read_text(encoding="utf-8")
+            and (ROOT / "models_v3/freeze_s3.json").exists() and (ROOT / "models_v3/freeze_s6.json").exists()
+            and not any((ROOT / "results/v3").glob("evaluation*")),
+            "protocol v3: systems frozen, not yet evaluated")
     n_human = 215  # the figure used in docs/report.md and the registered protocol v3
     require(abs(st.mean(f["contributor_training"] for f in HUM["folds"].values()) - n_human) < 1,
             "about 215 contributor messages per training fold")
@@ -618,8 +623,7 @@ def build(commit: str, branch: str) -> Report:
     R.link_para("**Data:** ", (blob + "data/athar.jsonl", "data/athar.jsonl"),
                 f" ({n_all} items; splits ", (blob + "data/splits/manifest.json", "data/splits/manifest.json"),
                 "), ", (blob + "data/natural/natural.jsonl", "data/natural/natural.jsonl"),
-                f" ({n_nat}), data card, task contract and annotation guide (`docs/`). Contributors "
-                "consented to the use of their messages in this project.",
+                f" ({n_nat}), data card and guides (`docs/`), used with consent.",
                 align=WD_ALIGN_PARAGRAPH.JUSTIFY)
     R.bullets([
         "**Models, outputs, demo:** frozen classifiers (`models/`, `models_v2/`), stored predictions "
@@ -683,22 +687,19 @@ def build(commit: str, branch: str) -> Report:
         "2-4-grams for spelling variation. Vocabularies are fitted on train; C and n-gram ranges were chosen by dev "
         "intent macro-F1 (S2: C = 0.3; S3: C = 0.1); each fits in under 0.3 s on a laptop CPU "
         "(Appendix A). The **oracle** feeds gold intents "
-        "to the same pipeline. **Extensions:** prompted LLM intent recognizers (**S4**: Jais 2 8B "
-        "[5, 11], Jais-3-7B, Jais-3-3.7B [12], Nile-Chat 4B [13], Qwen3 8B [14]); logistic regression on "
-        "frozen multilingual-e5-small embeddings (**S5**); fine-tuned MARBERTv2 [2] "
-        "(**S6**, five seeds, recipe after [10]); Jais 2 with QLoRA [3] (**S7**); Jais-3-7B performing "
-        "the whole task by native tool calling (**S8**); and **S9**, which keeps S8's declines and "
+        "to the same pipeline. **Extensions:** in **S8**, Jais-3-7B [12] performs the whole task by "
+        "native tool calling; **S9** keeps S8's declines and "
         "arguments but lets the policy decide when to execute, falling back to S1 v1.1 (S1 with the "
         "extractor fix, §4.3) where S8 made no valid "
-        f"call ({min(s8_invalid_nat)}-{max(s8_invalid_nat)} of {n_conf} items per seed).")
+        f"call ({min(s8_invalid_nat)}-{max(s8_invalid_nat)} of {n_conf} items per seed). S4-S7: Appendix A.")
 
     R.h2("3.4 Changes from the proposal")
     R.para(
         f"**Training data:** {drafted('train')} of {len(ITEMS['train'])} training items were AI-drafted, because the human "
         "requests available at the freeze were needed for an all-human test. **Evaluation:** a "
         "screened contributor collection became a second, pre-registered evaluation. **Scope:** "
-        f"{n_all} items and {t1['pairs']} test pairs (planned: 300, 20); LLM baselines on Kaggle T4 "
-        "GPUs, with Jais 3 added on its release.")
+        f"{n_all} items and {t1['pairs']} test pairs (planned: 300, 20). S1-S3 stayed on a laptop CPU; "
+        "LLM extensions used Kaggle GPUs.")
 
     # 4 ------------------------------------------------------------------------------------------
     R.h1("4. Evaluation and results")
@@ -784,7 +785,8 @@ def build(commit: str, branch: str) -> Report:
         f"{signed(N3['difference'])} {ci(N3['ci'])}, Holm p = {N3['p_holm']:.3f}. **N2 was not:** the "
         "extractor fix changed one natural item. S4 Jais-3-3.7B "
         f"({f3(s4_nat('jais3-3.7b'))}) and S7 ({S7_NAT:.3f}) score above S1, within its interval "
-        "(untested; Table 4). Even the best systems are unsafe: "
+        "(untested; Table 4). S9 builds on a fix drawn from the test errors, so it "
+        "was scored only here. Even the best systems are unsafe: "
         f"{1 - t1['execution_precision']:.0%} of S1's test executions and "
         f"{1 - n1['execution_precision']:.0%} of its natural ones were wrong, though 13 of its 16 wrong "
         "test calls missed only the exact reminder text.")
@@ -806,7 +808,9 @@ def build(commit: str, branch: str) -> Report:
         f"({hum['S3 | contributors only']['sts']:.3f}) it beat the {n_fit} drafted and author items, which points to source "
         f"rather than size (Table 5). "
         "MARBERTv2 on drafted data: "
-        f"{s6['locked_test_core_v1']:.3f} on the test, {s6['natural_core_v1']:.3f} on new writers.")
+        f"{s6['locked_test_core_v1']:.3f} on the test, {s6['natural_core_v1']:.3f} on new writers. "
+        f"A registered test of this explanation on {v3_n} unseen messages (`docs/protocol_v3.md`) has "
+        "frozen systems and awaits labelling; no result from it is reported.")
     R.para(
         "**Failure types.** S2 fails 20 more test items than S1, through intent errors S1 never makes: 9 wrong "
         "tools, 7 declined in-scope requests, 6 wrong-intent clarifications (Table 9). "
@@ -828,7 +832,7 @@ def build(commit: str, branch: str) -> Report:
         "compute, this favours rules plus an explicit policy until human training data exist. "
         "**Limits:** the extractor bounds every system; "
         f"{100 * (1 - t1['execution_precision']):.0f}-{1 - n1['execution_precision']:.0%} of S1's "
-        "executions were wrong.")
+        "executions were wrong; both evaluations use the same scenarios for two tools.")
 
     # References ----------------------------------------------------------------------------------
     R.h1("References")
@@ -898,6 +902,12 @@ def build(commit: str, branch: str) -> Report:
     j3_inline = j3["S4-jais3-7b-6shot-inline-prior"]["metrics"]["safe_task_success"]
     j3_declined = FAILS["S4-jais3-7b-6shot-prior"]["declined an in-scope request"]
     s8_invalid = [load(s8_file)["systems"][f"S8-jais3-7b-s{i}"]["metrics"]["invalid_outputs"] for i in range(3)]
+    R.para(
+        "**Systems S4-S7.** They replace only the intent recognizer; the extractor and policy are "
+        "shared. **S4** prompts an LLM for the intent with 6 examples (Jais 2 8B [5, 11], Jais-3-7B, "
+        "Jais-3-3.7B [12], Nile-Chat 4B [13], Qwen3 8B [14]). **S5** is logistic regression on frozen "
+        "multilingual-e5-small embeddings. **S6** is fine-tuned MARBERTv2 [2] (five seeds, recipe after "
+        "[10]). **S7** is Jais 2 with QLoRA [3] (three seeds).")
     R.para(
         "**Precision.** Kaggle's T4 GPUs have no bf16, so the models ran in different formats: Jais 2 "
         "overflowed in fp16 and ran 4-bit, Jais-3-7B and Qwen3 ran in fp16, the smaller models in fp32. "
