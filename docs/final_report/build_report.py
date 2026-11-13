@@ -155,6 +155,9 @@ AGREE_TEST = load("docs/agreement.json")
 AGREE_NAT = load("results/natural/agreement.json")
 FREEZE = load("models/freeze.json")
 FAILS = {r["system"]: r for r in csv_rows("results/error_analysis/summary.csv")}
+# one real failure of the shared pipeline with the gold intent, quoted in section 4.3
+EXAMPLE = next(r for r in csv_rows("results/error_analysis/failures.csv")
+               if r["system"] == "oracle" and r["id"] == "c014-a")
 
 
 def share(items: list[dict], key: str, value: object = True) -> float:
@@ -533,6 +536,8 @@ def build(commit: str, branch: str) -> Report:
             and FAILS["S1"]["wrong reminder text only"] == "13", "13 of S1's 16 wrong test calls")
     fix = {r["system"]: r for r in csv_rows("results/posthoc/extractor_fix.csv")}
     require(fix["oracle"]["fixed"] == "14" and FAILS["oracle"]["failures"] == "23", "14 of 23 oracle failures")
+    require(EXAMPLE["cause"] == "wrong reminder text only" and EXAMPLE["pred_route"] == "ACT"
+            and EXAMPLE["gold_datetime"] == EXAMPLE["pred_datetime"], "the quoted pipeline failure")
     require(n_drafted == sum(i.get("source") == "assistant_draft" for v in ITEMS.values() for i in v),
             "AI-drafted items are only in train and dev")
 
@@ -544,16 +549,15 @@ def build(commit: str, branch: str) -> Report:
         "decline it. We study this decision (ACT, CLARIFY, ABSTAIN) for single-turn Egyptian Arabic "
         "reminder and alarm requests, often code-switched with English. With one shared rule-based "
         "extractor and policy, keyword rules (S1), TF-IDF logistic regression (S2) and "
-        "its character n-gram extension (S3) are compared by Safe Task Success (STS). "
-        f"On a locked {len(ITEMS['test'])}-item test the "
-        f"rules outperformed both classifiers ({f3(t1['safe_task_success'])} vs "
-        f"{f3(t2['safe_task_success'])} and {f3(t3['safe_task_success'])}). A pre-registered "
-        f"evaluation on {n_conf} messages from {n_writers} other native speakers confirmed this "
-        f"(+{tests['N1 S1 vs S2']['difference']:.3f} STS, Holm p = {tests['N1 S1 vs S2']['p_holm']:.4f}) "
-        "and showed that the same policy makes Jais-3-7B tool calling safer "
-        f"(STS {s8m['sts']:.3f} → {s9m['sts']:.3f}). Exploratory analyses trace the classifiers' "
-        "deficit to their mostly AI-drafted training data and show that the shared extractor bounds "
-        f"every system ({f3(no['safe_task_success'])} with gold intents).")
+        "a character n-gram variant (S3) are compared by Safe Task Success (STS). "
+        f"In a pre-registered evaluation on {n_conf} messages from {n_writers} other native "
+        f"speakers, the rules beat the classifier ({f3(n1['safe_task_success'])} vs "
+        f"{f3(n2['safe_task_success'])}, Holm p = {tests['N1 S1 vs S2']['p_holm']:.4f}), as on the "
+        f"author's locked {len(ITEMS['test'])}-item test ({f3(t1['safe_task_success'])} vs "
+        f"{f3(t2['safe_task_success'])} and {f3(t3['safe_task_success'])}). The same policy made "
+        f"Jais-3-7B tool calling safer (STS {s8m['sts']:.3f} → {s9m['sts']:.3f}). Exploratory analyses "
+        "trace the classifiers' deficit to their mostly AI-drafted training data and show that the "
+        f"shared extractor bounds every system ({f3(no['safe_task_success'])} with gold intents).")
 
     # 1 ------------------------------------------------------------------------------------------
     R.h1("1. Motivation and objectives")
@@ -563,7 +567,7 @@ def build(commit: str, branch: str) -> Report:
         "what it cannot do, such as deleting a reminder. Egyptian Arabic makes "
         "this harder: messages are informal («اعمللي تذكير بعد بكرة الساعة 9 بالليل عشان اخد الدوا», "
         "\"set me a reminder the day after tomorrow at 9 pm to take my medicine\"), inconsistently "
-        "spelled and mixed with English (*timesheet*, *sprint backlog*). Out-of-scope requests are hard "
+        "spelled and mixed with English. Out-of-scope requests are hard "
         "for intent classifiers [6], and When2Call [1] showed for English that deciding *when* to call "
         "a tool is a problem of its own; no Egyptian Arabic dataset labels this decision with tool "
         "arguments.")
@@ -645,8 +649,8 @@ def build(commit: str, branch: str) -> Report:
         "only the intent. **S1** uses hand-written trigger and out-of-scope lexicons. **S2** is word "
         "TF-IDF with class-balanced logistic regression [4]; **S3** adds character 2-4-grams for "
         "spelling variation. Vocabularies are fitted on train; C and n-gram ranges were chosen by dev "
-        "intent macro-F1 (S2: C = 0.3; S3: C = 0.1). On a laptop CPU, each final fit takes under 0.3 s, "
-        "inference under 0.3 ms per item, peak memory 141 MB. The **oracle** feeds gold intents "
+        "intent macro-F1 (S2: C = 0.3; S3: C = 0.1); each fits in under 0.3 s on a laptop CPU "
+        "(Appendix A). The **oracle** feeds gold intents "
         "to the same pipeline. **Extensions:** prompted LLM intent recognizers (**S4**: Jais 2 8B "
         "[5, 11], Jais-3-7B, Jais-3-3.7B [12], Nile-Chat 4B [13], Qwen3 8B [14]); logistic regression on "
         "frozen multilingual-e5-small embeddings (**S5**); fine-tuned MARBERTv2 [2] "
@@ -684,7 +688,8 @@ def build(commit: str, branch: str) -> Report:
         f"{len(ITEMS['dev'])} mostly drafted dev items; with grouped cross-validation settings (frozen "
         "before labelling, with the extractor fix) they reach "
         f"{f3(NAT['summary']['S2-gcv']['sts'])} and {f3(NAT['summary']['S3-gcv']['sts'])} there, still "
-        "below S1. "
+        "below S1.")
+    R.para(
         "**Metrics.** Besides STS: intent and route macro-F1; unsafe execution (a wrong or unwarranted "
         "tool call) over all items and over predicted ACT outputs; unnecessary clarification (Unn. clar.: "
         "gold ACT answered with CLARIFY); and minimal pairs with both versions correct. Intervals are "
@@ -747,7 +752,8 @@ def build(commit: str, branch: str) -> Report:
         f"{signed(N3['difference'])} {ci(N3['ci'])}, Holm p = {N3['p_holm']:.3f}. **N2 was not:** the "
         "extractor fix changed one natural item. S4 Jais-3-3.7B "
         f"({f3(s4_nat('jais3-3.7b'))}) and S7 ({S7_NAT:.3f}) score above S1, within its interval "
-        "(untested; Table 4). Even the best systems are unsafe: "
+        "(untested; Table 4). S9 builds on a fix drawn from the test errors, so it "
+        "was scored only here. Even the best systems are unsafe: "
         f"{1 - t1['execution_precision']:.0%} of S1's test executions and "
         f"{1 - n1['execution_precision']:.0%} of its natural ones were wrong, though 13 of its 16 wrong "
         "test calls missed only the exact reminder text.")
@@ -756,9 +762,6 @@ def build(commit: str, branch: str) -> Report:
     s3h = HUM["tests"]["S3 +contributors vs S1-v1.1"]
     s3h = {**s3h, "difference": -s3h["difference"],   # report as rules minus S3, the gap to close
            "ci": {"low": -s3h["ci"]["high"], "high": -s3h["ci"]["low"]}}
-    kinds = ("S2", "S3", "S5")
-    gains = [hum[f"{k} | drafted+author+contributors"]["sts"] - hum[f"{k} | drafted+author"]["sts"] for k in kinds]
-    lo_gain, hi_gain = min(gains), max(gains)
     R.para(
         f"**Training data.** In the training set {reminder_share('train', 'فكرني'):.0%} of reminders use "
         f"the verb «فكرني» and {reminder_share('train', 'تذكير'):.0%} "
@@ -770,14 +773,16 @@ def build(commit: str, branch: str) -> Report:
         f"{hum['S3 | drafted+author']['sts']:.3f} to {hum['S3 | drafted+author+contributors']['sts']:.3f} "
         f"(gap to the rules {signed(s3h['difference'])} {ci(s3h['ci'])}); trained on them alone "
         f"({hum['S3 | contributors only']['sts']:.3f}) it beat the {n_fit} drafted and author items, so source, "
-        f"not size, mattered (Table 5: {lo_gain:.2f}-{hi_gain:.2f} gained per classifier). "
+        f"not size, mattered (Table 5). "
         "MARBERTv2 on drafted data: "
         f"{s6['locked_test_core_v1']:.3f} on the test, {s6['natural_core_v1']:.3f} on new writers.")
     R.para(
         "**Failure types.** S2 fails 20 more test items than S1, through intent errors S1 never makes: 9 wrong "
         "tools, 7 declined in-scope requests, 6 wrong-intent clarifications (Table 9). "
         "**Shared pipeline.** With gold intents, 14 of the 23 test failures disappear once the "
-        "extractor strips two request framings («عايز تذكير» or «اعمللي»). New writers failed elsewhere: emphasis "
+        "extractor strips two request framings: for "
+        f"«{EXAMPLE['text']}» it kept «{EXAMPLE['pred_text']}» instead of «{EXAMPLE['gold_text']}» "
+        "(right tool and time). New writers failed elsewhere: emphasis "
         "words after the verb stay in the text («ضروري»), and day-scale expressions («بعد اسبوع») were hardest (oracle 0.58 on 31 "
         "items), hence N2's small effect.")
 
@@ -866,6 +871,9 @@ def build(commit: str, branch: str) -> Report:
         f"the user message (a secondary analysis declared before the test was opened) it scored "
         f"{j3_inline:.3f}. As S8 it made no valid call on " + ", ".join(map(str, s8_invalid[:-1]))
         + f" and {s8_invalid[-1]} of the 120 test items.")
+    R.para(
+        "**Cost.** On a laptop CPU, each final S2/S3 fit takes under 0.3 s, inference under 0.3 ms per "
+        "item, and peak memory is 141 MB (`models/freeze.json`).")
     R.para(
         "Out-of-scope requests separate the learned systems on new writers: S6, Jais 2 and Nile-Chat "
         "declined only about half of them (0.48, 0.48 and 0.53), against 0.85 for the rules. These "
