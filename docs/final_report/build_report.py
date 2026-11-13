@@ -524,7 +524,6 @@ def build(commit: str, branch: str) -> Report:
     n_nat, n_conf, n_writers = len(NAT_ITEMS), len(NAT_CONF), len(NAT["writers"])
     n_drafted = drafted("train") + drafted("dev")
     n_fit = len(ITEMS["train"]) + len(ITEMS["dev"])
-    s2cm = t2["intent_confusion"]["matrix"]
     s8_invalid_nat = [nat_metrics(f"S8-s{i}")["invalid_outputs"] for i in range(3)]
 
     # figures typed into the text below, checked against the committed files
@@ -568,6 +567,23 @@ def build(commit: str, branch: str) -> Report:
             and (ROOT / "models_v3/freeze_s3.json").exists() and (ROOT / "models_v3/freeze_s6.json").exists()
             and not any((ROOT / "results/v3").glob("evaluation*")),
             "protocol v3: systems frozen, not yet evaluated")
+    # where S9's gain over S8 comes from: items S8 answered with no valid call go to the rule fallback
+    s9_fallback = s9_policy = 0
+    for i in range(3):
+        a = {x["id"]: x for x in NAT["systems"][f"S8-s{i}"]["items"]}
+        b = {x["id"]: x for x in NAT["systems"][f"S9-s{i}"]["items"]}
+        for k, x in a.items():
+            gain = int(b[k]["success"]) - int(x["success"])
+            if x["valid"]:
+                s9_policy += gain
+            else:
+                s9_fallback += gain
+    s9_gain = s9_fallback + s9_policy
+    require(abs(s9_gain / (3 * n_conf) - N3["difference"]) < 1e-9 and s9_fallback > s9_policy > 0,
+            "S9's gain over S8 split into fallback and policy items")
+    frames = load("results/posthoc/frame_overlap_summary.json")
+    require(frames["test_items"] == len(ITEMS["test"]) and frames["frame_seen_in_dev"] == 0,
+            "sentence-frame overlap of the test with train and dev")
     n_human = 215  # the figure used in docs/report.md and the registered protocol v3
     require(abs(st.mean(f["contributor_training"] for f in HUM["folds"].values()) - n_human) < 1,
             "about 215 contributor messages per training fold")
@@ -585,10 +601,11 @@ def build(commit: str, branch: str) -> Report:
         f"speakers, the rules beat the classifier ({f3(n1['safe_task_success'])} vs "
         f"{f3(n2['safe_task_success'])}, Holm p = {tests['N1 S1 vs S2']['p_holm']:.4f}), as on the "
         f"author's locked {len(ITEMS['test'])}-item test ({f3(t1['safe_task_success'])} vs "
-        f"{f3(t2['safe_task_success'])} and {f3(t3['safe_task_success'])}). The same policy made "
-        f"Jais-3-7B tool calling safer (STS {s8m['sts']:.3f} → {s9m['sts']:.3f}). Exploratory analyses "
-        "trace the classifiers' deficit to their mostly AI-drafted training data and show that the "
-        f"shared extractor bounds every system ({f3(no['safe_task_success'])} with gold intents).")
+        f"{f3(t2['safe_task_success'])} and {f3(t3['safe_task_success'])}). Wrapping Jais-3-7B tool "
+        f"calling in the same policy with a rule fallback raised STS from {s8m['sts']:.3f} to "
+        f"{s9m['sts']:.3f}, mostly through the fallback. Exploratory analyses suggest that the "
+        "classifiers' deficit comes from their mostly AI-drafted training data; the shared extractor "
+        f"limits every pipeline system ({f3(no['safe_task_success'])} with gold intents).")
 
     # 1 ------------------------------------------------------------------------------------------
     R.h1("1. Motivation and objectives")
@@ -600,15 +617,14 @@ def build(commit: str, branch: str) -> Report:
         "\"set me a reminder the day after tomorrow at 9 pm to take my medicine\"), inconsistently "
         "spelled and mixed with English. Out-of-scope requests are hard "
         "for intent classifiers [6], and When2Call [1] showed for English that deciding *when* to call "
-        "a tool is a problem of its own; we know of no Egyptian Arabic dataset labelling this decision.")
-    R.para(
-        "**Intended users.** Developers and students building assistants for under-resourced dialects "
-        "with little compute, who need evidence on how far inexpensive methods go.")
+        "a tool is a problem of its own; we know of no Egyptian Arabic dataset labelling this decision. "
+        "**Intended users** are developers and students building assistants for under-resourced "
+        "dialects with little compute, who need evidence on how far inexpensive methods go.")
     R.para(
         "**Research question.** When all systems share the same argument extractor and execution policy, "
         "does lightweight supervised intent classification improve Safe Task Success over keyword rules? "
         "**Objectives:** (O1) a task contract and safety-aware metric; (O2) a reviewed Egyptian Arabic "
-        "benchmark with leakage-free splits; (O3) rules vs. TF-IDF classifiers in one pipeline; "
+        "benchmark split by scenario; (O3) rules vs. TF-IDF classifiers in one pipeline; "
         "(O4) a test on writers other than the author; (O5) the errors limiting the pipeline.")
 
     # 2 ------------------------------------------------------------------------------------------
@@ -628,8 +644,8 @@ def build(commit: str, branch: str) -> Report:
     R.bullets([
         "**Models, outputs, demo:** frozen classifiers (`models/`, `models_v2/`), stored predictions "
         "(`results/`), links to the pinned Hugging Face models (Table 11), a Streamlit demo "
-        "(`app/streamlit_app.py`) and the technical report `docs/report.md`. The S6 and S7 weights are "
-        "not stored (size); Appendix C names the script and notebook that retrain them.",
+        "(`app/streamlit_app.py`) and the technical report `docs/report.md`. S6 and S7 weights are "
+        "not stored (size; retraining: Appendix C).",
     ])
 
     # 3 ------------------------------------------------------------------------------------------
@@ -668,8 +684,8 @@ def build(commit: str, branch: str) -> Report:
         f"{AGREE_TEST['route']['kappa']:.3f}). The natural set was collected after the "
         "systems were frozen: contributors wrote, without AI tools, a complete and an incomplete message "
         "for each test scenario. Screening out copies left 474 messages by 34 writers; a seeded draw of two "
-        f"writers per group of scenarios gave {n_nat} messages from {n_writers} writers, {n_conf} of "
-        "them in families absent from train and dev. Two annotators labelled all of them (intent κ = "
+        f"writers per scenario group gave {n_nat} messages from {n_writers} writers, {n_conf} "
+        "in families absent from train and dev. Two annotators labelled all of them (intent κ = "
         f"{AGREE_NAT['intent']['kappa']:.3f}, route κ = {AGREE_NAT['route']['kappa']:.3f}); the author "
         f"adjudicated the {load('results/natural/adjudication.json')['adjudicated']} disagreements.")
 
@@ -681,45 +697,51 @@ def build(commit: str, branch: str) -> Report:
         "framing, time expressions and fillers. The policy maps an unsupported intent to ABSTAIN, a "
         "supported one with all required slots to ACT, and otherwise to CLARIFY. Systems therefore "
         "predict only the intent, so STS differences come from intent recognition alone. "
-        "**S1** uses hand-written trigger and out-of-scope lexicons. **S2** is word "
-        "TF-IDF with class-balanced logistic regression [4], a learned baseline that a laptop CPU "
-        "fits on a few hundred items; **S3** adds character "
+        "**S1** uses hand-written trigger and out-of-scope lexicons and needs no data. **S2** is word "
+        "TF-IDF with class-balanced logistic regression [4], a learned baseline fitted on a laptop "
+        "CPU in under 0.3 s; **S3** adds character "
         "2-4-grams for spelling variation. Vocabularies are fitted on train; C and n-gram ranges were chosen by dev "
-        "intent macro-F1 (S2: C = 0.3; S3: C = 0.1); each fits in under 0.3 s on a laptop CPU "
-        "(Appendix A). The **oracle** feeds gold intents "
-        "to the same pipeline. **Extensions:** in **S8**, Jais-3-7B [12] performs the whole task by "
+        "intent macro-F1 (S2: C = 0.3; S3: C = 0.1). The **oracle** feeds gold intents "
+        "to the same pipeline. **Extensions:** **S4-S7** replace only the intent recognizer, with "
+        "few-shot LLMs (S4), an embedding classifier (S5), fine-tuned MARBERTv2 [2] (S6) and "
+        "QLoRA-tuned Jais 2 [3] (S7; Appendix A). In **S8**, Jais-3-7B [12] does the whole task by "
         "native tool calling; **S9** keeps S8's declines and "
         "arguments but lets the policy decide when to execute, falling back to S1 v1.1 (S1 with the "
         "extractor fix, §4.3) where S8 made no valid "
-        f"call ({min(s8_invalid_nat)}-{max(s8_invalid_nat)} of {n_conf} items per seed). S4-S7: Appendix A.")
+        f"call ({min(s8_invalid_nat)}-{max(s8_invalid_nat)} of {n_conf} items a seed).")
 
     R.h2("3.4 Changes from the proposal")
     R.para(
-        f"**Training data:** {drafted('train')} of {len(ITEMS['train'])} training items were AI-drafted, because the human "
-        "requests available at the freeze were needed for an all-human test. **Evaluation:** a "
-        "screened contributor collection became a second, pre-registered evaluation. **Scope:** "
-        f"{n_all} items and {t1['pairs']} test pairs (planned: 300, 20). S1-S3 stayed on a laptop CPU; "
-        "LLM extensions used Kaggle GPUs.")
+        "**Training data:** the proposal planned manually written items only; "
+        f"{drafted('train')} of {len(ITEMS['train'])} training items were AI-drafted, because the human "
+        "requests available at the freeze were needed for an all-human test "
+        f"({n_all} items, {t1['pairs']} test pairs; planned: 300, 20). **Evaluation:** a "
+        "screened contributor collection became a second, pre-registered evaluation. **Systems:** the "
+        "proposal excluded LLMs and GPUs; S1-S3 stayed on a laptop CPU, S4-S9 are extensions "
+        "(LLMs on Kaggle GPUs).")
 
     # 4 ------------------------------------------------------------------------------------------
     R.h1("4. Evaluation and results")
     R.h2("4.1 Evaluation data and metrics")
     R.para(
-        "**Adequacy.** Both evaluation sets hold native-written requests for the two tools, balanced "
-        "across routes, with incomplete variants and in-domain out-of-scope requests. Coverage is "
+        "**Adequacy.** Both evaluation sets hold native-written requests for the two tools, covering "
+        "all routes, with incomplete variants and in-domain out-of-scope requests. Coverage is "
         f"uneven: code-switching marks {share(ITEMS['train'], 'code_switched'):.0%} of training items but "
         f"{share(ITEMS['test'], 'code_switched'):.0%} of the test and "
         f"{share(NAT_CONF, 'code_switched'):.0%} of the natural set, and "
-        f"{share(NAT_CONF, 'domain', 'project_management'):.0%} of natural messages concern "
-        "project-management work. Test intervals span about ±0.09 STS, so "
-        "the larger natural set carries the main conclusion. "
-        "**Separation.** Splits follow scenario families under a hash-locked manifest; vocabularies and "
-        "hyper-parameters come from train/dev only; the test was scored once, by a command that refuses "
-        "changed models; natural-set systems were frozen before labelling. **Limitations.** The "
-        "test is one writer's templated phrasing (52 sentence frames for 120 items) by the author of "
-        "S1's lexicon; the natural set has new writers but the same scenarios. S2 and S3 were tuned on "
-        f"{len(ITEMS['dev'])} mostly drafted dev items; with grouped cross-validation settings (frozen "
-        "before labelling, with the extractor fix) they reach "
+        f"{share(NAT_CONF, 'domain', 'project_management'):.0%} of natural messages are about "
+        "project management. Test intervals span about ±0.09 STS, so "
+        "the natural set carries the main conclusion. "
+        "**Separation.** Splits follow scenario families (all versions of one situation) under a "
+        "hash-locked manifest; vocabularies and "
+        "hyper-parameters come from train/dev only; the test was scored once; "
+        "natural-set systems were frozen before labelling. **Limitations.** The "
+        "test is one writer's templated phrasing (52 sentence frames) by the author of "
+        f"S1's lexicon, and {frames['frame_seen_in_train']} test items share a frame with a training "
+        "item, so phrasing is not disjoint; the natural set has new writers but the "
+        "same scenarios. S2 and S3 were tuned on "
+        f"{len(ITEMS['dev'])} mostly drafted dev items; with grouped-CV settings and the extractor fix "
+        "(frozen before labelling) they reach "
         f"{f3(NAT['summary']['S2-gcv']['sts'])} and {f3(NAT['summary']['S3-gcv']['sts'])} there, still "
         "below S1.")
     R.para(
@@ -782,44 +804,40 @@ def build(commit: str, branch: str) -> Report:
         "**N1 was confirmed** with a larger gap: "
         f"{signed(N1['difference'])} {ci(N1['ci'])}, Holm p = {N1['p_holm']:.4f}; S1 led for 13 of 17 "
         "writers and under every alternative labelling (Table 7). **N3 was confirmed:** "
-        f"{signed(N3['difference'])} {ci(N3['ci'])}, Holm p = {N3['p_holm']:.3f}. **N2 was not:** the "
+        f"{signed(N3['difference'])} {ci(N3['ci'])}, Holm p = {N3['p_holm']:.3f}, but {s9_fallback} of the "
+        f"{s9_gain} items gained (three seeds) were S8's invalid outputs, answered by the rule "
+        f"fallback; {s9_policy} came from the policy. **N2 was not:** the "
         "extractor fix changed one natural item. S4 Jais-3-3.7B "
         f"({f3(s4_nat('jais3-3.7b'))}) and S7 ({S7_NAT:.3f}) score above S1, within its interval "
-        "(untested; Table 4). S9 builds on a fix drawn from the test errors, so it "
-        "was scored only here. Even the best systems are unsafe: "
+        "(untested; Table 4). Even the best are unsafe: "
         f"{1 - t1['execution_precision']:.0%} of S1's test executions and "
-        f"{1 - n1['execution_precision']:.0%} of its natural ones were wrong, though 13 of its 16 wrong "
-        "test calls missed only the exact reminder text.")
+        f"{1 - n1['execution_precision']:.0%} of its natural ones were wrong, but 13 of its 16 wrong "
+        "test calls missed only the reminder text.")
 
     R.h2("4.3 Analysis and errors")
     s3h = HUM["tests"]["S3 +contributors vs S1-v1.1"]
     s3h = {**s3h, "difference": -s3h["difference"],   # report as rules minus S3, the gap to close
            "ci": {"low": -s3h["ci"]["high"], "high": -s3h["ci"]["low"]}}
     R.para(
-        f"**Training data.** In the training set {reminder_share('train', 'فكرني'):.0%} of reminders use "
+        f"**Training data.** In training, {reminder_share('train', 'فكرني'):.0%} of reminders use "
         f"the verb «فكرني» and {reminder_share('train', 'تذكير'):.0%} "
         f"the noun «تذكير»; in the test, {reminder_share('test', 'فكرني'):.0%} and "
-        f"{reminder_share('test', 'تذكير'):.0%}. S2 sent {s2cm[0][1]} of the {sum(s2cm[0])} test "
-        "reminders to the alarm tool (Table 10). In exploratory "
+        f"{reminder_share('test', 'تذكير'):.0%}. In exploratory "
         "leave-one-writer-out "
         f"training, about {n_human} added human messages raised S3 on new writers from "
         f"{hum['S3 | drafted+author']['sts']:.3f} to {hum['S3 | drafted+author+contributors']['sts']:.3f} "
         f"(gap to the rules {signed(s3h['difference'])} {ci(s3h['ci'])}); trained on them alone "
-        f"({hum['S3 | contributors only']['sts']:.3f}) it beat the {n_fit} drafted and author items, which points to source "
-        f"rather than size (Table 5). "
-        "MARBERTv2 on drafted data: "
-        f"{s6['locked_test_core_v1']:.3f} on the test, {s6['natural_core_v1']:.3f} on new writers. "
-        f"A registered test of this explanation on {v3_n} unseen messages (`docs/protocol_v3.md`) has "
-        "frozen systems and awaits labelling; no result from it is reported.")
-    R.para(
-        "**Failure types.** S2 fails 20 more test items than S1, through intent errors S1 never makes: 9 wrong "
-        "tools, 7 declined in-scope requests, 6 wrong-intent clarifications (Table 9). "
+        f"({hum['S3 | contributors only']['sts']:.3f}) it beat the {n_fit} drafted and author items, so size "
+        "does not explain the gap, but they share the natural set's collection, a confound "
+        "(Table 5). "
+        "**Failure types.** S2 fails 20 more test items than S1 through intent errors: 9 wrong "
+        "tools, 7 declined in-scope requests, 6 wrong-intent clarifications (Tables 9, 10). "
         "**Shared pipeline.** With gold intents, 14 of the 23 test failures disappear once the "
-        "extractor strips two request framings: for "
-        f"«{EXAMPLE['text']}» it kept «{EXAMPLE['pred_text']}» instead of «{EXAMPLE['gold_text']}» "
-        "(right tool and time). New writers failed elsewhere: emphasis "
-        "words after the verb stay in the text («ضروري»), and day-scale expressions («بعد اسبوع») were hardest (oracle 0.58 on 31 "
-        "items), hence N2's small effect.")
+        "extractor strips two framings: from "
+        f"«{EXAMPLE['text']}» it kept «{EXAMPLE['pred_text']}» instead of «{EXAMPLE['gold_text']}». "
+        "New writers failed on emphasis "
+        "words («ضروري») and day-scale expressions («بعد اسبوع»; oracle 0.58 on 31 "
+        "items), so N2 had little effect.")
 
     # 5 ------------------------------------------------------------------------------------------
     R.h1("5. Conclusion")
@@ -827,12 +845,13 @@ def build(commit: str, branch: str) -> Report:
         f"We built a task contract, a safety-aware metric, a {n_all}-item benchmark and a {n_conf}-message "
         f"evaluation by {n_writers} other writers. Rules beat TF-IDF classifiers trained on "
         f"mostly AI-drafted data on both ({signed(N1['difference'])} STS on new writers); human-written "
-        f"training data brought S3 within {s3h['difference']:.3f} of them (exploratory). A "
-        f"deterministic policy made LLM tool calling safer ({signed(N3['difference'])} STS). With little "
+        f"training data brought S3 within {s3h['difference']:.3f} (exploratory). A "
+        f"policy with a rule fallback raised LLM tool calling by {signed(N3['difference'])} STS, mostly "
+        "through the fallback. With little "
         "compute, this favours rules plus an explicit policy until human training data exist. "
-        "**Limits:** the extractor bounds every system; "
+        "**Limits:** the extractor caps every pipeline system; "
         f"{100 * (1 - t1['execution_precision']):.0f}-{1 - n1['execution_precision']:.0%} of S1's "
-        "executions were wrong; both evaluations use the same scenarios for two tools.")
+        "executions were wrong; both evaluations share their scenarios and two tools.")
 
     # References ----------------------------------------------------------------------------------
     R.h1("References")
@@ -916,6 +935,10 @@ def build(commit: str, branch: str) -> Report:
         f"the user message (a secondary analysis declared before the test was opened) it scored "
         f"{j3_inline:.3f}. As S8 it made no valid call on " + ", ".join(map(str, s8_invalid[:-1]))
         + f" and {s8_invalid[-1]} of the 120 test items.")
+    R.para(
+        f"**Protocol v3.** A registered test of the training-data explanation on {v3_n} unseen "
+        "contributor messages (`docs/protocol_v3.md`) has frozen systems and awaits labelling; no "
+        "result from it is reported.")
     R.para(
         "**Cost.** On a laptop CPU, each final S2/S3 fit takes under 0.3 s, inference under 0.3 ms per "
         "item, and peak memory is 141 MB (`models/freeze.json`).")

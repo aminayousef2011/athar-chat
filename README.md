@@ -28,19 +28,21 @@ dev set. The shared extractor caps every pipeline system at 0.808 (oracle); fixi
 of its 23 failures. Post hoc analyses: [docs/posthoc_analyses.md](docs/posthoc_analyses.md).
 
 On 238 messages from 17 other native speakers (pre-registered), the rules again beat TF-IDF (+0.206,
-Holm p = 0.0003), and putting the deterministic policy around Jais-3-7B tool calling adds +0.102.
-Post hoc (report section 9): the classifiers' deficit comes mostly from their AI-drafted training
-data. With about 215 human messages from other writers added (leave one writer out), S3 reaches
-0.697 against the rules' 0.723, a difference that is not significant.
+Holm p = 0.0003), and putting the deterministic policy with a rule fallback around Jais-3-7B tool
+calling adds +0.102; 56 of the 73 items gained over three seeds are invalid tool calls answered by
+the fallback. Post hoc (report section 9): the classifiers' deficit appears to come mostly from
+their AI-drafted training data. With about 215 human messages from other writers added (leave one
+writer out), S3 reaches 0.697 against the rules' 0.723, a difference that is not significant; those
+messages come from the same collection as the evaluation set, so source and match are confounded.
 
 **Research question:** does lightweight text classification (S2: word TF-IDF + logistic
 regression; S3: S2 + character n-grams) improve *Safe Task Success* over keyword rules (S1) when
 all systems share the same normalizer, argument extractor, execution policy and templates?
 
-## From the proposal (Jais 2) to Jais 3
+## From Jais 2 to Jais 3
 
-The proposal named **Jais 2 8B** as the Arabic LLM baseline, and it remains the pre-registered
-S4 model. On **2026-10-15**, after the models were frozen but before the test split was opened,
+The proposal covered the CPU systems S1-S3 only. The LLM systems are extensions registered in the
+evaluation protocol, with **Jais 2 8B** as the pre-registered S4 model. On **2026-10-15**, after the models were frozen but before the test split was opened,
 MBZUAI's Institute of Foundation Models, Inception42 and Cerebras released **Jais 3**, with native
 tool calling and selectable reasoning. The LLM track was extended to use it. The core comparison
 (H1-H3), the data and the metrics did not change:
@@ -88,8 +90,9 @@ scripts/         notebook generator, Kaggle kit, smoke test, error analysis
 results/         locked test outputs (core, S4/S7/S8) and the error analysis
 ```
 
-`models/` holds the frozen systems, `results/` the locked test outputs and the error analysis, and `app/`
-the local demo.
+`models/` holds the frozen systems (`models_v2/` and `models_v3/` those of the natural-phrasing
+evaluation and protocol v3), `results/` the locked outputs and analyses, `notebooks/` the Kaggle GPU
+notebooks, and `app/` the local demo.
 
 ## Demo (CPU)
 
@@ -125,7 +128,7 @@ CI (`.github/workflows/ci.yml`) runs them on Linux and Windows from the frozen l
 
 | System | Models | Code |
 |---|---|---|
-| S4: LLM intent recognizer, shared pipeline | Jais-3-7B, Jais-3-3.7B, Jais 2 8B (proposal), Nile-Chat 4B, Qwen3 8B | `athar.intent.llm` |
+| S4: LLM intent recognizer, shared pipeline | Jais-3-7B, Jais-3-3.7B, Jais 2 8B (pre-registered), Nile-Chat 4B, Qwen3 8B | `athar.intent.llm` |
 | S7: QLoRA fine-tuned | Jais 2 8B | `athar.intent.llm` |
 | S8: end-to-end tool calling | Jais-3-7B | `athar.agent` |
 

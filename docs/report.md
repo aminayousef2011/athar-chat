@@ -241,7 +241,7 @@ task itself.
 | S3 | S2 + character 2-4-grams (C = 0.1, chosen on dev) | train | H2, H3 |
 | S5 | frozen multilingual-e5-small sentence embeddings + logistic regression (C chosen on dev) | train | post hoc (section 9.1); recipe fixed before the test |
 | S6 | MARBERTv2 fine-tuned with fixed settings (20 epochs, LR 2e-5, 5 seeds; no search; small-data recipe after Mosbach et al. 2021) | train | post hoc (section 9.1); recipe fixed before the test |
-| S4 | instruction-tuned LLM scoring Arabic label verbalizers: **Jais 2 8B** (proposal), **Jais-3-7B**, **Jais-3-3.7B**, Nile-Chat 4B (Egyptian), Qwen3 8B | 6 exemplars from train | extended, reported separately |
+| S4 | instruction-tuned LLM scoring Arabic label verbalizers: **Jais 2 8B** (pre-registered), **Jais-3-7B**, **Jais-3-3.7B**, Nile-Chat 4B (Egyptian), Qwen3 8B | 6 exemplars from train | extended, reported separately |
 | S7 | Jais 2 8B + QLoRA (Dettmers et al. 2023) | train | exploratory |
 | S8 | Jais-3-7B end to end through native tool calling | none | exploratory |
 | oracle | gold intent + shared core | | ceiling of the shared core |
@@ -259,7 +259,7 @@ must call `create_reminder`, `create_alarm`, `ask_clarification` or `decline`. I
 and sampled (T 0.7, top-p 0.95, top-k 20, reasoning effort high), whereas S4 is 6-shot and
 deterministic. The comparison is therefore not like for like.
 
-**Jais 2 → Jais 3.** The proposal named Jais 2 8B. Jais 3 was released on 2026-10-15, after the
+**Jais 2 → Jais 3.** The protocol registered Jais 2 8B; the LLM systems are extensions beyond the proposal. Jais 3 was released on 2026-10-15, after the
 systems were frozen and before the test split was opened. It was added as an extension (protocol log
 2026-10-15). Jais 2 remains the pre-registered S4 model, and H1-H3, the data and the metrics did not
 change.
