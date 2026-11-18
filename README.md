@@ -34,6 +34,9 @@ the fallback. Post hoc (report section 9): the classifiers' deficit appears to c
 their AI-drafted training data. With about 215 human messages from other writers added (leave one
 writer out), S3 reaches 0.697 against the rules' 0.723, a difference that is not significant; those
 messages come from the same collection as the evaluation set, so source and match are confounded.
+Post hoc ([scripts/posthoc_llm_vs_rules.py](scripts/posthoc_llm_vs_rules.py)), no LLM intent
+recognizer beats the rules significantly on either set: on new writers Jais-3-3.7B is +0.025
+[−0.016, 0.070] and QLoRA Jais 2 +0.011, and only Jais 2 8B (few-shot) differs, worse.
 
 **Research question:** does lightweight text classification (S2: word TF-IDF + logistic
 regression; S3: S2 + character n-grams) improve *Safe Task Success* over keyword rules (S1) when

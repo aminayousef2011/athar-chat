@@ -69,3 +69,25 @@ prompts S4 used: normalized text, the notebook's train exemplars, and 0-shot, 6-
 Nile-Chat 4B, Qwen3 8B): 0 of 120 pairs in every setting, and `answer_consistent` holds for all five.
 The S4 and S7 results of report sections 6.3, 6.4 and 8.4 need no correction. Jais 2, which is gated,
 was checked on 2026-11-06 with the author's token.
+
+## 2026-11-18: LLM intent recognizers vs the rules (final-report review)
+
+**Question.** The final report compared the LLM recognizers (S4, S7) with the rules only
+descriptively (report Table 4). Does any of them differ from S1 under the pre-registered test?
+
+**Method.** `scripts/posthoc_llm_vs_rules.py` → `results/posthoc/llm_vs_rules.json`. Nothing is
+rerun: it reads the stored per-item outputs of the GPU runs (S4 6-shot with prior calibration, the
+primary setting; S7 as the per-item mean over three seeds) and S1's stored outputs, checks that the
+gold labels agree item by item, and applies the family-level paired randomization test and family
+bootstrap of `configs/eval.yaml` (same seed), Holm over the six comparisons within each set. All
+systems use core v1, so differences come from intent recognition only.
+
+**Result.** Natural set (238): only Jais 2 8B differs from S1 (−0.101 [−0.170, −0.032], Holm p
+0.040, worse). Jais-3-3.7B (+0.025 [−0.016, 0.070]) and S7 (+0.011 [−0.032, 0.057]) are level with
+the rules; Jais-3-3.7B's unsafe execution rate is lower (0.134 vs 0.151, not tested). Locked test
+(120): only Jais-3-7B differs (−0.217, Holm p 0.001, worse). No LLM recognizer beats the rules
+significantly on either set.
+
+**Consequence for the report.** The conclusion no longer calls the rules the *safer* choice; it
+calls them the practical one at low compute (level with the best LLMs, no GPU, no training data).
+This analysis is post hoc and was chosen after the results were known; the report labels it so.
