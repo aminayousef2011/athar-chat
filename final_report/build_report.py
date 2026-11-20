@@ -547,6 +547,11 @@ def build(commit: str, branch: str) -> Report:
     require("S1 > S2 for 13 of 17 writers" in tables, "S1 led for 13 of 17 writers")
     require("474 confirmatory messages from 34 writers" in protocol and "corrected 24 rows" in protocol,
             "screened pool of 474 messages by 34 writers; 24 adjudication corrections")
+    tech = (ROOT / "docs/report.md").read_text(encoding="utf-8")
+    require("19 of 21 early submissions shared one writing pattern; several codes gave identical answers"
+            in protocol.replace("\n", " ")
+            and "Google Form gathered 21 responses" in tech and "(protocol log 2026-10-10)" in tech,
+            "first Google Form: 21 responses, 19 sharing one writing pattern, discarded on 10 October")
     require(re.search(r"\| day-scale expression[^|]*\| 31 \| 0\.581 \|", phenomena) is not None,
             "oracle 0.58 on 31 day-scale items")
     frame_p = [float(r["p_holm"]) for r in csv_rows("results/posthoc/template_sensitivity.csv")
@@ -710,34 +715,30 @@ def build(commit: str, branch: str) -> Report:
 
     R.h1("Abstract")
     R.para(
-        "A reminder assistant for Egyptian Arabic must decide whether to execute a request, ask for "
-        "missing details or decline it (ACT, CLARIFY, ABSTAIN). We ask whether a lightweight supervised "
-        "intent classifier beats keyword rules when both share one rule-based argument extractor and "
-        "execution policy, scored by Safe Task Success (STS). On a "
-        f"{n_all}-item benchmark split by scenario and {n_conf} messages from {n_writers} other native "
-        "speakers, the answer is no: keyword rules beat "
-        f"TF-IDF logistic regression ({f3(n1['safe_task_success'])} vs {f3(n2['safe_task_success'])} on "
-        f"new writers, Holm p = {tests['N1 S1 vs S2']['p_holm']:.4f}). A second pre-registered test, on "
-        f"{v3_n} messages from 17 further writers, traced the gap to the mostly AI-drafted training data: "
-        f"human-written training messages raised TF-IDF by {signed(v3a['difference'])} and MARBERTv2 by "
-        f"{signed(v3b['difference'])} STS (Holm p ≤ {max(v3a['p_holm'], v3b['p_holm']):.3f}), level with "
-        "the rules. The shared extractor, not intent, limits every system (STS "
-        f"{f3(no['safe_task_success'])} with gold intents); none is deployable.")
+        "A reminder assistant must decide whether to execute a request (ACT), ask for missing details "
+        f"(CLARIFY) or decline it (ABSTAIN). On a new Egyptian Arabic benchmark ({n_all} requests), we "
+        "compared keyword rules with TF-IDF logistic-regression intent classifiers in one shared "
+        "pipeline, scored by Safe Task Success (STS: correct decision and arguments). On "
+        f"{n_conf} messages from {n_writers} new writers, the rules won (STS {f3(n1['safe_task_success'])} "
+        f"vs {f3(n2['safe_task_success'])}, Holm p = {tests['N1 S1 vs S2']['p_holm']:.4f}). The cause was "
+        f"the mostly AI-drafted training data: on {v3_n} messages from {len(V3['writers'])} further "
+        "writers, a pre-registered test showed that human-written training messages raise TF-IDF by "
+        f"{signed(v3a['difference'])} and MARBERTv2 by {signed(v3b['difference'])} STS (Holm p ≤ "
+        f"{max(v3a['p_holm'], v3b['p_holm']):.3f}); retrained TF-IDF matched the rules ({v3_s111:.3f} "
+        f"each). The shared extractor limits every system (STS {f3(no['safe_task_success'])} even with "
+        "gold intents); none is ready to deploy.")
 
     # 1 ------------------------------------------------------------------------------------------
     R.h1("1. Motivation and objectives")
     R.para(
         "A reminder assistant must not execute a request whose time or content is missing or "
-        "ambiguous, must not ask again for what the user already gave, and must decline what it "
-        "cannot do. Egyptian Arabic makes "
+        "ambiguous, re-ask for what the user gave, or attempt what it cannot do. Egyptian Arabic makes "
         "this harder: messages are informal («اعمللي تذكير بعد بكرة الساعة 9 بالليل عشان اخد الدوا», "
         "\"set me a reminder the day after tomorrow at 9 pm to take my medicine\"), inconsistently "
-        "spelled and mixed with English. Out-of-scope requests are hard "
-        "for intent classifiers [6], and When2Call [1] showed for English that deciding *when* to call "
-        "a tool is a problem of its own; we know of no Egyptian Arabic dataset labelling this decision. "
-        "**Intended users:** teams building assistants for under-resourced dialects with little "
-        "compute, choosing between rules, classifiers and LLMs, and researchers who need an Egyptian "
-        "Arabic benchmark for when to call a tool.")
+        "spelled and mixed with English. When2Call [1] showed for English that deciding *when* to call "
+        "a tool is a problem of its own, and out-of-scope requests are hard for intent classifiers [6]; "
+        "we know of no Egyptian Arabic dataset labelling this decision. **Intended users:** teams "
+        "building dialect assistants with little compute, and researchers who need such a benchmark.")
     R.para(
         "**Research question.** When all systems share the same argument extractor and execution policy, "
         "does lightweight supervised intent classification improve Safe Task Success over keyword rules? "
@@ -757,7 +758,7 @@ def build(commit: str, branch: str) -> Report:
                 "licence yet.",
                 align=WD_ALIGN_PARAGRAPH.JUSTIFY)
     R.bullets([
-        f"**Code, models, outputs:** package `athar` (pipeline, systems, evaluation) with {n_tests} tests and locked dependencies (`uv.lock`, Python 3.11); "
+        f"**Code, models, outputs:** package `athar` with {n_tests} tests and locked dependencies (`uv.lock`); "
         "frozen classifiers (`models/`, `models_v2/`), stored predictions (`results/`), pinned Hugging "
         "Face models (Table 13), a Streamlit demo (`app/`) and the full technical report "
         "(`docs/report.md`); S6/S7 weights are not stored.",
@@ -770,8 +771,8 @@ def build(commit: str, branch: str) -> Report:
         "The simulated tools are `create_reminder(datetime, reminder_text)` and `create_alarm(datetime)`; "
         "each request has a sending time. The contract resolves explicit dates, today/tomorrow, "
         "weekdays with «الجاي» (next), clock times and period words such as «الصبح». **ACT** needs every "
-        "argument resolved to one future instant. **CLARIFY** names the missing slots (date, time, "
-        "AM/PM, past time, reminder text). **ABSTAIN** covers deletion, modification, recurrence, other "
+        "argument resolved to one future instant; **CLARIFY** names the missing slots (date, time, "
+        "AM/PM, past time, reminder text); **ABSTAIN** covers deletion, modification, recurrence, other "
         "people's items, several actions and other tools. **Safe Task Success** counts an item only if "
         "ABSTAIN is declined, CLARIFY asks for exactly the gold slots, or ACT "
         "calls the gold tool at the gold instant with the gold reminder text (exact after "
@@ -798,67 +799,69 @@ def build(commit: str, branch: str) -> Report:
         "The author wrote the test from scenario cards; a second native "
         f"speaker labelled {AGREE_TEST['n_compared']} items "
         f"independently (intent κ = {AGREE_TEST['intent']['kappa']:.3f}, route κ = "
-        f"{AGREE_TEST['route']['kappa']:.3f}). The natural set was collected after the "
-        "systems were frozen: contributors wrote, without AI tools, a complete and an incomplete message "
-        "for each test scenario. A seeded draw of two writers per scenario group from 474 screened "
-        f"messages (34 writers) gave {n_nat} messages, {n_conf} in families absent from train and dev. "
-        "Two annotators labelled all of them (intent κ = "
-        f"{AGREE_NAT['intent']['kappa']:.3f}, route κ = {AGREE_NAT['route']['kappa']:.3f}). "
-        "Slot-level agreement was lower (same slots on "
+        f"{AGREE_TEST['route']['kappa']:.3f}). For the **natural set**, collected after the systems "
+        "were frozen, contributors wrote without AI tools a complete and an incomplete message per test "
+        "scenario; a seeded draw of two writers per scenario group from 474 screened messages (34 "
+        f"writers) gave {n_nat}, {n_conf} in families absent from train and dev. Two annotators "
+        f"labelled all (intent κ = {AGREE_NAT['intent']['kappa']:.3f}, route κ = "
+        f"{AGREE_NAT['route']['kappa']:.3f}; same slots on "
         f"{AGREE_NAT['targets_exact_set']['agreement']:.0%} of {AGREE_NAT['targets_exact_set']['n']} "
-        f"items both labelled CLARIFY, same instant on {AGREE_NAT['datetime_same_instant']['agreement']:.0%} "
-        f"of {AGREE_NAT['datetime_same_instant']['n']} both labelled ACT). The author adjudicated the "
-        f"{load('results/natural/adjudication.json')['adjudicated']} disagreements alone (Table 8 "
-        f"tests each annotator's labels). **v3** is the other {len(V3['writers'])} writers' {v3_n} "
+        f"shared CLARIFY items, same instant on {AGREE_NAT['datetime_same_instant']['agreement']:.0%} "
+        f"of {AGREE_NAT['datetime_same_instant']['n']} shared ACT items); the author adjudicated the "
+        f"{load('results/natural/adjudication.json')['adjudicated']} disagreements alone. "
+        f"**v3** is the other {len(V3['writers'])} writers' {v3_n} "
         f"messages, labelled after its systems were frozen; both annotators adjudicated {v3_adj} jointly (route κ = "
         f"{AGREE_V3['route']['kappa']:.3f}, same slots {AGREE_V3['targets_exact_set']['agreement']:.0%}).")
 
     R.h2("3.3 Pipeline and systems")
     R.para(
-        "**Shared pipeline:** message → normalizer → *intent recognizer* (the only part that differs "
-        "between systems) → extractor → policy → ACT / CLARIFY / ABSTAIN. The normalizer unifies alef, "
-        "ya and taa marbuta variants, strips diacritics and elongation and maps Arabic-Indic digits. A "
-        "pattern-based extractor parses the supported time expressions; the reminder text is what "
-        "remains after request framing, time expressions and fillers are removed. The policy sends an "
-        "unsupported intent to ABSTAIN, a supported one with all required slots to ACT, and otherwise "
-        "to CLARIFY. STS differences between recognizers therefore come from intent alone.")
+        "**Shared pipeline:** message → normalizer → *intent recognizer* (the only part that differs) "
+        "→ extractor → policy → route. The normalizer unifies alef, ya and taa marbuta variants, strips "
+        "diacritics and elongation and maps Arabic-Indic digits; a pattern-based extractor parses the "
+        "supported time expressions, and the reminder text is what remains after request framing, "
+        "times and fillers are removed. The policy sends an unsupported intent to ABSTAIN, a supported "
+        "one with all slots to ACT, otherwise to CLARIFY, so STS differences come from intent alone.")
     R.para(
-        "**Systems compared.** **S1:** hand-written trigger and out-of-scope lexicons, no training data "
-        "(**S1 v1.1:** with an extractor fix drawn from the test errors). **S2:** word TF-IDF "
+        "**Systems compared.** **S1:** hand-written trigger and out-of-scope lexicons, no training "
+        "data. **S2:** word TF-IDF "
         "with class-balanced logistic regression [4]; **S3:** S2 plus character 2-4-grams for spelling "
-        "variation. Both are fitted on train, with C and n-gram ranges chosen by dev intent macro-F1 "
-        "(S2: C = 0.3; S3: C = 0.1). **Oracle:** gold intents in the same pipeline, its ceiling. "
-        "**Extensions** (Appendix A): S4-S7 are other recognizers, e.g. fine-tuned MARBERTv2 [2] "
-        "(**S6**); **S8:** Jais-3-7B [12] native tool calling; **S9:** S8 checked by the policy (S1 "
-        "v1.1 intent where S8 made no valid call).")
+        "variation; both fitted on train, with C and n-grams chosen by dev intent macro-F1 "
+        f"(S2: C = {FREEZE_C['S2']:g}; S3: C = {FREEZE_C['S3']:g}). **Oracle:** gold intents, the "
+        "pipeline's ceiling. **S1 v1.1** adds an extractor fix found in the test errors, so it is "
+        "compared only on the new-writer sets. **Extensions** (Appendix A): other recognizers S4-S7, "
+        "e.g. fine-tuned MARBERTv2 [2] (**S6**); **S8:** Jais-3-7B [12] tool calling; **S9:** S8 "
+        "checked by the policy (S1 v1.1 intent where S8 made no valid call).")
 
     R.h2("3.4 Changes from the proposal")
     R.para(
-        "**Training data:** the proposal planned manually written items only; "
-        f"{drafted('train')} of {len(ITEMS['train'])} training items were AI-drafted, because the human "
-        "requests available at the freeze were needed for an all-human test "
-        f"({n_all} items, {t1['pairs']} test pairs; planned: 300, 20). **Evaluation:** a "
-        "screened contributor collection became two more pre-registered evaluations. **Systems:** "
+        "**Training data:** the proposal planned manually written items only. Recruiting writers "
+        "through Google Forms failed before the freeze: many invited speakers declined, and 19 of the "
+        "first form's 21 responses shared one writing pattern (several were identical), pointing to "
+        "AI-generated or copied answers despite the instructions; they were discarded (protocol log, "
+        "10 October). With no time to recruit again, the author's own requests were kept for an "
+        f"all-human test and {drafted('train')} of {len(ITEMS['train'])} training items were "
+        f"AI-drafted ({n_all} items, {t1['pairs']} test pairs; planned: 300, 20). **Evaluation:** "
+        "screened contributor messages collected after the freeze became two more test sets. "
+        "**Systems:** "
         "S1-S3 ran on a laptop CPU as proposed; the open-weight extensions S4-S9 ran on Kaggle T4 GPUs.")
 
     # 4 ------------------------------------------------------------------------------------------
     R.h1("4. Evaluation and results")
     R.h2("4.1 Evaluation data and metrics")
     R.para(
-        "**Evaluation data.** All three sets hold native-written requests for the two tools, covering "
-        "all routes, with incomplete variants and in-domain out-of-scope requests; "
-        f"{share(NAT_CONF, 'domain', 'project_management'):.0%} of natural messages are about project "
-        "management, by design (about 70% of scenario cards), so results speak mainly to work "
-        "reminders. Test intervals span about ±0.09 STS, so the new-writer sets carry the conclusions. "
-        "**Training data** is relevant (same tools, routes and contract) but not adequate "
-        f"in quality or coverage: {drafted('train')} of {len(ITEMS['train'])} items are AI-drafted; "
-        f"code-switching marks {share(ITEMS['train'], 'code_switched'):.0%} of them but "
+        "**Evaluation data.** All three sets are native-written requests for the two tools covering "
+        "all routes, incomplete variants and in-domain out-of-scope requests; "
+        f"{share(NAT_CONF, 'domain', 'project_management'):.0%} of natural messages concern project "
+        "management (by design), so results speak mainly to work reminders. Test intervals span about "
+        "±0.09 STS, so the new-writer sets carry the conclusions. "
+        "**Training data** is relevant (same tools, routes and contract) but inadequate "
+        f"in quality and coverage: {drafted('train')} of {len(ITEMS['train'])} items are AI-drafted; "
+        f"{share(ITEMS['train'], 'code_switched'):.0%} are code-switched against "
         f"{share(ITEMS['test'], 'code_switched'):.0%} of the test and "
         f"{share(NAT_CONF, 'code_switched'):.0%} of the natural set; "
-        f"{reminder_share('train', 'فكرني'):.0%} of training reminders use the verb «فكرني» and "
-        f"{reminder_share('train', 'تذكير'):.0%} the noun «تذكير», against "
+        f"{reminder_share('train', 'فكرني'):.0%} of training reminders use «فكرني» and "
+        f"{reminder_share('train', 'تذكير'):.0%} «تذكير», against "
         f"{reminder_share('test', 'فكرني'):.0%} and {reminder_share('test', 'تذكير'):.0%} in the test. "
-        "Its phrasing, not its size, limited the classifiers (§4.3, v3). "
         "**Separation.** Splits follow scenario families under a hash-locked manifest; vocabularies "
         "and hyper-parameters come from train/dev only; each set was scored once; natural and v3 systems "
         "were frozen before labelling. **Limitations.** The test is one writer's templated phrasing "
@@ -871,17 +874,18 @@ def build(commit: str, branch: str) -> Report:
         "tool call) over all items and over executions; unnecessary clarification (Unn. clar.: "
         "gold ACT answered with CLARIFY); and pairs with both versions correct. Intervals are "
         "family-level bootstraps (10,000 resamples) [8]; paired tests swap whole families [7], "
-        "Holm-corrected [9]. **Hypotheses** (fixed before labelling): N1 S1 > S2, N2 S1 v1.1 > S1, "
-        "N3 S9 > S8; H-a/H-b (v3).")
+        "Holm-corrected [9]. **Pre-registered hypotheses:** on the natural set, rules beat TF-IDF (N1), "
+        "the extractor fix helps (N2) and the policy improves LLM tool calling (N3); on v3, human "
+        "training data improves TF-IDF (H-a) and MARBERTv2 (H-b).")
 
     R.h2("4.2 Results")
     h1_, h2_ = cmp_["S2 vs S1"], cmp_["S3 vs S1"]
     R.para(
-        "On the locked test (Table 2) both classifiers scored below the rules "
-        f"(S2 − S1 = {signed(h1_['difference'])} {ci(h1_['ci'])}, Holm p = {h1_['p_holm']:.3f}; "
-        f"S3 − S1 = {signed(h2_['difference'])}, Holm p = {h2_['p_holm']:.3f}; S3 vs S2: "
-        f"p = {cmp_['S3 vs S2']['p_value']:.2f}): a negative answer. Clustering by shared sentence "
-        "frame keeps the differences but raises Holm p to 0.055-0.526 (Table 7).")
+        "**Finding 1: rules beat classifiers trained on drafted data.** On the locked test (Table 2) "
+        f"both classifiers scored below the rules (S2 − S1 = {signed(h1_['difference'])} {ci(h1_['ci'])}, "
+        f"Holm p = {h1_['p_holm']:.3f}; S3 − S1 = {signed(h2_['difference'])}, Holm p = "
+        f"{h2_['p_holm']:.3f}), but this author-written test alone is not conclusive: clustering by "
+        "shared sentence frame raises Holm p to 0.055-0.526 (Table 7).")
     rows = []
     for name, m, c in (("oracle (gold intent)", o, TEST["systems"]["oracle"]),
                        ("S1 keyword rules", t1, TEST["systems"]["S1"]),
@@ -908,29 +912,22 @@ def build(commit: str, branch: str) -> Report:
                          f3(m["unnecessary_clarification_rate"]),
                          f3(m["pair_both_success"]),
                          f"{r['ACT']:.2f}/{r['CLARIFY']:.2f}/{r['ABSTAIN']:.2f}"])
-    for name, key, summ in (("S8 Jais-3 tools", "S8", s8m), ("S9 S8 + policy", "S9", s9m)):
-        nat_rows.append([name, f"{summ['sts']:.3f} {ci(summ['ci'])}",
-                         f3(nat_seed_mean(key, "intent_macro_f1")),
-                         f3(nat_seed_mean(key, "route_macro_f1")),
-                         f3(nat_seed_mean(key, "unsafe_execution_rate")),
-                         f3(1 - nat_seed_mean(key, "execution_precision")),
-                         f3(nat_seed_mean(key, "unnecessary_clarification_rate")),
-                         f3(nat_seed_mean(key, "pair_both_success")),
-                         "/".join(f"{nat_seed_route(key, r):.2f}" for r in ("ACT", "CLARIFY", "ABSTAIN"))])
-    R.table(f"Natural set ({n_conf} items, {n_writers} writers, {n1['pairs']} pairs). S8/S9: 3-seed means; last column: success by route.",
+    R.table(f"Natural set ({n_conf} items, {n_writers} new writers, {n1['pairs']} pairs). Last column: "
+            "success by gold route.",
             ["System", "STS [95% CI]", "Intent F1", "Route F1", "Unsafe (all)", "Unsafe (ACT)",
              "Unn. clar.", "Pairs", "ACT/CLAR/ ABST"], nat_rows,
             widths=[2.55, 3.25, 1.2, 1.2, 1.3, 1.3, 1.15, 1.15, 2.9], bold_rows={1})
+    require(abs(wrong_n / exec_n - (1 - n1["execution_precision"])) < 1e-9
+            and wrong_n - harm_n == lenient_items, "S1 natural executions: wrong = harmful + wording only")
     R.para(
-        "**N1 was confirmed:** "
-        f"{signed(N1['difference'])} {ci(N1['ci'])}, Holm p = {N1['p_holm']:.4f}; S1 led for 13 of 17 "
-        "writers and under all alternative labels (Table 8). **N3 was confirmed:** "
-        f"{signed(N3['difference'])} {ci(N3['ci'])}, Holm p = {N3['p_holm']:.3f}, but {s9_fallback} "
-        f"of the {s9_gain} items gained (three seeds) were S8's invalid calls answered by the rule "
-        f"fallback. **N2 was not:** the fix changed one natural item. **Safety.** "
-        f"{1 - n1['execution_precision']:.0%} of S1's natural executions were wrong; harmful ones (wrong "
-        f"tool, time or route) rose from {harm_t} of {exec_t} on the test to {harm_n} of {exec_n}, the "
-        f"rest only in reminder wording (any text accepted: S1 {len_s1:.3f}).")
+        f"The new writers confirm the gap (Table 3): the rules lead by {signed(N1['difference'])} "
+        f"{ci(N1['ci'])} STS (N1, Holm p = {N1['p_holm']:.4f}), for 13 of 17 writers and under every "
+        "alternative labelling (Table 8). N2 was not confirmed (the fix changed one natural item). N3 "
+        f"was ({signed(N3['difference'])}, Holm p = {N3['p_holm']:.3f}), but {s9_fallback} of its "
+        f"{s9_gain} gained items were calls Jais-3-7B failed to make, answered by the rules (Table 5). "
+        f"**Safety.** {wrong_n} of S1's {exec_n} natural executions were wrong: {harm_n} harmful (wrong "
+        f"tool or time, or a request that should not run), against {harm_t} of {exec_t} on the test, "
+        f"and {lenient_items} only in reminder wording.")
 
     R.h2("4.3 Analysis and errors")
     s3h = HUM["tests"]["S3 +contributors vs S1-v1.1"]
@@ -953,25 +950,33 @@ def build(commit: str, branch: str) -> Report:
              v3row("S6 MARBERTv2", "+ human data", "S6-human (seed mean)")],
             widths=[3.6, 3.4, 4.2, 4.8], bold_rows={3, 5})
     R.para(
-        "**Training data (H-a, H-b confirmed; Table 4).** Human messages raised S3 by "
-        f"{signed(v3a['difference'])} {ci(v3a['ci'])} (Holm p = {v3a['p_holm']:.3f}) and MARBERTv2 by "
-        f"{signed(v3b['difference'])} {ci(v3b['ci'])} (Holm p = {v3b['p_holm']:.4f}), mostly by declining "
-        f"out-of-scope requests; human data alone gave the same {v3s['S3-contrib-only']['sts']:.3f}, "
-        f"so not size. S3 now equals the rules ({signed(v3_s3r['difference'])} "
-        f"{ci(v3_s3r['ci'])}). But v3 is harder for the extractor: the oracle fell from "
-        f"{nat_or11:.3f} (natural, core v1.1) to {v3_or11:.3f} and S1 from {nat_s111:.3f} to "
-        f"{v3_s111:.3f}. **Shared pipeline** (Tables 10-12). With gold intents, 14 of 23 test failures "
-        "vanish once two framings are stripped; new writers failed on emphasis words («ضروري») and "
-        "day-scale expressions.")
+        "**Finding 2: human training data closes the gap** (Table 4). On v3, adding human-written "
+        f"messages raised S3 by {signed(v3a['difference'])} {ci(v3a['ci'])} (H-a, Holm p = "
+        f"{v3a['p_holm']:.3f}) and MARBERTv2 by {signed(v3b['difference'])} {ci(v3b['ci'])} (H-b, Holm "
+        f"p = {v3b['p_holm']:.4f}), mostly by declining out-of-scope requests. The human messages "
+        f"alone, a smaller set, gave the same {v3s['S3-contrib-only']['sts']:.3f}: origin, not size, "
+        f"mattered. Retrained S3 equals the rules ({signed(v3_s3r['difference'])} {ci(v3_s3r['ci'])}).")
+    agree_slots = AGREE_NAT["targets_exact_set"]["agreement"]
+    require(all((1 - orc) / (1 - s1) > 0.5 for orc, s1 in (
+        (o["safe_task_success"], t1["safe_task_success"]),
+        (no["safe_task_success"], n1["safe_task_success"]),
+        (v3_or11, v3_s111))), "most of S1's failures remain with gold intents on all three sets")
+    R.para(
+        "**Finding 3: the shared extractor is the ceiling.** Even with gold intents, STS is only "
+        f"{f3(o['safe_task_success'])} (test), {f3(no['safe_task_success'])} (natural) and "
+        f"{v3_or11:.3f} (v3): gold intents remove under half of the rules' failures. 14 of the oracle's 23 "
+        "test failures disappear once two request framings are stripped from the reminder text (post "
+        "hoc; Table 10); new writers failed on emphasis words («ضروري») and day-scale expressions. "
+        f"Part may be label noise ({agree_slots:.0%} slot agreement, §3.2).")
 
     # 5 ------------------------------------------------------------------------------------------
     R.h1("5. Conclusion")
     R.para(
-        f"We delivered a task contract and metric (O1), a {n_all}-item benchmark (O2), one shared "
-        f"pipeline (O3) and locked tests by {n_writers + len(V3['writers'])} other writers (O4). Rules "
-        f"beat classifiers trained on mostly AI-drafted data ({signed(N1['difference'])} STS); human data "
-        f"closed the gap. The extractor limits every system (O5: {f3(no['safe_task_success'])} with "
-        "gold intents); none is deployable.")
+        f"We delivered a task contract and metric, a {n_all}-item benchmark, a shared pipeline and "
+        f"locked tests by {n_writers + len(V3['writers'])} other writers (O1-O4). Training-data origin "
+        "decided the comparison: classifiers trained on mostly AI-drafted data lost to rules by "
+        f"{N1['difference']:.3f} STS; human data closed the gap. The extractor limits every system (O5: "
+        f"{f3(no['safe_task_success'])} with gold intents) and should be improved next.")
 
     # References ----------------------------------------------------------------------------------
     R.h1("References")
@@ -1241,6 +1246,91 @@ def build(commit: str, branch: str) -> Report:
     return R
 
 
+def export_text(doc, path: Path) -> list[tuple[str, str]]:
+    """Write the report as plain text (paragraphs and table rows in order) so that `git diff` shows
+    every word a revision changed. Returns (kind, text) blocks in document order."""
+    blocks: list[tuple[str, str]] = []
+    for el in doc.element.body.iterchildren():
+        if el.tag == qn("w:p"):
+            text = "".join(t.text or "" for t in el.iter(qn("w:t"))).strip()
+            if text:
+                style = el.find(f"{qn('w:pPr')}/{qn('w:pStyle')}")
+                heading = style is not None and style.get(qn("w:val"), "").startswith("Heading")
+                blocks.append(("heading" if heading else "para", text))
+        elif el.tag == qn("w:tbl"):
+            for tr in el.iter(qn("w:tr")):
+                cells = ["".join(t.text or "" for t in tc.iter(qn("w:t"))).strip() for tc in tr.iter(qn("w:tc"))]
+                blocks.append(("row", " | ".join(cells)))
+    lines = []
+    for kind, text in blocks:
+        lines.append(f"\n## {text}\n" if kind == "heading" else (f"| {text} |" if kind == "row" else f"\n{text}\n"))
+    path.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
+    return blocks
+
+
+def _numbers_in_files() -> set[str]:
+    """Every number stored in the committed result files, written with 2, 3 and 4 decimals."""
+    found: set[str] = set()
+
+    def add(x: float) -> None:
+        found.add(f"{abs(x):g}")
+        for d in (2, 3, 4):
+            found.add(f"{abs(x):.{d}f}")
+
+    def walk(v: object) -> None:
+        if isinstance(v, bool):
+            return
+        if isinstance(v, (int, float)):
+            add(float(v))
+        elif isinstance(v, str) and re.fullmatch(r"-?\d+(\.\d+)?", v):
+            add(float(v))
+        elif isinstance(v, dict):
+            for x in v.values():
+                walk(x)
+        elif isinstance(v, list):
+            for x in v:
+                walk(x)
+
+    files = [*ROOT.glob("results/**/*.json"), ROOT / "docs/agreement.json", ROOT / "models/freeze.json"]
+    for f in files:
+        try:
+            walk(json.loads(f.read_text(encoding="utf-8")))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            continue
+    for f in [*ROOT.glob("results/**/*.csv"), *ROOT.glob("results/**/*.md")]:
+        for m in re.finditer(r"-?\d+\.\d+", f.read_text(encoding="utf-8", errors="ignore")):
+            add(float(m.group()))
+    return found
+
+
+# decimals typed in the main text that are not stored in a result file; each one has a require()
+AUDIT_ALLOWED = {
+    "0.055", "0.526",   # Holm p range under frame clustering (require: "Holm p under frame clustering")
+    "0.09",             # test interval half-width (require: "test intervals of about ±0.09")
+    "3.11",             # Python version
+}
+
+
+def audit_numbers(blocks: list[tuple[str, str]]) -> None:
+    """Stop the build if a decimal in the main report (abstract to conclusion) cannot be traced to a
+    committed result file or to a table of the report."""
+    stored = _numbers_in_files()
+    table_text = " ".join(t for k, t in blocks if k == "row")
+    stored |= {m.group() for m in re.finditer(r"\d+\.\d+", table_text)}
+    main: list[str] = []
+    for kind, text in blocks:
+        if kind == "heading" and text == "References":
+            break
+        if kind == "para":
+            main.append(text)
+    untraced = sorted({m.group() for t in main for m in re.finditer(r"(?<![\w.§])\d+\.\d+(?![\w.])", t)}
+                      - stored - AUDIT_ALLOWED)
+    if untraced:
+        sys.exit("number audit: these decimals in the main report are not in any result file or table: "
+                 + ", ".join(untraced))
+    print("number audit: every decimal in the main report is traceable")
+
+
 def to_pdf(docx: Path, pdf: Path) -> None:
     ps = (f"$w = New-Object -ComObject Word.Application; $w.Visible = $false; "
           f"$d = $w.Documents.Open('{docx}'); $d.SaveAs([ref]'{pdf}', [ref]17); "
@@ -1268,7 +1358,10 @@ def main() -> None:
     commit, branch = git("rev-parse", "HEAD"), git("rev-parse", "--abbrev-ref", "HEAD")
     a.out_dir.mkdir(parents=True, exist_ok=True)
     docx = a.out_dir.resolve() / "ATHAR_Chat_Final_Report.docx"
-    build(commit, branch).save(docx)
+    report = build(commit, branch)
+    blocks = export_text(report.doc, a.out_dir.resolve() / "report_text.md")
+    audit_numbers(blocks)
+    report.save(docx)
     print(f"wrote {docx} for commit {commit}")
     if dirty:
         print("DRAFT: uncommitted changes, so the printed commit does not hold these files; do not submit")
