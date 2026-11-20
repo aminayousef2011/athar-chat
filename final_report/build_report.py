@@ -56,6 +56,10 @@ ENC = load("results/posthoc/encoders_run1.json")
 HUM = load("results/posthoc/human_training.json")
 SENS = load("results/natural/sensitivity.json")
 LVR = load("results/posthoc/llm_vs_rules.json")  # post hoc: S4/S7 vs S1 (scripts/posthoc_llm_vs_rules.py)
+V3 = load("results/v3/evaluation.json")          # protocol v3, gate G5 (registered H-a, H-b)
+V3G = load("results/v3/evaluation_gpu.json")     # protocol v3 GPU systems (descriptive, amendment A7)
+AGREE_V3 = load("results/v3/agreement.json")
+V3_MAN = load("data/v3/manifest.json")
 # S7's natural-set score is the per-item mean over three seeds; the generated table holds it at full
 # precision (the per-seed values stored with the LLM results are rounded).
 S7_NAT = float(re.search(r"\| S7 Jais 2 \+ QLoRA \(3 seeds\) \| ([0-9.]+)",
@@ -568,9 +572,39 @@ def build(commit: str, branch: str) -> Report:
                     for d in ("7a-jais3", "7b-others", "7cd-s7-s8")),
             "S1-S3 frozen on the author's Windows machine; the LLM runs on Kaggle T4 GPUs")
     require(f"**{v3_n} messages from 17 writers" in (ROOT / "docs/protocol_v3.md").read_text(encoding="utf-8")
-            and (ROOT / "models_v3/freeze_s3.json").exists() and (ROOT / "models_v3/freeze_s6.json").exists()
-            and not any((ROOT / "results/v3").glob("evaluation*")),
-            "protocol v3: systems frozen, not yet evaluated")
+            and V3["confirmatory_items"] == V3["n_items"] == v3_n == V3G["confirmatory_items"]
+            and len(V3["writers"]) == 17 and V3["hypothesis_tests"].startswith("confirmatory")
+            and V3_MAN["dataset"]["n_items"] == v3_n,
+            "protocol v3: 236 confirmatory items from 17 writers, locked and scored once")
+    v3a, v3b = V3["primary"]["H-a S3-human vs S3-drafted"], V3["primary"]["H-b S6-human vs S6-drafted (seed means)"]
+    v3c = V3["secondary"]["H-c ABSTAIN success, S6-human vs S6-drafted (seed means)"]
+    v3s, v3e = V3["summary"], V3["estimation"]
+    require(v3c["n"] == V3_MAN["splits"]["test"]["counts"]["ABSTAIN"] and v3c["p_value"] < 0.05
+            and abs(v3c["difference"] - (v3s["S6-human (seed mean)"]["by_route"]["ABSTAIN"]
+                                         - v3s["S6-drafted (seed mean)"]["by_route"]["ABSTAIN"])) < 1e-3,
+            "v3 H-c: the out-of-scope change quoted in section 4.3 is the registered secondary test")
+    v3_lowo = V3["sensitivity"]["leave_one_writer_out"]
+    v3_lowo_wins = [sum(v[a] > v[b] for v in v3_lowo.values()) for a, b in
+                    (("S3-human", "S3-drafted"), ("S6-human (seed mean)", "S6-drafted (seed mean)"))]
+    require(v3a["significant"] and v3b["significant"] and v3a["difference"] > 0 and v3b["difference"] > 0
+            and all(t["p_value"] < 0.05 for t in V3["sensitivity"]["writer_clustered"].values())
+            and v3_lowo_wins == [17, 17],
+            "v3: H-a and H-b confirmed, also writer-clustered and in every leave-one-writer-out analysis")
+    v3_ctrl = V3["descriptive"]["size-matched control (A4): S3-contrib-only vs S3-drafted"]
+    require(v3s["S3-contrib-only"]["sts"] == v3s["S3-human"]["sts"] and v3_ctrl["p_value"] < 0.05,
+            "v3 control: contributors only reach S3-human")
+    v3_s3r, v3_s6r = v3e["S3-human minus S1-v1.1"], v3e["S6-human (seed mean) minus S1-v1.1"]
+    require(v3_s3r["within_0.10_of_the_rules"] and v3_s6r["within_0.10_of_the_rules"]
+            and v3_s6r["ci"]["low"] > 0 and v3_s3r["ci"]["low"] < 0 < v3_s3r["ci"]["high"],
+            "v3 estimation: S3-human level with the rules, S6-human interval above zero (estimate only)")
+    v3_adj = load("results/v3/adjudication.json")["adjudicated"]
+    nat_writers = NAT["writers"] if isinstance(NAT["writers"], list) else list(NAT["writers"])
+    require(not set(V3["writers"]) & set(nat_writers) and len(nat_writers) == n_writers,
+            "natural-set and v3 writers are disjoint (34 other writers in all)")
+    g_cmp = V3G["comparisons"]
+    require(g_cmp["S4 raw vs normalized text"]["p_value"] > 0.05 and g_cmp["S9-fair vs S8-fair"]["p_value"] > 0.05
+            and V3G["s8_fair_no_valid_call"] == 8 and V3G["s4_norm_raw_same_intent"] == 230,
+            "v3 GPU systems: raw text and the policy make no significant difference (descriptive)")
     # where S9's gain over S8 comes from: items S8 answered with no valid call go to the rule fallback
     s9_fallback = s9_policy = 0
     for i in range(3):
@@ -665,11 +699,13 @@ def build(commit: str, branch: str) -> Report:
         "regression (S2, S3) by Safe Task Success (STS). In a pre-registered evaluation on "
         f"{n_conf} messages from {n_writers} other native speakers, the rules beat the classifier "
         f"({f3(n1['safe_task_success'])} vs {f3(n2['safe_task_success'])}, Holm p = "
-        f"{tests['N1 S1 vs S2']['p_holm']:.4f}), as on the author's locked test. Letting the policy, "
-        "with a rule fallback, decide when Jais-3-7B tool calls are executed raised STS from "
-        f"{s8m['sts']:.3f} to {s9m['sts']:.3f}, mostly by replacing invalid calls. Exploratory "
-        "analyses trace the classifiers' deficit to their mostly AI-drafted training data. No system "
-        f"is deployable: the shared extractor caps all ({f3(no['safe_task_success'])} with gold intents).")
+        f"{tests['N1 S1 vs S2']['p_holm']:.4f}), as on the author's locked test. The policy with a rule "
+        f"fallback raised Jais-3-7B tool calling from {s8m['sts']:.3f} to {s9m['sts']:.3f}, mostly by "
+        f"replacing invalid calls. On {v3_n} messages by 17 further writers, a third registered test "
+        "located the cause: human-written training messages raised TF-IDF and MARBERTv2 by "
+        f"{signed(v3a['difference'])} and {signed(v3b['difference'])} STS (Holm p ≤ "
+        f"{max(v3a['p_holm'], v3b['p_holm']):.3f}), to the rules' level. No system is deployable: the shared extractor caps all "
+        f"({f3(no['safe_task_success'])} with gold intents).")
 
     # 1 ------------------------------------------------------------------------------------------
     R.h1("1. Motivation and objectives")
@@ -700,7 +736,7 @@ def build(commit: str, branch: str) -> Report:
     R.link_para("**Data:** ", (blob + "data/athar.jsonl", "data/athar.jsonl"),
                 f" ({n_all} items; splits ", (blob + "data/splits/manifest.json", "data/splits/manifest.json"),
                 "), ", (blob + "data/natural/natural.jsonl", "data/natural/natural.jsonl"),
-                f" ({n_nat}), data card and guides (`docs/`); consent covers this project, no public "
+                f" ({n_nat}), `data/v3/manifest.json` (texts private), data card and guides (`docs/`); consent covers this project, no public "
                 "licence yet.",
                 align=WD_ALIGN_PARAGRAPH.JUSTIFY)
     R.bullets([
@@ -727,8 +763,7 @@ def build(commit: str, branch: str) -> Report:
     R.h2("3.2 Data")
     nat_fams = nat_confirmatory_families()
     R.table(
-        "Datasets. No scenario family crosses train, dev and test; the natural set reuses the test's "
-        "scenarios.",
+        "Datasets. Train, dev and test share no scenario family; natural and v3 reuse the test's.",
         ["Set", "Items", "Families", "ACT/CLAR/ABST", "Written by", "Use"],
         [["train", *split_row("train"),
           f"{drafted('train')} AI-drafted, {len(ITEMS['train']) - drafted('train')} author", "fitting"],
@@ -737,7 +772,10 @@ def build(commit: str, branch: str) -> Report:
          ["test (locked)", *split_row("test"), "author (native speaker)", "evaluation 1"],
          ["natural (locked)", str(n_conf), str(nat_fams),
           " / ".join(str(sum(i["route"] == r for i in NAT_CONF)) for r in ("ACT", "CLARIFY", "ABSTAIN")),
-          f"{n_writers} other native speakers", "evaluation 2"]],
+          f"{n_writers} other native speakers", "evaluation 2"],
+         ["v3 (locked)", str(v3_n), str(V3["families"]),
+          " / ".join(str(V3_MAN["splits"]["test"]["counts"][r]) for r in ("ACT", "CLARIFY", "ABSTAIN")),
+          f"{len(V3['writers'])} further native speakers", "evaluation 3"]],
         widths=[2.7, 1.3, 1.6, 3.2, 4.4, 2.8])
     R.para(
         "The author wrote the test from scenario cards; a second native "
@@ -754,7 +792,10 @@ def build(commit: str, branch: str) -> Report:
         f"items both labelled CLARIFY, same instant on {AGREE_NAT['datetime_same_instant']['agreement']:.0%} "
         f"of {AGREE_NAT['datetime_same_instant']['n']} both labelled ACT). The author adjudicated the "
         f"{load('results/natural/adjudication.json')['adjudicated']} disagreements, with no recorded "
-        "joint discussion (Table 7 uses each annotator's own labels).")
+        "joint discussion (Table 7 uses each annotator's own labels). **v3** is the other "
+        f"{len(V3['writers'])} screened writers' {v3_n} messages; its systems were frozen before labelling, "
+        f"and both annotators jointly adjudicated {v3_adj} disagreements (route κ = "
+        f"{AGREE_V3['route']['kappa']:.3f}, same slots {AGREE_V3['targets_exact_set']['agreement']:.0%}).")
 
     R.h2("3.3 Pipeline and systems")
     R.para(
@@ -783,7 +824,7 @@ def build(commit: str, branch: str) -> Report:
         f"{drafted('train')} of {len(ITEMS['train'])} training items were AI-drafted, because the human "
         "requests available at the freeze were needed for an all-human test "
         f"({n_all} items, {t1['pairs']} test pairs; planned: 300, 20). **Evaluation:** a "
-        "screened contributor collection became a second, pre-registered evaluation. **Systems:** "
+        "screened contributor collection became two more pre-registered evaluations. **Systems:** "
         "S1-S3 ran on a laptop CPU as proposed; the open-weight extensions S4-S9 ran on Kaggle T4 "
         "GPUs. Jais 2 stayed the pre-registered LLM; Jais 3 (released after the freeze, before the "
         "test was opened) joined S4 unchanged and added S8-S9.")
@@ -792,7 +833,7 @@ def build(commit: str, branch: str) -> Report:
     R.h1("4. Evaluation and results")
     R.h2("4.1 Evaluation data and metrics")
     R.para(
-        "**Evaluation data.** Both sets hold native-written requests for the two tools, covering "
+        "**Evaluation data.** All three sets hold native-written requests for the two tools, covering "
         "all routes, with incomplete variants and in-domain out-of-scope requests; "
         f"{share(NAT_CONF, 'domain', 'project_management'):.0%} of natural messages are about project "
         "management. Test intervals span about ±0.09 STS, so the natural set carries the main "
@@ -804,22 +845,22 @@ def build(commit: str, branch: str) -> Report:
         f"{reminder_share('train', 'فكرني'):.0%} of training reminders use the verb «فكرني» and "
         f"{reminder_share('train', 'تذكير'):.0%} the noun «تذكير», against "
         f"{reminder_share('test', 'فكرني'):.0%} and {reminder_share('test', 'تذكير'):.0%} in the test. "
-        "Its phrasing, rather than its size, appears to limit the classifiers (§4.3). "
+        "Its phrasing, not its size, limited the classifiers (§4.3, v3). "
         "**Separation.** Splits follow scenario families under a hash-locked manifest; vocabularies "
-        "and hyper-parameters come from train/dev only; the test was scored once; natural-set systems "
+        "and hyper-parameters come from train/dev only; each set was scored once; natural and v3 systems "
         "were frozen before labelling. **Limitations.** The test is one writer's templated phrasing "
         f"(52 sentence frames; {frames['frame_seen_in_train']} items share a frame with train) by the "
-        "author of S1's lexicon; the natural set has new writers but the same scenarios. C was chosen "
-        f"on {len(ITEMS['dev'])} mostly drafted dev items; retuned by family-grouped cross-validation on "
-        f"train+dev, S2 and S3 still score only {f3(NAT['summary']['S2-gcv']['sts'])} and "
-        f"{f3(NAT['summary']['S3-gcv']['sts'])} on the natural set.")
+        "author of S1's lexicon; natural and v3 have new writers but the same scenarios. C was chosen "
+        f"on {len(ITEMS['dev'])} mostly drafted dev items (grouped-CV retuning on train+dev: S2 "
+        f"{f3(NAT['summary']['S2-gcv']['sts'])}, S3 {f3(NAT['summary']['S3-gcv']['sts'])} on natural).")
     R.para(
         "**Metrics.** Besides STS: intent and route macro-F1; unsafe execution (a wrong or unwarranted "
         "tool call) over all items and over executions; unnecessary clarification (Unn. clar.: "
         "gold ACT answered with CLARIFY); and pairs with both versions correct. Intervals are "
         "family-level bootstraps (10,000 resamples) [8]; paired tests swap whole families [7], "
         "Holm-corrected [9]. **Hypotheses** (fixed before labelling): "
-        "N1, S1 beats S2; N2, S1 v1.1 beats S1; N3, S9 beats S8.")
+        "N1, S1 beats S2; N2, S1 v1.1 beats S1; N3, S9 beats S8; v3, H-a/H-b: human training messages "
+        "improve S3/MARBERTv2.")
 
     R.h2("4.2 Results")
     h1_, h2_ = cmp_["S2 vs S1"], cmp_["S3 vs S1"]
@@ -865,51 +906,50 @@ def build(commit: str, branch: str) -> Report:
                          f3(nat_seed_mean(key, "unnecessary_clarification_rate")),
                          f3(nat_seed_mean(key, "pair_both_success")),
                          "/".join(f"{nat_seed_route(key, r):.2f}" for r in ("ACT", "CLARIFY", "ABSTAIN"))])
-    R.table(f"Natural set ({n_conf} items, {n_writers} writers, {n1['pairs']} pairs); S8/S9: 3-seed "
-            "means; last column: success by gold route.",
+    R.table(f"Natural set ({n_conf} items, {n_writers} writers, {n1['pairs']} pairs). S8/S9: 3-seed means; last column: success by route.",
             ["System", "STS [95% CI]", "Intent F1", "Route F1", "Unsafe (all)", "Unsafe (ACT)",
              "Unn. clar.", "Pairs", "ACT/CLAR/ ABST"], nat_rows,
             widths=[2.55, 3.25, 1.2, 1.2, 1.3, 1.3, 1.15, 1.15, 2.9], bold_rows={1})
     R.para(
         "**N1 was confirmed** with a larger gap: "
         f"{signed(N1['difference'])} {ci(N1['ci'])}, Holm p = {N1['p_holm']:.4f}; S1 led for 13 of 17 "
-        "writers and under every alternative labelling (Table 7). **N3 was confirmed:** "
+        "writers and under all alternative labels (Table 7). **N3 was confirmed:** "
         f"{signed(N3['difference'])} {ci(N3['ci'])}, Holm p = {N3['p_holm']:.3f}, but {s9_fallback} "
         f"of the {s9_gain} items gained (three seeds) were S8's invalid calls answered by the rule "
         f"fallback. **N2 was not:** the extractor fix changed one natural item. **Safety.** "
         f"{1 - t1['execution_precision']:.0%} of S1's test and {1 - n1['execution_precision']:.0%} of "
-        f"its natural executions were wrong; harmful ones (wrong tool or time, or should have asked or "
-        f"declined) rose from {harm_t} of {exec_t} to {harm_n} of {exec_n}, the rest differing only in "
-        f"reminder wording. Accepting any reminder text, natural STS is {len_s1:.3f} (S1) and "
-        f"{len_or:.3f} (oracle). No LLM recognizer beat the rules significantly (post hoc, Table 8).")
+        f"its natural executions were wrong; harmful ones (wrong tool, time or route) rose from {harm_t} "
+        f"of {exec_t} to {harm_n} of {exec_n}, the rest differing only in reminder wording (any text "
+        f"accepted: S1 {len_s1:.3f}, oracle {len_or:.3f}).")
 
     R.h2("4.3 Analysis and errors")
     s3h = HUM["tests"]["S3 +contributors vs S1-v1.1"]
     s3h = {**s3h, "difference": -s3h["difference"],   # report as rules minus S3, the gap to close
            "ci": {"low": -s3h["ci"]["high"], "high": -s3h["ci"]["low"]}}
     R.para(
-        "**Training data (exploratory, Table 5).** In leave-one-writer-out training, about "
-        f"{n_human} added human messages raised S3 on new writers from "
-        f"{hum['S3 | drafted+author']['sts']:.3f} to {hum['S3 | drafted+author+contributors']['sts']:.3f} "
-        f"(gap to the rules {signed(s3h['difference'])} {ci(s3h['ci'])}); trained on them alone "
-        f"({hum['S3 | contributors only']['sts']:.3f}) it beat the {n_fit} drafted and author items, so "
-        "size does not explain the gap, but they come from the natural set's collection. "
-        "**Failure types.** S2's 20 extra test failures are all intent errors (Tables 10, 11). **Shared pipeline.** With "
-        "gold intents, 14 of 23 test failures vanish once two framings, such as the want-verb «عايز», "
-        "are stripped (Table 9). New writers failed instead on emphasis words («ضروري») "
-        "and day-scale expressions (oracle 0.58 on 31 items), hence N2.")
+        "**Training data (registered, v3; Table 5).** Adding the natural set's human messages raised S3 "
+        f"from {v3s['S3-drafted']['sts']:.3f} to {v3s['S3-human']['sts']:.3f} ({signed(v3a['difference'])} "
+        f"{ci(v3a['ci'])}, Holm p = {v3a['p_holm']:.3f}) and MARBERTv2 from "
+        f"{v3s['S6-drafted (seed mean)']['sts']:.3f} to {v3s['S6-human (seed mean)']['sts']:.3f} "
+        f"({signed(v3b['difference'])} {ci(v3b['ci'])}, Holm p = {v3b['p_holm']:.4f}; out-of-scope "
+        f"declined {v3s['S6-drafted (seed mean)']['by_route']['ABSTAIN']:.2f} → "
+        f"{v3s['S6-human (seed mean)']['by_route']['ABSTAIN']:.2f}); human messages alone also gave S3 "
+        f"{v3s['S3-contrib-only']['sts']:.3f}, so size does not explain it. S3 equals the rules "
+        f"({signed(v3_s3r['difference'])} {ci(v3_s3r['ci'])}); MARBERTv2 is above them "
+        f"({signed(v3_s6r['difference'])} {ci(v3_s6r['ci'])}, estimate). "
+        "**Shared pipeline** (Tables 9-11). With "
+        "gold intents, 14 of 23 test failures vanish once two framings are stripped; "
+        "new writers failed instead on emphasis words («ضروري») and day-scale "
+        "expressions (oracle 0.58, n = 31).")
 
     # 5 ------------------------------------------------------------------------------------------
     R.h1("5. Conclusion")
     R.para(
-        f"We built a task contract, a safety-aware metric, a {n_all}-item benchmark and a {n_conf}-message "
-        f"evaluation by {n_writers} other writers on the same scenarios and two tools. Rules beat TF-IDF classifiers trained on mostly "
-        f"AI-drafted data on both sets ({signed(N1['difference'])} STS on new writers), owing more to "
-        "the data than the method (exploratory). A policy with a rule fallback raised "
-        f"LLM tool calling by {signed(N3['difference'])} STS, mostly by recovering invalid calls. No "
-        "intent layer beat the cheap rules significantly, yet none is deployable: the extractor "
-        f"caps all systems and {100 * (1 - t1['execution_precision']):.0f}-"
-        f"{1 - n1['execution_precision']:.0%} of S1's executions were wrong.")
+        f"We built a task contract, a safety-aware metric, a {n_all}-item benchmark and evaluations by "
+        f"{n_writers + len(V3['writers'])} other writers. Rules beat TF-IDF trained on mostly AI-drafted "
+        f"data ({signed(N1['difference'])} STS on new writers); a registered test traced this to the data. "
+        f"A rule-backed policy raised LLM tool calling by {signed(N3['difference'])}. None is deployable: "
+        f"the extractor caps all, and {1 - n1['execution_precision']:.0%} of S1's new-writer calls were wrong.")
 
     # References ----------------------------------------------------------------------------------
     R.h1("References")
@@ -970,11 +1010,21 @@ def build(commit: str, branch: str) -> Report:
          f"{st.mean(s8t):.3f} (" + " / ".join(f3(x) for x in s8t) + ")", f"{s8m['sts']:.3f}"],
         ["S9 S8 + deterministic policy (3 seeds)", precision(s8_file), "not run¹", f"{s9m['sts']:.3f}"],
     ]
-    R.table("Safe Task Success of the extension systems on both locked sets, with the numeric format "
+    ext = [row + ["–"] for row in ext]
+    ext[0][-1] = f"{v3s['S1-v1.1']['sts']:.3f}"
+    gs = V3G["summary"]
+    v3_prec = load("models_v3/freeze_gpu.json")["precision"]
+    ext += [["S4 Jais-3-7B 6-shot inline, normalized / raw text", v3_prec, "–", "–",
+             f"{gs['S4-jais3-7b-inline-norm']['sts']:.3f} / {gs['S4-jais3-7b-inline-raw']['sts']:.3f}"],
+            ["S8 Jais-3-7B greedy, with exemplars (1 run)", v3_prec, "–", "–", f"{gs['S8-fair']['sts']:.3f}"],
+            ["S9 from that S8", v3_prec, "–", "–", f"{gs['S9-fair']['sts']:.3f}"]]
+    require(abs(gs["S1-v1.1"]["sts"] - v3s["S1-v1.1"]["sts"]) < 1e-9, "same S1 v1.1 score in both v3 result files")
+    R.table("Safe Task Success of the extension systems on the three locked sets, with the numeric format "
             "each GPU model ran in, or CPU (S4: primary setting, 6 examples with prior calibration; S5/S6 fitted after "
-            "both evaluations, exploratory). ¹S9 uses core v1.1, whose fix was drawn from the test errors.",
-            ["System", "Format", "Locked test (120)", "Natural (238)"], ext,
-            widths=[5.8, 2.0, 4.1, 4.1])
+            "both evaluations, exploratory). ¹S9 uses core v1.1, whose fix was drawn from the test errors. "
+            "v3: core v1.1; the GPU rows were frozen before labelling (amendments A5, A7), descriptive.",
+            ["System", "Format", "Locked test (120)", "Natural (238)", f"v3 ({v3_n})"], ext,
+            widths=[5.0, 1.7, 3.4, 3.4, 2.5])
     j3 = load("results/s4/7a-jais3/s4_results/jais3-7b.json")["systems"]
     j3_inline = j3["S4-jais3-7b-6shot-inline-prior"]["metrics"]["safe_task_success"]
     j3_declined = FAILS["S4-jais3-7b-6shot-prior"]["declined an in-scope request"]
@@ -984,7 +1034,8 @@ def build(commit: str, branch: str) -> Report:
         "shared. **S4** prompts an LLM for the intent with 6 examples (Jais 2 8B [5, 11], Jais-3-7B, "
         "Jais-3-3.7B [12], Nile-Chat 4B [13], Qwen3 8B [14]). **S5** is logistic regression on frozen "
         "multilingual-e5-small embeddings. **S6** is fine-tuned MARBERTv2 [2] (five seeds, recipe after "
-        "[10]). **S7** is Jais 2 with QLoRA [3] (three seeds).")
+        "[10]). **S7** is Jais 2 with QLoRA [3] (three seeds). No LLM recognizer beat the rules "
+        "significantly on any set (Tables 4, 8).")
     R.para(
         "**Precision.** Kaggle's T4 GPUs have no bf16, so the models ran in different formats: Jais 2 "
         "overflowed in fp16 and ran 4-bit, Jais-3-7B and Qwen3 ran in fp16, the smaller models in fp32. "
@@ -994,9 +1045,19 @@ def build(commit: str, branch: str) -> Report:
         f"{j3_inline:.3f}. As S8 it made no valid call on " + ", ".join(map(str, s8_invalid[:-1]))
         + f" and {s8_invalid[-1]} of the 120 test items.")
     R.para(
-        f"**Protocol v3.** A registered test of the training-data explanation on {v3_n} unseen "
-        "contributor messages (`docs/protocol_v3.md`) has frozen systems and awaits labelling; no "
-        "result from it is reported.")
+        f"**Protocol v3** (`docs/protocol_v3.md`, amendments A1-A9). Registered on 6 November before "
+        f"any v3 system existed; systems and GPU outputs frozen before labelling; gold locked "
+        f"(manifest `{V3_MAN['manifest_sha256'][:8]}`) and scored once (`results/v3/evaluation.json`, "
+        "`evaluation_gpu.json`). H-a and H-b also hold with writers as clusters and in all 17 "
+        "leave-one-writer-out analyses; the exploratory natural-set analysis agreed (Table 5). "
+        "GPU systems (descriptive): raw instead of normalized text did not change S4 "
+        f"({signed(g_cmp['S4 raw vs normalized text']['difference'])}, p = "
+        f"{g_cmp['S4 raw vs normalized text']['p_value']:.2f}; same intent on "
+        f"{V3G['s4_norm_raw_same_intent']} of {v3_n}); the policy added "
+        f"{signed(g_cmp['S9-fair vs S8-fair']['difference'])} to greedy Jais 3 with exemplars "
+        f"(p = {g_cmp['S9-fair vs S8-fair']['p_value']:.2f}). Greedy S8 made no valid "
+        f"call on {V3G['s8_fair_no_valid_call']} of {v3_n} items (sampled S8 on the natural set: "
+        f"{min(s8_invalid_nat)}-{max(s8_invalid_nat)} of {n_conf} a seed).")
     R.para(
         "**Cost.** On a laptop CPU, each final S2/S3 fit takes under 0.3 s, inference under 0.3 ms per "
         "item, and peak memory is 141 MB (`models/freeze.json`).")
@@ -1012,11 +1073,25 @@ def build(commit: str, branch: str) -> Report:
                                 for pool in ("drafted+author", "contributors only",
                                              "drafted+author+contributors")])
     hrows.append(["S1 rules (reference)", "", "", f"{hum['S1-v1.1']['sts']:.3f} ({hum['S1-v1.1']['intent_accuracy']:.3f})"])
-    R.table("Exploratory leave-one-writer-out training on the natural set: STS (intent accuracy). Each "
-            f"held-out writer's scenario families are removed from training; about {n_human} contributor "
-            "messages per fold; S2/S3 use grouped-CV settings; S1 is core v1.1.",
-            ["Classifier", f"Drafted + author ({n_fit})", f"Contributors only (~{n_human})", "Both"],
-            hrows, widths=[3.5, 4.2, 4.2, 4.1])
+    hrows = [[f"{r[0]}, natural" if r[0] != "S1 rules (reference)" else "S1 rules, natural", *r[1:]] for r in hrows]
+    vm = V3["metrics"]
+
+    def v3cell(name: str) -> str:
+        if name.startswith("S6"):
+            acc = st.mean(vm[f"{name}-s{s}"]["intent_accuracy"] for s in range(5))
+            return f"{v3s[name + ' (seed mean)']['sts']:.3f} ({acc:.3f})"
+        return f"{v3s[name]['sts']:.3f} ({vm[name]['intent_accuracy']:.3f})"
+
+    hrows += [["**S3, v3 (registered)**", v3cell("S3-drafted"), v3cell("S3-contrib-only"), v3cell("S3-human")],
+              ["**S6 MARBERTv2, v3 (5 seeds)**", v3cell("S6-drafted"), "", v3cell("S6-human")],
+              ["S1 rules, v3", "", "", v3cell("S1-v1.1")]]
+    R.table("Training on human-written messages: STS (intent accuracy). Natural set: exploratory "
+            "leave-one-writer-out (each held-out writer's scenarios removed; about "
+            f"{n_human} contributor messages per fold). v3: registered test on {v3_n} unseen messages, "
+            "trained per scenario block on the natural set minus that block's cards (H-a: S3, H-b: S6). "
+            "S2/S3 use grouped-CV settings; S1 is core v1.1.",
+            ["Classifier, set", f"Drafted + author ({n_fit})", f"Contributors only (~{n_human})", "Both"],
+            hrows, widths=[4.3, 3.9, 3.9, 3.9])
     tsv = csv_rows("results/posthoc/template_sensitivity.csv")
     srows = []
     for r in tsv:
@@ -1076,7 +1151,8 @@ def build(commit: str, branch: str) -> Report:
             "asked instead of declining", "declined an in-scope request"]
     frows = [[c[0].upper() + c[1:]] + [fails[s][c] for s in ("oracle", "S1", "S2", "S3")] for c in cats]
     frows.append(["All failures"] + [fails[s]["failures"] for s in ("oracle", "S1", "S2", "S3")])
-    R.table("Locked test: failures by type (counts of 120 items; from results/error_analysis).",
+    R.table("Locked test: failures by type (counts of 120 items; from results/error_analysis). S2's "
+            "20 failures beyond S1's are all intent errors.",
             ["Failure type", "Oracle", "S1", "S2", "S3"], frows, widths=[7.6, 2.1, 2.1, 2.1, 2.1],
             bold_rows={len(frows) - 1})
 

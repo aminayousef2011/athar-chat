@@ -1,0 +1,304 @@
+{
+  "annotator": "Ibrahim",
+  "date": "2026-11-13",
+  "sheet": "data/raw/private/v3/v3_label_Ibrahim.xlsx",
+  "n_compared": 227,
+  "unknown_ids": [
+    "c017-b-p2",
+    "c091-a-ad1",
+    "c097-a-pp1",
+    "c109-b-p2"
+  ],
+  "intent": {
+    "n": 227,
+    "agreement": 0.9955947136563876,
+    "kappa": 0.9930950570342205,
+    "reading": "almost perfect",
+    "labels": [
+      "create_reminder",
+      "create_alarm",
+      "unsupported"
+    ],
+    "confusion": [
+      [
+        104,
+        0,
+        0
+      ],
+      [
+        0,
+        72,
+        0
+      ],
+      [
+        1,
+        0,
+        50
+      ]
+    ]
+  },
+  "route": {
+    "n": 227,
+    "agreement": 0.973568281938326,
+    "kappa": 0.9592374225600814,
+    "reading": "almost perfect",
+    "labels": [
+      "ACT",
+      "CLARIFY",
+      "ABSTAIN"
+    ],
+    "confusion": [
+      [
+        86,
+        0,
+        0
+      ],
+      [
+        5,
+        85,
+        0
+      ],
+      [
+        0,
+        1,
+        50
+      ]
+    ]
+  },
+  "targets_exact_set": {
+    "n": 85,
+    "agreement": 0.9882352941176471
+  },
+  "targets_kappa": {
+    "date": {
+      "n": 227,
+      "agreement": 0.9911894273127754,
+      "kappa": 0.9550495049504952,
+      "reading": "almost perfect",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          24,
+          1
+        ],
+        [
+          1,
+          201
+        ]
+      ]
+    },
+    "time": {
+      "n": 227,
+      "agreement": 1.0,
+      "kappa": 1.0,
+      "reading": "almost perfect",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          22,
+          0
+        ],
+        [
+          0,
+          205
+        ]
+      ]
+    },
+    "am_pm": {
+      "n": 227,
+      "agreement": 0.9955947136563876,
+      "kappa": 0.9846756227637884,
+      "reading": "almost perfect",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          39,
+          0
+        ],
+        [
+          1,
+          187
+        ]
+      ]
+    },
+    "past": {
+      "n": 227,
+      "agreement": 0.9779735682819384,
+      "kappa": 0.7510418951524463,
+      "reading": "substantial",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          8,
+          5
+        ],
+        [
+          0,
+          214
+        ]
+      ]
+    },
+    "reminder_text": {
+      "n": 227,
+      "agreement": 1.0,
+      "kappa": 1.0,
+      "reading": "almost perfect",
+      "labels": [
+        "True",
+        "False"
+      ],
+      "confusion": [
+        [
+          9,
+          0
+        ],
+        [
+          0,
+          218
+        ]
+      ]
+    }
+  },
+  "unsupported_reason": {
+    "n": 50,
+    "agreement": 1.0,
+    "kappa": 1.0,
+    "reading": "almost perfect",
+    "labels": [
+      "deletion",
+      "recurring",
+      "other_person",
+      "multi_action",
+      "other_tool",
+      "modification",
+      "other"
+    ],
+    "confusion": [
+      [
+        10,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        20,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        5,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        8,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        6,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  "datetime_same_instant": {
+    "n": 86,
+    "agreement": 0.9534883720930233
+  },
+  "reminder_text_same": {
+    "n": 51,
+    "agreement": 0.9607843137254902
+  },
+  "disagreements": [
+    {
+      "id": "c017-a-p2",
+      "gold": "create_alarm/CLARIFY/past",
+      "annotator": "create_alarm/ACT/"
+    },
+    {
+      "id": "c027-a-ac",
+      "gold": "create_reminder/CLARIFY/past",
+      "annotator": "create_reminder/ACT/"
+    },
+    {
+      "id": "c027-a-p2",
+      "gold": "create_reminder/CLARIFY/past",
+      "annotator": "create_reminder/ACT/"
+    },
+    {
+      "id": "c090-a-ac",
+      "gold": "create_reminder/CLARIFY/past",
+      "annotator": "create_reminder/ACT/"
+    },
+    {
+      "id": "c090-a-p2",
+      "gold": "create_alarm/CLARIFY/past",
+      "annotator": "create_alarm/ACT/"
+    },
+    {
+      "id": "c091-b-ad1",
+      "gold": "create_reminder/CLARIFY/date,time",
+      "annotator": "create_reminder/CLARIFY/time"
+    },
+    {
+      "id": "c097-a-b1",
+      "gold": "create_alarm/ACT/",
+      "annotator": "create_alarm/ACT/am_pm"
+    },
+    {
+      "id": "c144-a-ac",
+      "gold": "unsupported/ABSTAIN/",
+      "annotator": "create_reminder/CLARIFY/date"
+    }
+  ]
+}

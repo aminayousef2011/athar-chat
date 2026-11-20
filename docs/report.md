@@ -965,9 +965,13 @@ does not cover (section 8.7). All conclusions are about Safe Task Success under 
   new writers. The 236 screened but unlabelled messages come from the 17 writers outside the sample
   and can serve as that set once double-annotated. Its protocol ([protocol_v3.md](protocol_v3.md))
   was registered on 2026-11-06; its S3 and S6 systems and a contributors-only control are frozen
-  with committed predictions, and its GPU systems are specified but not yet run. No v3 message is
-  labelled yet and no v3 result exists. S4 on
-  raw text belongs in the same run.
+  with committed predictions. **Done (2026-11-20):** the GPU systems were run and frozen before
+  labelling (amendment A7), both annotators labelled the 236 messages and adjudicated 20 jointly, the
+  gold was locked (manifest `750e7847`) and scored once (`results/v3/evaluation.json`,
+  `evaluation_gpu.json`). Both registered hypotheses hold: human training messages raised S3 by
+  +0.089 [0.037, 0.150] (Holm p 0.002) and MARBERTv2 by +0.088 [0.049, 0.134] (Holm p 0.0002), to
+  the rules' level (S3 equals S1 v1.1 at 0.589; MARBERTv2 +0.048 [0.013, 0.091], an estimate). S4 on
+  raw text did not differ from normalized text (+0.017, p 0.50, descriptive).
 - **Reminder text at notification time.** The contract stores the reminder text in the user's own
   words («اراجع الـ slides»), which keeps scoring objective. A deployed assistant should render it
   as an action addressed to the user when the reminder fires («راجع الـ slides»). This is a separate

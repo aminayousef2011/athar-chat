@@ -241,17 +241,18 @@ the Phase 4 evaluation passes. Procedure: [docs/annotation_guide.md](docs/annota
 
 Complete: locked test (2026-10-18), pre-registered natural-phrasing evaluation (2026-11-02) and
 the final report ([final_report/build_report.py](final_report/build_report.py)).
-Protocol v3 ([docs/protocol_v3.md](docs/protocol_v3.md)), a third evaluation on unused contributor
-messages, is registered and in progress; it is not part of the submitted results.
+Protocol v3 ([docs/protocol_v3.md](docs/protocol_v3.md)), a third registered evaluation on 236 unused
+contributor messages, is complete (2026-11-20): human training messages raised S3 by +0.089 and
+MARBERTv2 by +0.088 STS (Holm p ≤ 0.002), to the rules' level. It is in the final report.
 
 ## Protocol v3: does human-written training data help? (gates G1-G5)
 
 | Gate | State |
 |---|---|
 | G1 protocol registered | done (`3a69bc0`) |
-| G2+G3 systems frozen, predictions committed | done for S3-drafted/-human, S6-drafted/-human (5 seeds) and the A4 control; the GPU systems of A5 were not run, so they are not scored |
-| G4 two annotations, adjudication, lock | blank sheets ready in `data/raw/private/v3/`; no label yet |
-| G5 one scoring run | `python -m athar.v3.evaluate` (amendment A6) |
+| G2+G3 systems frozen, predictions committed | done for S3, S6 (5 seeds), the A4 control and the A5 GPU systems (A7, before labelling) |
+| G4 two annotations, adjudication, lock | done: 20 items adjudicated jointly, 4 gold corrections (A8, A9), manifest `750e7847` |
+| G5 one scoring run | done: `results/v3/evaluation.json`; GPU systems: `results/v3/evaluation_gpu.json` (`python -m athar.v3.gpu_score`) |
 
 ```powershell
 uv run python -m athar.v3 verify                     # freezes, models, predictions, sources unchanged
