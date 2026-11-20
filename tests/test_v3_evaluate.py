@@ -108,7 +108,8 @@ def test_the_scoring_run_happens_once(tmp_path: Path) -> None:
 def test_the_committed_freezes_hold_the_registered_systems() -> None:
     preds, hashes = E.frozen_predictions()
     assert len(preds) == 13 and all(len(p) == 236 for p in preds.values())
-    assert hashes["freeze_gpu.json"].startswith("absent")
+    # the A5 GPU systems were frozen before G4 (amendment A7): their freeze hash is recorded
+    assert len(hashes["freeze_gpu.json"]) == 64 and not hashes["freeze_gpu.json"].startswith("absent")
 
 
 @pytest.fixture

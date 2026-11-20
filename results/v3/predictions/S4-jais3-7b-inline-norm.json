@@ -1,0 +1,1890 @@
+{
+ "c001-a-b1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.948309,
+   0.031611,
+   0.02008
+  ]
+ },
+ "c001-a-pp1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.696477,
+   0.139911,
+   0.163612
+  ]
+ },
+ "c001-a-ps1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.669672,
+   0.154821,
+   0.175507
+  ]
+ },
+ "c001-b-b1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.940356,
+   0.03285,
+   0.026794
+  ]
+ },
+ "c001-b-pp1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.652393,
+   0.150816,
+   0.196791
+  ]
+ },
+ "c001-b-ps1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.714416,
+   0.092422,
+   0.193162
+  ]
+ },
+ "c003-a-po2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.908897,
+   0.054005,
+   0.037098
+  ]
+ },
+ "c003-a-r1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.557514,
+   0.165184,
+   0.277302
+  ]
+ },
+ "c003-b-po2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.60226,
+   0.068734,
+   0.329006
+  ]
+ },
+ "c003-b-r1": {
+  "intent": "unsupported",
+  "proba": [
+   0.280677,
+   0.093615,
+   0.625708
+  ]
+ },
+ "c004-a-c2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.728876,
+   0.117641,
+   0.153483
+  ]
+ },
+ "c004-b-c2": {
+  "intent": "unsupported",
+  "proba": [
+   0.083862,
+   0.14119,
+   0.774947
+  ]
+ },
+ "c006-a-pr1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.628384,
+   0.142977,
+   0.228639
+  ]
+ },
+ "c006-b-pr1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.514041,
+   0.205167,
+   0.280791
+  ]
+ },
+ "c007-a-ac": {
+  "intent": "unsupported",
+  "proba": [
+   0.410532,
+   0.163704,
+   0.425763
+  ]
+ },
+ "c007-a-p2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.588141,
+   0.287993,
+   0.123866
+  ]
+ },
+ "c007-a-w1": {
+  "intent": "unsupported",
+  "proba": [
+   0.196688,
+   0.28241,
+   0.520902
+  ]
+ },
+ "c007-a-w2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.627505,
+   0.27118,
+   0.101315
+  ]
+ },
+ "c007-a-w3": {
+  "intent": "create_reminder",
+  "proba": [
+   0.732412,
+   0.198075,
+   0.069513
+  ]
+ },
+ "c007-b-ac": {
+  "intent": "unsupported",
+  "proba": [
+   0.378982,
+   0.168601,
+   0.452417
+  ]
+ },
+ "c007-b-p2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.583693,
+   0.277009,
+   0.139298
+  ]
+ },
+ "c007-b-w1": {
+  "intent": "unsupported",
+  "proba": [
+   0.139055,
+   0.2724,
+   0.588545
+  ]
+ },
+ "c007-b-w2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.582381,
+   0.23636,
+   0.181259
+  ]
+ },
+ "c007-b-w3": {
+  "intent": "create_reminder",
+  "proba": [
+   0.616087,
+   0.262031,
+   0.121882
+  ]
+ },
+ "c008-a-ad1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.99074,
+   0.008484,
+   0.000776
+  ]
+ },
+ "c008-a-pm1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.917471,
+   0.044493,
+   0.038036
+  ]
+ },
+ "c008-b-ad1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.79955,
+   0.042293,
+   0.158157
+  ]
+ },
+ "c008-b-pm1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.530299,
+   0.054715,
+   0.414986
+  ]
+ },
+ "c009-a-pm2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.867959,
+   0.07271,
+   0.059331
+  ]
+ },
+ "c009-a-r4": {
+  "intent": "create_reminder",
+  "proba": [
+   0.745683,
+   0.126143,
+   0.128175
+  ]
+ },
+ "c009-b-pm2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.48119,
+   0.071536,
+   0.447274
+  ]
+ },
+ "c009-b-r4": {
+  "intent": "unsupported",
+  "proba": [
+   0.383999,
+   0.088372,
+   0.527629
+  ]
+ },
+ "c010-a-b1": {
+  "intent": "unsupported",
+  "proba": [
+   0.25132,
+   0.170486,
+   0.578194
+  ]
+ },
+ "c010-a-pp1": {
+  "intent": "unsupported",
+  "proba": [
+   0.361622,
+   0.20004,
+   0.438338
+  ]
+ },
+ "c010-a-ps1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.612197,
+   0.139327,
+   0.248477
+  ]
+ },
+ "c010-b-b1": {
+  "intent": "unsupported",
+  "proba": [
+   0.172148,
+   0.164453,
+   0.663399
+  ]
+ },
+ "c010-b-pp1": {
+  "intent": "unsupported",
+  "proba": [
+   0.405223,
+   0.174633,
+   0.420145
+  ]
+ },
+ "c010-b-ps1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.605343,
+   0.14895,
+   0.245707
+  ]
+ },
+ "c011-a-f1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.900309,
+   0.043657,
+   0.056034
+  ]
+ },
+ "c011-b-f1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.966002,
+   0.020792,
+   0.013206
+  ]
+ },
+ "c012-a-po2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.910679,
+   0.060373,
+   0.028948
+  ]
+ },
+ "c012-a-r1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.499885,
+   0.160292,
+   0.339823
+  ]
+ },
+ "c012-b-po2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.924379,
+   0.044826,
+   0.030795
+  ]
+ },
+ "c012-b-r1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.502063,
+   0.151262,
+   0.346675
+  ]
+ },
+ "c014-a-c2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.756396,
+   0.154263,
+   0.089341
+  ]
+ },
+ "c014-b-c2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.710402,
+   0.1694,
+   0.120197
+  ]
+ },
+ "c015-a-pr1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.843977,
+   0.093647,
+   0.062376
+  ]
+ },
+ "c015-b-pr1": {
+  "intent": "unsupported",
+  "proba": [
+   0.002222,
+   0.036566,
+   0.961212
+  ]
+ },
+ "c017-a-p2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.111195,
+   0.516576,
+   0.37223
+  ]
+ },
+ "c017-a-w1": {
+  "intent": "unsupported",
+  "proba": [
+   0.251969,
+   0.244447,
+   0.503584
+  ]
+ },
+ "c017-a-w2": {
+  "intent": "unsupported",
+  "proba": [
+   0.14955,
+   0.207586,
+   0.642864
+  ]
+ },
+ "c017-a-w3": {
+  "intent": "unsupported",
+  "proba": [
+   0.289439,
+   0.280565,
+   0.429996
+  ]
+ },
+ "c017-b-ac": {
+  "intent": "create_reminder",
+  "proba": [
+   0.69216,
+   0.134771,
+   0.173069
+  ]
+ },
+ "c017-b-p2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.088732,
+   0.505201,
+   0.406067
+  ]
+ },
+ "c017-b-w1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.745275,
+   0.13627,
+   0.118455
+  ]
+ },
+ "c017-b-w2": {
+  "intent": "unsupported",
+  "proba": [
+   0.337943,
+   0.225923,
+   0.436134
+  ]
+ },
+ "c017-b-w3": {
+  "intent": "create_reminder",
+  "proba": [
+   0.697996,
+   0.185739,
+   0.116265
+  ]
+ },
+ "c018-a-ad1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.593233,
+   0.18749,
+   0.219278
+  ]
+ },
+ "c018-a-pm1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.629021,
+   0.178223,
+   0.192756
+  ]
+ },
+ "c018-b-ad1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.678914,
+   0.062223,
+   0.258863
+  ]
+ },
+ "c018-b-pm1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.645014,
+   0.166394,
+   0.188592
+  ]
+ },
+ "c020-a-pm2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.855985,
+   0.065279,
+   0.078736
+  ]
+ },
+ "c020-a-r4": {
+  "intent": "create_reminder",
+  "proba": [
+   0.932338,
+   0.046647,
+   0.021015
+  ]
+ },
+ "c020-b-pm2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.469885,
+   0.205624,
+   0.324491
+  ]
+ },
+ "c020-b-r4": {
+  "intent": "create_reminder",
+  "proba": [
+   0.954404,
+   0.034947,
+   0.010649
+  ]
+ },
+ "c021-a-b1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.187477,
+   0.711681,
+   0.100842
+  ]
+ },
+ "c021-a-pp1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.258725,
+   0.730031,
+   0.011244
+  ]
+ },
+ "c021-a-ps1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.111019,
+   0.812311,
+   0.07667
+  ]
+ },
+ "c021-b-b1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.185321,
+   0.70347,
+   0.111209
+  ]
+ },
+ "c021-b-pp1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.323595,
+   0.668007,
+   0.008398
+  ]
+ },
+ "c021-b-ps1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.081285,
+   0.558259,
+   0.360456
+  ]
+ },
+ "c022-a-f1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.256054,
+   0.657777,
+   0.08617
+  ]
+ },
+ "c022-b-f1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.278044,
+   0.66059,
+   0.061366
+  ]
+ },
+ "c024-a-po2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.338221,
+   0.615791,
+   0.045988
+  ]
+ },
+ "c024-a-r1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.426072,
+   0.525135,
+   0.048792
+  ]
+ },
+ "c024-b-po2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.361034,
+   0.617521,
+   0.021444
+  ]
+ },
+ "c024-b-r1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.504574,
+   0.469382,
+   0.026044
+  ]
+ },
+ "c025-a-c2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.081605,
+   0.896327,
+   0.022068
+  ]
+ },
+ "c025-b-c2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.100157,
+   0.843392,
+   0.056451
+  ]
+ },
+ "c026-a-pr1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.174457,
+   0.823825,
+   0.001718
+  ]
+ },
+ "c026-b-pr1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.201473,
+   0.776516,
+   0.02201
+  ]
+ },
+ "c027-a-ac": {
+  "intent": "create_reminder",
+  "proba": [
+   0.689888,
+   0.142893,
+   0.167219
+  ]
+ },
+ "c027-a-p2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.597363,
+   0.188619,
+   0.214018
+  ]
+ },
+ "c027-a-w1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.118882,
+   0.635967,
+   0.24515
+  ]
+ },
+ "c027-a-w2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.446441,
+   0.259348,
+   0.29421
+  ]
+ },
+ "c027-a-w3": {
+  "intent": "create_reminder",
+  "proba": [
+   0.909718,
+   0.072744,
+   0.017539
+  ]
+ },
+ "c027-b-ac": {
+  "intent": "unsupported",
+  "proba": [
+   0.000543,
+   0.013853,
+   0.985604
+  ]
+ },
+ "c027-b-p2": {
+  "intent": "unsupported",
+  "proba": [
+   0.000562,
+   0.017806,
+   0.981632
+  ]
+ },
+ "c027-b-w1": {
+  "intent": "unsupported",
+  "proba": [
+   0.000911,
+   0.073378,
+   0.925711
+  ]
+ },
+ "c027-b-w2": {
+  "intent": "unsupported",
+  "proba": [
+   0.00036,
+   0.020623,
+   0.979017
+  ]
+ },
+ "c027-b-w3": {
+  "intent": "unsupported",
+  "proba": [
+   0.090237,
+   0.18301,
+   0.726754
+  ]
+ },
+ "c029-a-ad1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.194769,
+   0.61254,
+   0.19269
+  ]
+ },
+ "c029-a-pm1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.926077,
+   0.038415,
+   0.035508
+  ]
+ },
+ "c029-b-ad1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.206389,
+   0.669776,
+   0.123835
+  ]
+ },
+ "c029-b-pm1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.943297,
+   0.037344,
+   0.019359
+  ]
+ },
+ "c030-a-pm2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.698787,
+   0.109296,
+   0.191918
+  ]
+ },
+ "c030-a-r4": {
+  "intent": "create_reminder",
+  "proba": [
+   0.982872,
+   0.015002,
+   0.002126
+  ]
+ },
+ "c030-b-pm2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.456589,
+   0.150918,
+   0.392494
+  ]
+ },
+ "c035-a-b1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.100196,
+   0.870506,
+   0.029298
+  ]
+ },
+ "c035-a-pp1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.697341,
+   0.125512,
+   0.177147
+  ]
+ },
+ "c035-a-ps1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.920757,
+   0.049045,
+   0.030198
+  ]
+ },
+ "c035-b-b1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.203923,
+   0.631444,
+   0.164634
+  ]
+ },
+ "c035-b-pp1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.592889,
+   0.088284,
+   0.318827
+  ]
+ },
+ "c035-b-ps1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.876812,
+   0.03867,
+   0.084518
+  ]
+ },
+ "c038-a-f1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.137111,
+   0.831664,
+   0.031225
+  ]
+ },
+ "c038-b-f1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.197632,
+   0.726996,
+   0.075373
+  ]
+ },
+ "c042-a-po2": {
+  "intent": "unsupported",
+  "proba": [
+   0.026364,
+   0.080347,
+   0.893289
+  ]
+ },
+ "c042-a-r1": {
+  "intent": "unsupported",
+  "proba": [
+   0.14033,
+   0.153864,
+   0.705806
+  ]
+ },
+ "c042-b-po2": {
+  "intent": "unsupported",
+  "proba": [
+   0.031054,
+   0.094955,
+   0.873991
+  ]
+ },
+ "c042-b-r1": {
+  "intent": "unsupported",
+  "proba": [
+   0.041162,
+   0.112797,
+   0.846042
+  ]
+ },
+ "c047-a-c2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.261132,
+   0.725391,
+   0.013477
+  ]
+ },
+ "c047-b-c2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.40685,
+   0.435515,
+   0.157635
+  ]
+ },
+ "c048-a-pr1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.099592,
+   0.838747,
+   0.06166
+  ]
+ },
+ "c048-b-pr1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.101102,
+   0.83823,
+   0.060667
+  ]
+ },
+ "c049-a-ac": {
+  "intent": "create_alarm",
+  "proba": [
+   0.07652,
+   0.50102,
+   0.42246
+  ]
+ },
+ "c049-a-p2": {
+  "intent": "unsupported",
+  "proba": [
+   0.019699,
+   0.303568,
+   0.676733
+  ]
+ },
+ "c049-a-w1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.121448,
+   0.63962,
+   0.238933
+  ]
+ },
+ "c049-a-w2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.691,
+   0.170158,
+   0.138842
+  ]
+ },
+ "c049-a-w3": {
+  "intent": "create_alarm",
+  "proba": [
+   0.124265,
+   0.789918,
+   0.085817
+  ]
+ },
+ "c049-b-ac": {
+  "intent": "unsupported",
+  "proba": [
+   0.002929,
+   0.122696,
+   0.874375
+  ]
+ },
+ "c049-b-p2": {
+  "intent": "unsupported",
+  "proba": [
+   0.001878,
+   0.133266,
+   0.864856
+  ]
+ },
+ "c049-b-w1": {
+  "intent": "unsupported",
+  "proba": [
+   0.001267,
+   0.078227,
+   0.920506
+  ]
+ },
+ "c049-b-w2": {
+  "intent": "unsupported",
+  "proba": [
+   0.002983,
+   0.032826,
+   0.96419
+  ]
+ },
+ "c049-b-w3": {
+  "intent": "unsupported",
+  "proba": [
+   0.023249,
+   0.382444,
+   0.594307
+  ]
+ },
+ "c051-a-pm2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.135962,
+   0.694027,
+   0.170011
+  ]
+ },
+ "c051-a-r4": {
+  "intent": "create_alarm",
+  "proba": [
+   0.162213,
+   0.730891,
+   0.106896
+  ]
+ },
+ "c051-b-pm2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.114833,
+   0.585861,
+   0.299305
+  ]
+ },
+ "c051-b-r4": {
+  "intent": "create_alarm",
+  "proba": [
+   0.173545,
+   0.700858,
+   0.125596
+  ]
+ },
+ "c052-a-b1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.112635,
+   0.574841,
+   0.312524
+  ]
+ },
+ "c052-a-pp1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.226925,
+   0.660201,
+   0.112874
+  ]
+ },
+ "c052-a-ps1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.161846,
+   0.788556,
+   0.049598
+  ]
+ },
+ "c052-b-b1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.117294,
+   0.562291,
+   0.320415
+  ]
+ },
+ "c052-b-pp1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.17509,
+   0.595435,
+   0.229475
+  ]
+ },
+ "c052-b-ps1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.161983,
+   0.789151,
+   0.048866
+  ]
+ },
+ "c053-a-f1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.127962,
+   0.839019,
+   0.033018
+  ]
+ },
+ "c053-b-f1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.03388,
+   0.965521,
+   0.0006
+  ]
+ },
+ "c056-a-po2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.567234,
+   0.14618,
+   0.286586
+  ]
+ },
+ "c056-a-r1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.742359,
+   0.110784,
+   0.146857
+  ]
+ },
+ "c056-b-po2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.728931,
+   0.054625,
+   0.216443
+  ]
+ },
+ "c056-b-r1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.82287,
+   0.037913,
+   0.139217
+  ]
+ },
+ "c075-a-c2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.061804,
+   0.928058,
+   0.010138
+  ]
+ },
+ "c075-b-c2": {
+  "intent": "unsupported",
+  "proba": [
+   0.000963,
+   0.071848,
+   0.927189
+  ]
+ },
+ "c076-a-pr1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.150167,
+   0.656062,
+   0.193771
+  ]
+ },
+ "c076-b-pr1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.150463,
+   0.768613,
+   0.080925
+  ]
+ },
+ "c089-a-pr1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.883377,
+   0.052346,
+   0.064277
+  ]
+ },
+ "c089-b-pr1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.830257,
+   0.076172,
+   0.093571
+  ]
+ },
+ "c090-a-ac": {
+  "intent": "create_reminder",
+  "proba": [
+   0.788455,
+   0.129362,
+   0.082183
+  ]
+ },
+ "c090-a-p2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.177524,
+   0.603897,
+   0.218579
+  ]
+ },
+ "c090-a-w1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.630566,
+   0.225862,
+   0.143571
+  ]
+ },
+ "c090-a-w2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.75734,
+   0.122289,
+   0.120371
+  ]
+ },
+ "c090-a-w3": {
+  "intent": "create_reminder",
+  "proba": [
+   0.840915,
+   0.109143,
+   0.049943
+  ]
+ },
+ "c090-b-ac": {
+  "intent": "create_reminder",
+  "proba": [
+   0.786752,
+   0.123181,
+   0.090066
+  ]
+ },
+ "c090-b-p2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.288125,
+   0.63273,
+   0.079145
+  ]
+ },
+ "c090-b-w1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.592659,
+   0.236762,
+   0.170579
+  ]
+ },
+ "c090-b-w2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.867534,
+   0.07499,
+   0.057476
+  ]
+ },
+ "c090-b-w3": {
+  "intent": "create_reminder",
+  "proba": [
+   0.629064,
+   0.218453,
+   0.152483
+  ]
+ },
+ "c091-a-ad1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.795186,
+   0.106388,
+   0.098425
+  ]
+ },
+ "c091-a-pm1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.827478,
+   0.083537,
+   0.088985
+  ]
+ },
+ "c091-b-ad1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.528481,
+   0.164241,
+   0.307278
+  ]
+ },
+ "c091-b-pm1": {
+  "intent": "create_reminder",
+  "proba": [
+   0.883529,
+   0.038927,
+   0.077543
+  ]
+ },
+ "c092-a-pm2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.534579,
+   0.227082,
+   0.238339
+  ]
+ },
+ "c092-a-r4": {
+  "intent": "unsupported",
+  "proba": [
+   0.078941,
+   0.19121,
+   0.729849
+  ]
+ },
+ "c092-b-pm2": {
+  "intent": "create_reminder",
+  "proba": [
+   0.501393,
+   0.241304,
+   0.257303
+  ]
+ },
+ "c092-b-r4": {
+  "intent": "unsupported",
+  "proba": [
+   0.093341,
+   0.213022,
+   0.693637
+  ]
+ },
+ "c097-a-b1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.048332,
+   0.946629,
+   0.005039
+  ]
+ },
+ "c097-a-pp1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.178604,
+   0.75639,
+   0.065006
+  ]
+ },
+ "c097-a-ps1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.169571,
+   0.826837,
+   0.003592
+  ]
+ },
+ "c097-b-b1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.03439,
+   0.964816,
+   0.000794
+  ]
+ },
+ "c097-b-pp1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.219393,
+   0.712304,
+   0.068303
+  ]
+ },
+ "c097-b-ps1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.199567,
+   0.794186,
+   0.006247
+  ]
+ },
+ "c098-a-f1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.12399,
+   0.813346,
+   0.062664
+  ]
+ },
+ "c098-b-f1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.116774,
+   0.815307,
+   0.067919
+  ]
+ },
+ "c099-a-po2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.073408,
+   0.488477,
+   0.438115
+  ]
+ },
+ "c099-a-r1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.1513,
+   0.601905,
+   0.246795
+  ]
+ },
+ "c099-b-po2": {
+  "intent": "unsupported",
+  "proba": [
+   0.001063,
+   0.055816,
+   0.943121
+  ]
+ },
+ "c099-b-r1": {
+  "intent": "unsupported",
+  "proba": [
+   0.00109,
+   0.090338,
+   0.908572
+  ]
+ },
+ "c102-a-c2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.066311,
+   0.920973,
+   0.012717
+  ]
+ },
+ "c102-b-c2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.100568,
+   0.820723,
+   0.078709
+  ]
+ },
+ "c106-a-pr1": {
+  "intent": "unsupported",
+  "proba": [
+   0.154098,
+   0.213623,
+   0.632279
+  ]
+ },
+ "c106-b-pr1": {
+  "intent": "unsupported",
+  "proba": [
+   0.153573,
+   0.216122,
+   0.630306
+  ]
+ },
+ "c109-a-p2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.139222,
+   0.689357,
+   0.171421
+  ]
+ },
+ "c109-a-w1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.268756,
+   0.72334,
+   0.007903
+  ]
+ },
+ "c109-a-w2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.046436,
+   0.953138,
+   0.000426
+  ]
+ },
+ "c109-a-w3": {
+  "intent": "create_alarm",
+  "proba": [
+   0.122358,
+   0.59613,
+   0.281512
+  ]
+ },
+ "c109-b-p2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.111399,
+   0.730728,
+   0.157873
+  ]
+ },
+ "c109-b-w1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.271236,
+   0.718681,
+   0.010083
+  ]
+ },
+ "c109-b-w2": {
+  "intent": "create_alarm",
+  "proba": [
+   0.031909,
+   0.967989,
+   0.000102
+  ]
+ },
+ "c109-b-w3": {
+  "intent": "create_alarm",
+  "proba": [
+   0.114773,
+   0.595206,
+   0.290022
+  ]
+ },
+ "c110-a-ad1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.062774,
+   0.928139,
+   0.009087
+  ]
+ },
+ "c110-a-pm1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.115298,
+   0.805067,
+   0.079635
+  ]
+ },
+ "c110-b-ad1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.077547,
+   0.906869,
+   0.015585
+  ]
+ },
+ "c110-b-pm1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.131327,
+   0.809191,
+   0.059482
+  ]
+ },
+ "c121-a-r4": {
+  "intent": "create_alarm",
+  "proba": [
+   0.034382,
+   0.964508,
+   0.00111
+  ]
+ },
+ "c121-b-pm2": {
+  "intent": "unsupported",
+  "proba": [
+   0.000363,
+   0.044807,
+   0.95483
+  ]
+ },
+ "c121-b-r4": {
+  "intent": "unsupported",
+  "proba": [
+   0.000806,
+   0.088162,
+   0.911033
+  ]
+ },
+ "c126-a-pr1": {
+  "intent": "unsupported",
+  "proba": [
+   0.001895,
+   0.040806,
+   0.957299
+  ]
+ },
+ "c127-a-p2": {
+  "intent": "unsupported",
+  "proba": [
+   0.001941,
+   0.076828,
+   0.921231
+  ]
+ },
+ "c127-a-w1": {
+  "intent": "unsupported",
+  "proba": [
+   0.000931,
+   0.040199,
+   0.95887
+  ]
+ },
+ "c127-a-w2": {
+  "intent": "unsupported",
+  "proba": [
+   0.001002,
+   0.045685,
+   0.953313
+  ]
+ },
+ "c127-a-w3": {
+  "intent": "unsupported",
+  "proba": [
+   0.001872,
+   0.044518,
+   0.953611
+  ]
+ },
+ "c128-a-ad1": {
+  "intent": "unsupported",
+  "proba": [
+   0.001198,
+   0.03126,
+   0.967542
+  ]
+ },
+ "c128-a-pm1": {
+  "intent": "unsupported",
+  "proba": [
+   0.00059,
+   0.028229,
+   0.971181
+  ]
+ },
+ "c129-a-pm2": {
+  "intent": "unsupported",
+  "proba": [
+   0.001448,
+   0.059208,
+   0.939343
+  ]
+ },
+ "c129-a-r4": {
+  "intent": "unsupported",
+  "proba": [
+   0.000621,
+   0.047092,
+   0.952287
+  ]
+ },
+ "c134-a-b1": {
+  "intent": "unsupported",
+  "proba": [
+   0.007414,
+   0.103112,
+   0.889474
+  ]
+ },
+ "c134-a-pp1": {
+  "intent": "unsupported",
+  "proba": [
+   0.001124,
+   0.062601,
+   0.936275
+  ]
+ },
+ "c134-a-ps1": {
+  "intent": "create_alarm",
+  "proba": [
+   0.21548,
+   0.780234,
+   0.004287
+  ]
+ },
+ "c136-a-f1": {
+  "intent": "unsupported",
+  "proba": [
+   0.000807,
+   0.029017,
+   0.970176
+  ]
+ },
+ "c137-a-po2": {
+  "intent": "unsupported",
+  "proba": [
+   0.000231,
+   0.011362,
+   0.988407
+  ]
+ },
+ "c137-a-r1": {
+  "intent": "unsupported",
+  "proba": [
+   0.000818,
+   0.036566,
+   0.962616
+  ]
+ },
+ "c140-a-ad1": {
+  "intent": "unsupported",
+  "proba": [
+   0.003179,
+   0.067928,
+   0.928893
+  ]
+ },
+ "c140-a-pm1": {
+  "intent": "unsupported",
+  "proba": [
+   0.001005,
+   0.029114,
+   0.969881
+  ]
+ },
+ "c142-a-c2": {
+  "intent": "unsupported",
+  "proba": [
+   0.000589,
+   0.067997,
+   0.931414
+  ]
+ },
+ "c143-a-pr1": {
+  "intent": "unsupported",
+  "proba": [
+   0.000543,
+   0.02102,
+   0.978437
+  ]
+ },
+ "c144-a-ac": {
+  "intent": "create_reminder",
+  "proba": [
+   0.601469,
+   0.196051,
+   0.20248
+  ]
+ },
+ "c144-a-p2": {
+  "intent": "unsupported",
+  "proba": [
+   0.000521,
+   0.013211,
+   0.986268
+  ]
+ },
+ "c144-a-w1": {
+  "intent": "unsupported",
+  "proba": [
+   0.000985,
+   0.015524,
+   0.983491
+  ]
+ },
+ "c144-a-w2": {
+  "intent": "unsupported",
+  "proba": [
+   0.001679,
+   0.027118,
+   0.971202
+  ]
+ },
+ "c144-a-w3": {
+  "intent": "unsupported",
+  "proba": [
+   0.000365,
+   0.026904,
+   0.972732
+  ]
+ },
+ "c148-a-pm2": {
+  "intent": "unsupported",
+  "proba": [
+   0.000512,
+   0.045171,
+   0.954317
+  ]
+ },
+ "c156-a-ad1": {
+  "intent": "unsupported",
+  "proba": [
+   0.00208,
+   0.02663,
+   0.97129
+  ]
+ },
+ "c156-a-pm1": {
+  "intent": "unsupported",
+  "proba": [
+   0.086206,
+   0.210356,
+   0.703438
+  ]
+ },
+ "c160-a-pm2": {
+  "intent": "unsupported",
+  "proba": [
+   0.000118,
+   0.017532,
+   0.98235
+  ]
+ },
+ "c160-a-r4": {
+  "intent": "unsupported",
+  "proba": [
+   0.000206,
+   0.033859,
+   0.965935
+  ]
+ },
+ "c164-a-b1": {
+  "intent": "unsupported",
+  "proba": [
+   0.003579,
+   0.180987,
+   0.815434
+  ]
+ },
+ "c164-a-pp1": {
+  "intent": "unsupported",
+  "proba": [
+   0.000155,
+   0.037689,
+   0.962156
+  ]
+ },
+ "c164-a-ps1": {
+  "intent": "unsupported",
+  "proba": [
+   0.000138,
+   0.031703,
+   0.96816
+  ]
+ },
+ "c168-a-b1": {
+  "intent": "unsupported",
+  "proba": [
+   0.139196,
+   0.080661,
+   0.780142
+  ]
+ },
+ "c168-a-pp1": {
+  "intent": "unsupported",
+  "proba": [
+   2.4e-05,
+   0.000717,
+   0.999258
+  ]
+ },
+ "c168-a-ps1": {
+  "intent": "unsupported",
+  "proba": [
+   3e-06,
+   2.5e-05,
+   0.999972
+  ]
+ },
+ "c170-a-f1": {
+  "intent": "unsupported",
+  "proba": [
+   5.6e-05,
+   0.001684,
+   0.99826
+  ]
+ },
+ "c171-a-po2": {
+  "intent": "unsupported",
+  "proba": [
+   1e-06,
+   1.8e-05,
+   0.999981
+  ]
+ },
+ "c171-a-r1": {
+  "intent": "unsupported",
+  "proba": [
+   0.000135,
+   0.00968,
+   0.990184
+  ]
+ },
+ "c172-a-c2": {
+  "intent": "unsupported",
+  "proba": [
+   1e-06,
+   2.1e-05,
+   0.999977
+  ]
+ },
+ "c174-a-po2": {
+  "intent": "unsupported",
+  "proba": [
+   3e-06,
+   0.000815,
+   0.999182
+  ]
+ },
+ "c174-a-r1": {
+  "intent": "unsupported",
+  "proba": [
+   3e-06,
+   0.000957,
+   0.99904
+  ]
+ }
+}

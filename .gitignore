@@ -55,3 +55,5 @@ final_report/*.pdf
 results_jais3.zip
 results_v3_GPU.zip
 v3_gpu_outputs*.zip
+# Kaggle working-folder download of the v3 GPU run (2026-11-20): contains the private v3 texts
+results.zip

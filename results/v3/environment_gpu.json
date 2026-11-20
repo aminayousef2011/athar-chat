@@ -1,0 +1,9 @@
+{
+ "python": "3.13.16",
+ "torch": "2.11.0+cu130",
+ "transformers": "5.20.2",
+ "gpus": [
+  "Tesla T4",
+  "Tesla T4"
+ ]
+}

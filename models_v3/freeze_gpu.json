@@ -1,0 +1,69 @@
+{
+ "protocol": "docs/protocol_v3.md",
+ "protocol_sha256": "9c1b3c117bb50894a069b9b99529c8b968422bbe5090b209a34754e937df857e",
+ "v3_set_sha256": "b1802ea829bd77018776ae8b7575bd1b275404d035ef4ce57a49de02f475a7b0",
+ "v3_items": 236,
+ "natural_manifest": "1de694ae9bfaf727c24ac0a635067fcabfa8c7a4a1d23bcface3f62da6873869",
+ "config_sha256": "894274222fa01a66cfa0e44e30fcb7e39f92eb35510bcf870ecced5987f546ad",
+ "sources": {
+  "src/athar/v3/gpu.py": "e76c672768e1244aecbbc88fb57a55626783857d5be20741d9f4d6d8e4c06df8",
+  "src/athar/v3/amend.py": "a77c880aa4214e713ddf7ad03ee769a75a58dc844360a4299e7a357dfe82e9a7",
+  "src/athar/agent.py": "052a7da3133e6dbd3d4641903d8455b8758e6fcf2c821b6a9504d4700badca3c",
+  "src/athar/intent/llm.py": "ee442559e8b086e45e2ef2b90b30b50b3c2fec301318af0ad4b548fac111a616",
+  "src/athar/v3/__init__.py": "77fd5c4f7355ed77dc27ab622a92511bb45251f7475236312de5a60079a055e6",
+  "src/athar/v3/data.py": "84fe9094325e304f4ce042fb9c6e50cb19cc2466c56b1495f09c2f525fecf998",
+  "src/athar/v3/systems.py": "350b34e853dc61bfa663ec18a6e8900acf0335354a450c60fdcd2323b3d300f1",
+  "src/athar/v3/__main__.py": "e5b6115bb587634d92acb802477aa2dc3613825cd3812359861bef1495ee1523"
+ },
+ "amendment": "A5",
+ "amendments_bytes": 6054,
+ "amendments_sha256": "c768af57df4b43169bc3d4269e74103ab0d2d88da742fa907515828816501178",
+ "gate": "G3 (GPU systems, descriptive)",
+ "model": "inception42/Jais-3-7B",
+ "revision": "94d69f49b4af702d42fcee122cc06e493a6fe7e1",
+ "precision": "fp16",
+ "outputs": {
+  "S4-jais3-7b-inline-norm": {
+   "file": "results/v3/predictions/S4-jais3-7b-inline-norm.json",
+   "sha256": "ee874006a8ff1dc4811381dc620be7f9c7bf3976a1d96d8886b2670aa619bbcd",
+   "labels": [
+    "create_reminder",
+    "create_alarm",
+    "unsupported"
+   ]
+  },
+  "S4-jais3-7b-inline-raw": {
+   "file": "results/v3/predictions/S4-jais3-7b-inline-raw.json",
+   "sha256": "e098ed7c9ba7115b71d82980d2fea06c0d74867fd4351a9e4394b222b009e8a6",
+   "labels": [
+    "create_reminder",
+    "create_alarm",
+    "unsupported"
+   ]
+  },
+  "S8-fair": {
+   "file": "results/v3/traces/S8-fair.jsonl",
+   "sha256": "bc8d634d18b983ce50eb46ceaa9c1255cafbdac52cae74336c3469b00c169fb2",
+   "decoding": "greedy",
+   "template": {
+    "reasoning_effort": "high",
+    "tool_call_format": "xml"
+   },
+   "max_new_tokens": 8192,
+   "exemplars": [
+    "c093-a",
+    "c023-a",
+    "c013-b",
+    "c103-b",
+    "c145-a",
+    "c132-a"
+   ]
+  }
+ },
+ "prompts_sha256": {
+  "S4-jais3-7b-inline-norm": "b7745c8c331685bda90c27166debd9c8eb351c9c97deb970885ce0c474eab78f",
+  "S4-jais3-7b-inline-raw": "32a340bef24f171885d3e394681333dc17750c552e1b1ef48611393bf8271217",
+  "S8-fair": "9b9ccb9f8d8cfe0d981f56e532e820ad6385ae1bd9f6d42907081f91d319daa3"
+ },
+ "freeze_sha256": "0264b84c31d3f6086394064980848d66ff7cf60057b06a56bbe5daa2c82e7638"
+}
