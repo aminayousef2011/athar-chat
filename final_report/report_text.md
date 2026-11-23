@@ -7,7 +7,7 @@ Amina Yousef
 ## Abstract
 
 
-A reminder assistant must decide whether to execute a request (ACT), ask for missing details (CLARIFY) or decline it (ABSTAIN). On a new Egyptian Arabic benchmark (458 requests), we compared keyword rules with TF-IDF logistic-regression intent classifiers in one shared pipeline, scored by Safe Task Success (STS: correct decision and arguments). On 238 messages from 17 new writers, the rules won (STS 0.718 vs 0.513, Holm p = 0.0003). Training data explain much of it: on 236 messages from 17 further writers, a pre-registered test showed that adding in-domain human messages raises TF-IDF by +0.089 and MARBERTv2 by +0.088 STS (Holm p ≤ 0.002); retrained TF-IDF matched the rules (0.589 each). The extractor limits every system (0.786 STS with gold intents); none is deployable.
+A reminder assistant must decide whether to execute a request (ACT), ask for missing details (CLARIFY) or decline it (ABSTAIN). On a new Egyptian Arabic benchmark (458 requests), we compared keyword rules with TF-IDF logistic-regression intent classifiers in one shared pipeline, scored by Safe Task Success (STS: correct decision and arguments). On 238 messages from 17 new writers, the rules won (STS 0.718 vs 0.513, Holm p = 0.0003). The mostly AI-drafted training data explain much of this gap: on 236 messages from 17 further writers, a pre-registered test showed that adding in-domain human messages raises TF-IDF by +0.089 and MARBERTv2 by +0.088 STS (Holm p ≤ 0.002); retrained TF-IDF matched the rules (0.589 each). The extractor limits every system (0.786 STS with gold intents); four post hoc extractor fixes added 0.047-0.051 STS on the held-out writers, but none is deployable.
 
 
 ## 1. Motivation and objectives
@@ -22,7 +22,7 @@ Research questions. (RQ1) When all systems share the same argument extractor and
 ## 2. Deliverables
 
 
-• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit 8fc5831dd58e0ab361f954ee65ff9e27df28af00; PDF added by the next commit.
+• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit 69807223ab25dca8f2cd46b5826b0311cabf4fa8; PDF added by the next commit.
 
 
 • Data: data/athar.jsonl (458 items; splits data/splits/manifest.json), data/natural/natural.jsonl (247), data/v3/manifest.json (texts private), data card and guides (docs/); consent covers this project, no public licence yet.
@@ -85,7 +85,7 @@ Metrics. Besides STS: intent and route macro-F1; unsafe execution (a wrong or un
 ## 4.2 Results
 
 
-Finding 1: rules beat drafted-data classifiers. On new writers (Table 3) rules lead TF-IDF by +0.206 [0.129, 0.287] STS (N1, Holm p = 0.0003; 13/17 writers; also with each annotator's labels, Table 8). The author's test agrees (Table 2; S2 − S1 = −0.167, S3 − S1 = −0.142; Holm p ≤ 0.005) but alone is inconclusive (frame-clustered Holm p 0.055-0.526, Table 7).
+Finding 1: rules beat drafted-data classifiers. On new writers (Table 3) rules lead TF-IDF by +0.206 [0.129, 0.287] STS (N1, Holm p = 0.0003; 13 of 17 writers; also per annotator, Table 8). The author's test agrees (Table 2; S2 − S1 = −0.167, S3 − S1 = −0.142; Holm p ≤ 0.005) but alone is inconclusive (frame-clustered Holm p 0.055-0.526, Table 7).
 
 
 Table 2. Locked test (120 items, 34 pairs). Metrics as defined in §4.1.
@@ -104,10 +104,10 @@ Table 3. Natural set (238 items, 17 new writers, 64 pairs). Last column: success
 | S2 TF-IDF | 0.513 [0.444, 0.580] | 0.667 | 0.714 | 0.218 | 0.536 | 0.044 | 0.328 | 0.49/0.50/0.56 |
 | S3 + char | 0.513 [0.447, 0.577] | 0.670 | 0.721 | 0.239 | 0.576 | 0.033 | 0.328 | 0.46/0.55/0.54 |
 
-N2 was not confirmed (one item changed). N3 was (+0.102, Holm p = 0.001), but 56 of its 73 gains were Jais-3-7B's missing calls filled by rules (Table 5). Safety. 19 of S1's 94 natural calls were harmful (wrong tool/time or should not run; 3 of 50 on the test), 17 more only in wording.
+N2 was not confirmed (one item changed). N3 was (+0.102, Holm p = 0.001), but 56 of its 73 gains were Jais-3-7B's missing calls filled by S1 (Table 5). Safety. 19 of S1's 94 natural calls were harmful (wrong tool/time or should not run; test: 3 of 50), 17 more only in wording.
 
 
-## 4.3 Analysis and errors
+## 4.3 Training data and extractor errors
 
 
 Table 4. Registered v3 test (236 items, 17 further writers). Human data: natural-set messages added to training.
@@ -123,7 +123,7 @@ Table 4. Registered v3 test (236 items, 17 further writers). Human data: natural
 Finding 2: in-domain human training data closes the gap (Table 4). On v3, adding human-written messages raised S3 by +0.089 [0.037, 0.150] (H-a, Holm p = 0.002) and MARBERTv2 by +0.088 [0.049, 0.134] (H-b, Holm p = 0.0002), mostly on out-of-scope requests. Not just more data: about 215 human messages alone beat 338 drafted/author items (+0.089, p = 0.004, descriptive). Retrained S3 equals the rules (+0.000 [−0.054, 0.058]); retrained MARBERTv2 exceeds them (+0.048 [0.013, 0.091], estimate only). They share v3's scenario cards: the gain is from in-distribution human data, not authorship alone.
 
 
-Finding 3: the extractor is the ceiling; fixes help all systems. With gold intents, STS is only 0.786 (natural) and 0.669 (v3): intents explain under half the rules' failures. Four post hoc fixes (core v1.2: emphasis words, want-verb framing, vague content, «X بعد الجاي») from the oracle's 50 natural-set failures raised the oracle on unseen v3 from 0.669 to 0.720 (+0.051 [0.019, 0.086], p = 0.010; 14 fixed, 2 broken), as did every v3 system (Table 13).
+Finding 3: the extractor is the ceiling; fixes help all systems. With gold intents STS is 0.786 (natural) and 0.669 (v3): intents explain under half the rules' failures. Four fixes solve 28 of the oracle's 50 natural failures: emphasis words («ابعت الريليز نوت ضروري»), want-verb framing («عايز تفكرني»), vague content («حاجه مهمه») and «الخميس بعد الجاي» (Thursday after next). These post hoc fixes (core v1.2) lifted the oracle on unseen v3 to 0.720 (+0.051 [0.019, 0.086], p = 0.010; 14 fixed, 2 broken); all v3 systems gained 0.047-0.051 (Table 13).
 
 
 ## 5. Conclusion
