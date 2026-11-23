@@ -22,13 +22,13 @@ Research questions. (RQ1) When all systems share the same argument extractor and
 ## 2. Deliverables
 
 
-• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit 3d4cb75c3f375c4b80f867ece99bcb92710438a0; PDF added by the next commit.
+• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit 439581759317aa57e7e41a552138e1f34c454231; PDF added by the next commit.
 
 
 • Data: data/athar.jsonl (458 items; splits data/splits/manifest.json), data/natural/natural.jsonl (247), data/v3/manifest.json (texts private), data card and guides (docs/); consent covers this project, no public licence yet.
 
 
-• Code, models, outputs: package athar with 390 tests and locked dependencies (uv.lock); frozen classifiers (models/, models_v2/), stored predictions (results/), pinned Hugging Face models (Table 13), a Streamlit demo (app/) and the full technical report (docs/report.md); S6/S7 weights are not stored.
+• Code, models, outputs: package athar with 402 tests and locked dependencies (uv.lock); frozen classifiers (models/, models_v2/), stored predictions (results/), pinned Hugging Face models (Table 14), a Streamlit demo (app/) and the full technical report (docs/report.md); S6/S7 weights are not stored.
 
 
 ## 3. Methods and implementation
@@ -104,7 +104,7 @@ Table 3. Natural set (238 items, 17 new writers, 64 pairs). Last column: success
 | S2 TF-IDF | 0.513 [0.444, 0.580] | 0.667 | 0.714 | 0.218 | 0.536 | 0.044 | 0.328 | 0.49/0.50/0.56 |
 | S3 + char | 0.513 [0.447, 0.577] | 0.670 | 0.721 | 0.239 | 0.576 | 0.033 | 0.328 | 0.46/0.55/0.54 |
 
-N2 was not confirmed (the fix changed one natural item). N3 was (+0.102, Holm p = 0.001), but 56 of its 73 gained items were calls Jais-3-7B failed to make, answered by the rules (Table 5). Safety. 36 of S1's 94 natural executions were wrong: 19 harmful (wrong tool or time, or a request that should not run), against 3 of 50 on the test, and 17 only in reminder wording.
+N2 was not confirmed (one item changed). N3 was (+0.102, Holm p = 0.001), but 56 of its 73 gains were Jais-3-7B's missing calls filled by rules (Table 5). Safety. 19 of S1's 94 natural calls were harmful (wrong tool/time or should not run; 3 of 50 on the test), 17 more only in wording.
 
 
 ## 4.3 Analysis and errors
@@ -123,13 +123,13 @@ Table 4. Registered v3 test (236 items, 17 further writers). Human data: natural
 Finding 2: in-domain human training data closes the gap (Table 4). On v3, adding human-written messages raised S3 by +0.089 [0.037, 0.150] (H-a, Holm p = 0.002) and MARBERTv2 by +0.088 [0.049, 0.134] (H-b, Holm p = 0.0002), mostly on out-of-scope requests. Not just more data: about 215 human messages alone beat 338 drafted/author items (+0.089, p = 0.004, descriptive). Retrained S3 equals the rules (+0.000 [−0.054, 0.058]); retrained MARBERTv2 exceeds them (+0.048 [0.013, 0.091], estimate only). They share v3's scenario cards: the gain is from in-distribution human data, not authorship alone.
 
 
-Finding 3: the shared extractor is the ceiling. Even with gold intents, STS is only 0.808 (test), 0.786 (natural) and 0.669 (v3): gold intents remove under half of the rules' failures. 14 of the oracle's 23 test failures disappear once two request framings are stripped from the reminder text (post hoc; Table 10); new writers failed on emphasis words («ضروري») and day-scale expressions. Part may be label noise (CLARIFY slot agreement 65%; 99% on v3).
+Finding 3: the extractor is the ceiling; fixes help all systems. With gold intents, STS is only 0.786 (natural) and 0.669 (v3): intents explain under half the rules' failures. Four post hoc fixes (core v1.2: emphasis words, want-verb framing, vague content, «X بعد الجاي») from the oracle's 50 natural-set failures raised the oracle on unseen v3 from 0.669 to 0.720 (+0.051 [0.019, 0.086], p = 0.010; 14 fixed, 2 broken), as did every v3 system (Table 13).
 
 
 ## 5. Conclusion
 
 
-We delivered a task contract and metric, a 458-item benchmark, a shared pipeline and locked tests by 34 other writers (O1-O4). Training data decided the comparison: classifiers trained on mostly AI-drafted data lost to rules by 0.206 STS; in-domain human data closed the gap. The extractor limits every system (O5: 0.786 with gold intents) and is the next target.
+We delivered a task contract and metric, a 458-item benchmark, a shared pipeline and locked tests by 34 other writers (O1-O4). Training data decided the comparison: classifiers trained on mostly AI-drafted data lost to rules by 0.206 STS; in-domain human data closed the gap. The extractor limits every system (O5: 0.786 with gold intents); post hoc fixes added 0.05 on v3.
 
 
 ## References
@@ -289,6 +289,18 @@ Table 12. Locked test: intent precision / recall per class, and STS on code-swit
 | S2 TF-IDF + LR | 0.87 / 0.66 | 0.70 / 0.97 | 0.65 / 0.65 | 0.708 | 0.488 |
 | S3 + char n-grams | 0.91 / 0.65 | 0.73 / 0.97 | 0.60 / 0.75 | 0.750 | 0.488 |
 
+Table 13. Post hoc core v1.2 (src/athar/v2/core12.py, scripts/posthoc_core_v12.py): STS of each system with its frozen intents through core v1.1 and v1.2. The fixes were written from the natural-set oracle failures (in-sample there); v3 was not inspected meanwhile. Paired family-level permutation test and bootstrap, unadjusted p. One natural item breaks because its gold keeps «ضروري» inside the text, unlike the others; the two broken v3 items were not examined, to keep v3 unread. Locked test: no change (0.967 with core v1.1, whose fixes came from its errors).
+
+| Set | System | Core v1.1 | Core v1.2 [95% CI] | Δ [95% CI] | p | Fixed / broken |
+| natural (dev.) | oracle | 0.790 | 0.903 [0.860, 0.943] | +0.113 [0.061, 0.172] | < 0.001 | 28 / 1 |
+| natural (dev.) | S1 rules | 0.723 | 0.836 [0.783, 0.885] | +0.113 [0.061, 0.172] | < 0.001 | 28 / 1 |
+| v3 (held-out) | oracle | 0.669 | 0.720 [0.665, 0.775] | +0.051 [0.019, 0.086] | 0.010 | 14 / 2 |
+| v3 (held-out) | S1 rules | 0.589 | 0.640 [0.576, 0.700] | +0.051 [0.019, 0.086] | 0.010 | 14 / 2 |
+| v3 (held-out) | S3 + human data | 0.589 | 0.640 [0.581, 0.700] | +0.051 [0.019, 0.086] | 0.010 | 14 / 2 |
+| v3 (held-out) | S6 MARBERTv2 + human data (5 seeds) | 0.637 | 0.688 [0.632, 0.742] | +0.051 [0.019, 0.086] | 0.010 | 14 / 2 |
+| v3 (held-out) | S3 drafted | 0.500 | 0.547 [0.472, 0.616] | +0.047 [0.015, 0.082] | 0.018 | 13 / 2 |
+| v3 (held-out) | S6 MARBERTv2 drafted (5 seeds) | 0.549 | 0.599 [0.538, 0.658] | +0.050 [0.019, 0.085] | 0.010 | 14 / 2 |
+
 ## Appendix C. Reproducing the results
 
 
@@ -322,10 +334,13 @@ uv run --extra neural python scripts/posthoc_encoders_human.py encoders # T5
 uv run --extra neural python scripts/posthoc_encoders_human.py human   # T6
 
 
+uv run python scripts/posthoc_core_v12.py   # T13 (needs the private v3 texts)
+
+
 uv run --extra ui streamlit run app/streamlit_app.py        # demo
 
 
-Table 13. Pretrained models used (linked), with the pinned Hugging Face revisions.
+Table 14. Pretrained models used (linked), with the pinned Hugging Face revisions.
 
 | System | Hugging Face model | Revision |
 | S4, S7 | inception42/Jais-2-8B-Chat | da0e1639cd92b508b24120f7f77f5270a8465dc4 |
@@ -339,4 +354,4 @@ Table 13. Pretrained models used (linked), with the pinned Hugging Face revision
 ## Appendix D. Use of generative AI
 
 
-The 300 AI-drafted training and development requests were generated with an AI assistant and are marked source: assistant_draft; none is in either evaluation set. The code, tests and documentation were developed with Claude Code as a programming assistant. During adjudication of the natural set, the assistant checked the author's final labels against the written guide and flagged 24 that broke a rule; the author approved each correction. No message was labelled from scratch by an AI system. The author designed the study, wrote the test requests and their labels, recruited the contributors, ran the experiments and is responsible for every claim in this report.
+The 300 AI-drafted training and development requests were generated with an AI assistant and are marked source: assistant_draft; none is in either evaluation set. The code, tests and documentation were developed with Claude Code as a programming assistant. During adjudication of the natural set, the assistant checked the author's final labels against the written guide and flagged 24 that broke a rule; the author approved each correction. The core v1.2 fixes were written with the assistant from the natural-set oracle failures, without reading the v3 texts; the v3 scores were computed once and only in aggregate. No message was labelled from scratch by an AI system. The author designed the study, wrote the test requests and their labels, recruited the contributors, ran the experiments and is responsible for every claim in this report.
