@@ -58,6 +58,7 @@ SENS = load("results/natural/sensitivity.json")
 LVR = load("results/posthoc/llm_vs_rules.json")  # post hoc: S4/S7 vs S1 (scripts/posthoc_llm_vs_rules.py)
 V3 = load("results/v3/evaluation.json")          # protocol v3, gate G5 (registered H-a, H-b)
 V3G = load("results/v3/evaluation_gpu.json")     # protocol v3 GPU systems (descriptive, amendment A7)
+C12 = load("results/posthoc/core_v12.json")      # post hoc: core v1.2 extractor fixes (scripts/posthoc_core_v12.py)
 AGREE_V3 = load("results/v3/agreement.json")
 V3_MAN = load("data/v3/manifest.json")
 # S7's natural-set score is the per-item mean over three seeds; the generated table holds it at full
@@ -711,6 +712,18 @@ def build(commit: str, branch: str) -> Report:
         gain = {r: (v3s[hi]["by_route"][r] - v3s[lo]["by_route"][r]) * route_n[r] for r in route_n}
         require(gain["ABSTAIN"] > sum(gain.values()) / 2, f"{hi}: most of the gain is declined out-of-scope requests")
 
+    # post hoc core v1.2: its v1.1 baselines must be the registered numbers, and the v3 gain held out
+    c12n, c12v = C12["natural (development)"], C12["v3 (held-out)"]
+    require(abs(c12v["oracle"]["sts_v1.1"] - v3_or11) < 5e-4 and abs(c12v["S1 rules"]["sts_v1.1"] - v3_s111) < 5e-4
+            and abs(c12v["S3 + human data"]["sts_v1.1"] - v3s["S3-human"]["sts"]) < 5e-4
+            and abs(c12v["S6 MARBERTv2 + human data (5 seeds)"]["sts_v1.1"] - v3s["S6-human (seed mean)"]["sts"]) < 5e-3
+            and abs(c12n["oracle"]["sts_v1.1"] - nat_or11) < 5e-4 and c12v["oracle"]["n"] == v3_n
+            and c12n["oracle"]["n"] == n_conf,
+            "core v1.2 analysis starts from the registered core v1.1 scores")
+    require(all(r["difference"] > 0 and r["ci"]["low"] > 0 and r["p_value"] < 0.05 for r in c12v.values()),
+            "core v1.2 raises every v3 system, interval above zero")
+    c12o = c12v["oracle"]
+
     R.title("ATHAR Chat: Safe Tool Routing for Egyptian Arabic", "Amina Yousef")
 
     R.h1("Abstract")
@@ -762,7 +775,7 @@ def build(commit: str, branch: str) -> Report:
     R.bullets([
         f"**Code, models, outputs:** package `athar` with {n_tests} tests and locked dependencies (`uv.lock`); "
         "frozen classifiers (`models/`, `models_v2/`), stored predictions (`results/`), pinned Hugging "
-        "Face models (Table 13), a Streamlit demo (`app/`) and the full technical report "
+        "Face models (Table 14), a Streamlit demo (`app/`) and the full technical report "
         "(`docs/report.md`); S6/S7 weights are not stored.",
     ])
 
@@ -923,12 +936,11 @@ def build(commit: str, branch: str) -> Report:
     require(abs(wrong_n / exec_n - (1 - n1["execution_precision"])) < 1e-9
             and wrong_n - harm_n == lenient_items, "S1 natural executions: wrong = harmful + wording only")
     R.para(
-        "N2 was not confirmed (the fix changed one natural item). N3 "
+        "N2 was not confirmed (one item changed). N3 "
         f"was ({signed(N3['difference'])}, Holm p = {N3['p_holm']:.3f}), but {s9_fallback} of its "
-        f"{s9_gain} gained items were calls Jais-3-7B failed to make, answered by the rules (Table 5). "
-        f"**Safety.** {wrong_n} of S1's {exec_n} natural executions were wrong: {harm_n} harmful (wrong "
-        f"tool or time, or a request that should not run), against {harm_t} of {exec_t} on the test, "
-        f"and {lenient_items} only in reminder wording.")
+        f"{s9_gain} gains were Jais-3-7B's missing calls filled by rules (Table 5). "
+        f"**Safety.** {harm_n} of S1's {exec_n} natural calls were harmful (wrong tool/time or "
+        f"should not run; {harm_t} of {exec_t} on the test), {lenient_items} more only in wording.")
 
     R.h2("4.3 Analysis and errors")
     s3h = HUM["tests"]["S3 +contributors vs S1-v1.1"]
@@ -967,13 +979,15 @@ def build(commit: str, branch: str) -> Report:
         (no["safe_task_success"], n1["safe_task_success"]),
         (v3_or11, v3_s111))), "most of S1's failures remain with gold intents on all three sets")
     R.para(
-        "**Finding 3: the shared extractor is the ceiling.** Even with gold intents, STS is only "
-        f"{f3(o['safe_task_success'])} (test), {f3(no['safe_task_success'])} (natural) and "
-        f"{v3_or11:.3f} (v3): gold intents remove under half of the rules' failures. 14 of the oracle's 23 "
-        "test failures disappear once two request framings are stripped from the reminder text (post "
-        "hoc; Table 10); new writers failed on emphasis words («ضروري») and day-scale expressions. "
-        f"Part may be label noise (CLARIFY slot agreement {agree_slots:.0%}; "
-        f"{AGREE_V3['targets_exact_set']['agreement']:.0%} on v3).")
+        "**Finding 3: the extractor is the ceiling; fixes help all systems.** With gold intents, "
+        f"STS is only {f3(no['safe_task_success'])} (natural) and "
+        f"{v3_or11:.3f} (v3): intents explain under half the rules' failures. Four post hoc "
+        "fixes (core v1.2: emphasis words, want-verb framing, vague content, «X بعد الجاي») from "
+        f"the oracle's {round((1 - c12n['oracle']['sts_v1.1']) * n_conf)} natural-set failures raised "
+        f"the oracle on unseen v3 from {v3_or11:.3f} to {c12o['sts_v1.2']:.3f} "
+        f"({signed(c12o['difference'])} {ci(c12o['ci'])}, p = {c12o['p_value']:.3f}; "
+        f"{len(c12o['items_fixed'])} fixed, {len(c12o['items_broken'])} broken), as did every v3 "
+        "system (Table 13).")
 
     # 5 ------------------------------------------------------------------------------------------
     R.h1("5. Conclusion")
@@ -982,7 +996,8 @@ def build(commit: str, branch: str) -> Report:
         f"locked tests by {n_writers + len(V3['writers'])} other writers (O1-O4). Training data "
         "decided the comparison: classifiers trained on mostly AI-drafted data lost to rules by "
         f"{N1['difference']:.3f} STS; in-domain human data closed the gap. The extractor limits "
-        f"every system (O5: {f3(no['safe_task_success'])} with gold intents) and is the next target.")
+        f"every system (O5: {f3(no['safe_task_success'])} with gold intents); post hoc fixes added "
+        f"{c12o['difference']:.2f} on v3.")
 
     # References ----------------------------------------------------------------------------------
     R.h1("References")
@@ -1208,6 +1223,24 @@ def build(commit: str, branch: str) -> Report:
             ["System", "Reminder P / R", "Alarm P / R", "Unsupported P / R", "CS test", "CS natural"],
             crow, widths=[3.4, 2.6, 2.6, 3.4, 1.8, 2.2])
 
+    c12rows = []
+    for part, label in (("natural (development)", "natural (dev.)"), ("v3 (held-out)", "v3 (held-out)")):
+        for name, r in C12[part].items():
+            c12rows.append([label, name, f"{r['sts_v1.1']:.3f}", f"{r['sts_v1.2']:.3f} {ci(r['sts_v1.2_ci'])}",
+                            f"{signed(r['difference'])} {ci(r['ci'])}",
+                            f"{r['p_value']:.3f}" if r["p_value"] >= 0.001 else "< 0.001",
+                            f"{len(r['items_fixed'])} / {len(r['items_broken'])}"])
+    c12t = C12["locked test"]["oracle"]
+    R.table("Post hoc core v1.2 (`src/athar/v2/core12.py`, `scripts/posthoc_core_v12.py`): STS of each "
+            "system with its frozen intents through core v1.1 and v1.2. The fixes were written from the "
+            "natural-set oracle failures (in-sample there); v3 was not inspected meanwhile. Paired family-level "
+            "permutation test and bootstrap, unadjusted p. One natural item breaks because its gold keeps "
+            f"«ضروري» inside the text, unlike the others; the two broken v3 items were not examined, to "
+            f"keep v3 unread. Locked test: no change ({c12t['sts_v1.1']:.3f} "
+            "with core v1.1, whose fixes came from its errors).",
+            ["Set", "System", "Core v1.1", "Core v1.2 [95% CI]", "Δ [95% CI]", "p", "Fixed / broken"],
+            c12rows, widths=[2.2, 4.4, 1.5, 3.1, 3.1, 1.0, 1.7])
+
     R.h1("Appendix C. Reproducing the results")
     R.para("All commands run from the repository root on a CPU; T2 stands for Table 2. The five "
            "analysis scripts (T2-T11) rebuild their tables from the stored outputs and reproduce the "
@@ -1225,6 +1258,7 @@ def build(commit: str, branch: str) -> Report:
         "uv run --with openpyxl python scripts/natural_sensitivity.py           # T8",
         "uv run --extra neural python scripts/posthoc_encoders_human.py encoders # T5",
         "uv run --extra neural python scripts/posthoc_encoders_human.py human   # T6",
+        "uv run python scripts/posthoc_core_v12.py   # T13 (needs the private v3 texts)",
         "uv run --extra ui streamlit run app/streamlit_app.py        # demo",
     ])
     R.table("Pretrained models used (linked), with the pinned Hugging Face revisions.",
@@ -1245,7 +1279,9 @@ def build(commit: str, branch: str) -> Report:
         "are marked `source: assistant_draft`; none is in either evaluation set. The code, tests and "
         "documentation were developed with Claude Code as a programming assistant. During adjudication "
         "of the natural set, the assistant checked the author's final labels against the written "
-        "guide and flagged 24 that broke a rule; the author approved each correction. No message was "
+        "guide and flagged 24 that broke a rule; the author approved each correction. The core v1.2 "
+        "fixes were written with the assistant from the natural-set oracle failures, without reading "
+        "the v3 texts; the v3 scores were computed once and only in aggregate. No message was "
         "labelled from scratch by an AI system. The author designed the study, wrote the test requests "
         "and their labels, recruited the contributors, ran the experiments and is responsible for every "
         "claim in this report.")
