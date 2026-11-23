@@ -1226,7 +1226,8 @@ def build(commit: str, branch: str) -> Report:
     c12rows = []
     for part, label in (("natural (development)", "natural (dev.)"), ("v3 (held-out)", "v3 (held-out)")):
         for name, r in C12[part].items():
-            c12rows.append([label, name, f"{r['sts_v1.1']:.3f}", f"{r['sts_v1.2']:.3f} {ci(r['sts_v1.2_ci'])}",
+            name = name.replace(" MARBERTv2", "").replace(" data", "")
+            c12rows.append([label, name, f"{r['sts_v1.1']:.3f}", f"{r['sts_v1.2']:.3f}",
                             f"{signed(r['difference'])} {ci(r['ci'])}",
                             f"{r['p_value']:.3f}" if r["p_value"] >= 0.001 else "< 0.001",
                             f"{len(r['items_fixed'])} / {len(r['items_broken'])}"])
@@ -1238,8 +1239,8 @@ def build(commit: str, branch: str) -> Report:
             f"«ضروري» inside the text, unlike the others; the two broken v3 items were not examined, to "
             f"keep v3 unread. Locked test: no change ({c12t['sts_v1.1']:.3f} "
             "with core v1.1, whose fixes came from its errors).",
-            ["Set", "System", "Core v1.1", "Core v1.2 [95% CI]", "Δ [95% CI]", "p", "Fixed / broken"],
-            c12rows, widths=[2.2, 4.4, 1.5, 3.1, 3.1, 1.0, 1.7])
+            ["Set", "System", "Core v1.1", "Core v1.2", "Δ [95% CI]", "p", "Fixed / broken"],
+            c12rows, widths=[2.4, 3.9, 1.5, 1.5, 3.7, 1.4, 1.6])
 
     R.h1("Appendix C. Reproducing the results")
     R.para("All commands run from the repository root on a CPU; T2 stands for Table 2. The five "
