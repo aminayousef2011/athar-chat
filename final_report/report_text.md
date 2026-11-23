@@ -7,7 +7,7 @@ Amina Yousef
 ## Abstract
 
 
-A reminder assistant must decide whether to execute a request (ACT), ask for missing details (CLARIFY) or decline it (ABSTAIN). On a new Egyptian Arabic benchmark (458 requests), we compared keyword rules with TF-IDF logistic-regression intent classifiers in one shared pipeline, scored by Safe Task Success (STS: correct decision and arguments). On 238 messages from 17 new writers, the rules won (STS 0.718 vs 0.513, Holm p = 0.0003). The cause was the mostly AI-drafted training data: on 236 messages from 17 further writers, a pre-registered test showed that human-written training messages raise TF-IDF by +0.089 and MARBERTv2 by +0.088 STS (Holm p ≤ 0.002); retrained TF-IDF matched the rules (0.589 each). The shared extractor limits every system (STS 0.786 even with gold intents); none is ready to deploy.
+A reminder assistant must decide whether to execute a request (ACT), ask for missing details (CLARIFY) or decline it (ABSTAIN). On a new Egyptian Arabic benchmark (458 requests), we compared keyword rules with TF-IDF logistic-regression intent classifiers in one shared pipeline, scored by Safe Task Success (STS: correct decision and arguments). On 238 messages from 17 new writers, the rules won (STS 0.718 vs 0.513, Holm p = 0.0003). Training data explain much of it: on 236 messages from 17 further writers, a pre-registered test showed that adding in-domain human messages raises TF-IDF by +0.089 and MARBERTv2 by +0.088 STS (Holm p ≤ 0.002); retrained TF-IDF matched the rules (0.589 each). The extractor limits every system (0.786 STS with gold intents); none is deployable.
 
 
 ## 1. Motivation and objectives
@@ -16,13 +16,13 @@ A reminder assistant must decide whether to execute a request (ACT), ask for mis
 A reminder assistant must not execute a request whose time or content is missing or ambiguous, re-ask for what the user gave, or attempt what it cannot do. Egyptian Arabic makes this harder: messages are informal («اعمللي تذكير بعد بكرة الساعة 9 بالليل عشان اخد الدوا», "set me a reminder the day after tomorrow at 9 pm to take my medicine"), inconsistently spelled and mixed with English. When2Call [1] showed for English that deciding when to call a tool is a problem of its own, and out-of-scope requests are hard for intent classifiers [6]; we know of no Egyptian Arabic dataset labelling this decision. Intended users: teams building dialect assistants with little compute, and researchers who need such a benchmark.
 
 
-Research question. When all systems share the same argument extractor and execution policy, does lightweight supervised intent classification improve Safe Task Success over keyword rules? Objectives: (O1) a task contract and safety-aware metric; (O2) a reviewed Egyptian Arabic benchmark split by scenario; (O3) rules vs. TF-IDF classifiers in one pipeline; (O4) a test on writers other than the author; (O5) the errors limiting the pipeline.
+Research questions. (RQ1) When all systems share the same argument extractor and execution policy, does lightweight supervised intent classification improve Safe Task Success over keyword rules? (RQ2) Does human-written instead of AI-drafted training data change the answer? Objectives: (O1) a task contract and safety-aware metric; (O2) a reviewed Egyptian Arabic benchmark split by scenario; (O3) rules vs. TF-IDF classifiers in one pipeline; (O4) a test on writers other than the author; (O5) the errors limiting the pipeline.
 
 
 ## 2. Deliverables
 
 
-• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit 55c8dde014bd6040ba6950900ae5c1ba8c8d02c7.
+• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit 3d4cb75c3f375c4b80f867ece99bcb92710438a0; PDF added by the next commit.
 
 
 • Data: data/athar.jsonl (458 items; splits data/splits/manifest.json), data/natural/natural.jsonl (247), data/v3/manifest.json (texts private), data card and guides (docs/); consent covers this project, no public licence yet.
@@ -58,7 +58,7 @@ The author wrote the test from scenario cards; a second native speaker labelled 
 ## 3.3 Pipeline and systems
 
 
-Shared pipeline: message → normalizer → intent recognizer (the only part that differs) → extractor → policy → route. The normalizer unifies alef, ya and taa marbuta variants, strips diacritics and elongation and maps Arabic-Indic digits; a pattern-based extractor parses the supported time expressions, and the reminder text is what remains after request framing, times and fillers are removed. The policy sends an unsupported intent to ABSTAIN, a supported one with all slots to ACT, otherwise to CLARIFY, so STS differences come from intent alone.
+Shared pipeline: message → normalizer → intent recognizer (the only part that differs) → extractor → policy → route. The normalizer unifies alef, ya and taa marbuta variants, strips diacritics and elongation and maps Arabic-Indic digits; a pattern-based extractor parses the supported time expressions; the reminder text is what remains once request framing, times and fillers are removed. The policy sends an unsupported intent to ABSTAIN, a supported one with all slots to ACT, otherwise to CLARIFY, so STS differences come from intent. Intent is isolated because out-of-scope detection is hard [6]; lexical models fit laptop CPUs.
 
 
 Systems compared. S1: hand-written trigger and out-of-scope lexicons, no training data. S2: word TF-IDF with class-balanced logistic regression [4]; S3: S2 plus character 2-4-grams for spelling variation; both fitted on train, with C and n-grams chosen by dev intent macro-F1 (S2: C = 0.3; S3: C = 0.1). Oracle: gold intents, the pipeline's ceiling. S1 v1.1 adds an extractor fix found in the test errors, so it is compared only on the new-writer sets. Extensions (Appendix A): other recognizers S4-S7, e.g. fine-tuned MARBERTv2 [2] (S6); S8: Jais-3-7B [12] tool calling; S9: S8 checked by the policy (S1 v1.1 intent where S8 made no valid call).
@@ -67,7 +67,7 @@ Systems compared. S1: hand-written trigger and out-of-scope lexicons, no trainin
 ## 3.4 Changes from the proposal
 
 
-Training data: the proposal planned manually written items only. Recruiting writers through Google Forms failed before the freeze: many invited speakers declined, and 19 of the first form's 21 responses shared one writing pattern (several were identical), pointing to AI-generated or copied answers despite the instructions; they were discarded (protocol log, 10 October). With no time to recruit again, the author's own requests were kept for an all-human test and 261 of 298 training items were AI-drafted (458 items, 34 test pairs; planned: 300, 20). Evaluation: screened contributor messages collected after the freeze became two more test sets. Systems: S1-S3 ran on a laptop CPU as proposed; the open-weight extensions S4-S9 ran on Kaggle T4 GPUs.
+Training data: the proposal planned manually written items only. Recruiting writers through Google Forms failed before the freeze: many invited speakers declined, and 19 of the first form's 21 responses shared one writing pattern (several were identical), pointing to AI-generated or copied answers; they were discarded (10 October). With no time to recruit again, the author's own requests were kept for an all-human test and 261 of 298 training items were AI-drafted (458 items, 34 test pairs; planned: 300, 20). Evaluation: screened contributor messages collected after the freeze became two more test sets. Systems: S1-S3 ran on a laptop CPU as proposed; the open-weight extensions S4-S9 ran on Kaggle T4 GPUs.
 
 
 ## 4. Evaluation and results
@@ -79,13 +79,13 @@ Training data: the proposal planned manually written items only. Recruiting writ
 Evaluation data. All three sets are native-written requests for the two tools covering all routes, incomplete variants and in-domain out-of-scope requests; 79% of natural messages concern project management (by design), so results speak mainly to work reminders. Test intervals span about ±0.09 STS, so the new-writer sets carry the conclusions. Training data is relevant (same tools, routes and contract) but inadequate in quality and coverage: 261 of 298 items are AI-drafted; 64% are code-switched against 20% of the test and 35% of the natural set; 88% of training reminders use «فكرني» and 5% «تذكير», against 50% and 42% in the test. Separation. Splits follow scenario families under a hash-locked manifest; vocabularies and hyper-parameters come from train/dev only; each set was scored once; natural and v3 systems were frozen before labelling. Limitations. The test is one writer's templated phrasing (52 sentence frames; 59 items share a frame with train) by the author of S1's lexicon; natural and v3 test new writers, not new scenarios. C was chosen on 40 mostly drafted dev items (grouped-CV retuning on train+dev: S2 0.546, S3 0.580 on natural).
 
 
-Metrics. Besides STS: intent and route macro-F1; unsafe execution (a wrong or unwarranted tool call) over all items and over executions; unnecessary clarification (Unn. clar.: gold ACT answered with CLARIFY); and pairs with both versions correct. Intervals are family-level bootstraps (10,000 resamples) [8]; paired tests swap whole families [7], Holm-corrected [9]. Pre-registered hypotheses: on the natural set, rules beat TF-IDF (N1), the extractor fix helps (N2) and the policy improves LLM tool calling (N3); on v3, human training data improves TF-IDF (H-a) and MARBERTv2 (H-b).
+Metrics. Besides STS: intent and route macro-F1; unsafe execution (a wrong or unneeded call) over all items and over calls; unnecessary clarification (Unn. clar.: CLARIFY on gold ACT); and pairs fully correct. Intervals are family-level bootstraps (10,000 resamples) [8]; paired tests permute families [7], Holm-corrected [9]. Pre-registered hypotheses: on the natural set, rules beat TF-IDF (N1), the extractor fix helps (N2) and the policy helps LLM tool calling (N3); on v3, human training data helps TF-IDF (H-a) and MARBERTv2 (H-b).
 
 
 ## 4.2 Results
 
 
-Finding 1: rules beat classifiers trained on drafted data. On the locked test (Table 2) both classifiers scored below the rules (S2 − S1 = −0.167 [−0.250, −0.084], Holm p = 0.002; S3 − S1 = −0.142, Holm p = 0.005), but this author-written test alone is not conclusive: clustering by shared sentence frame raises Holm p to 0.055-0.526 (Table 7).
+Finding 1: rules beat drafted-data classifiers. On new writers (Table 3) rules lead TF-IDF by +0.206 [0.129, 0.287] STS (N1, Holm p = 0.0003; 13/17 writers; also with each annotator's labels, Table 8). The author's test agrees (Table 2; S2 − S1 = −0.167, S3 − S1 = −0.142; Holm p ≤ 0.005) but alone is inconclusive (frame-clustered Holm p 0.055-0.526, Table 7).
 
 
 Table 2. Locked test (120 items, 34 pairs). Metrics as defined in §4.1.
@@ -104,7 +104,7 @@ Table 3. Natural set (238 items, 17 new writers, 64 pairs). Last column: success
 | S2 TF-IDF | 0.513 [0.444, 0.580] | 0.667 | 0.714 | 0.218 | 0.536 | 0.044 | 0.328 | 0.49/0.50/0.56 |
 | S3 + char | 0.513 [0.447, 0.577] | 0.670 | 0.721 | 0.239 | 0.576 | 0.033 | 0.328 | 0.46/0.55/0.54 |
 
-The new writers confirm the gap (Table 3): the rules lead by +0.206 [0.129, 0.287] STS (N1, Holm p = 0.0003), for 13 of 17 writers and under every alternative labelling (Table 8). N2 was not confirmed (the fix changed one natural item). N3 was (+0.102, Holm p = 0.001), but 56 of its 73 gained items were calls Jais-3-7B failed to make, answered by the rules (Table 5). Safety. 36 of S1's 94 natural executions were wrong: 19 harmful (wrong tool or time, or a request that should not run), against 3 of 50 on the test, and 17 only in reminder wording.
+N2 was not confirmed (the fix changed one natural item). N3 was (+0.102, Holm p = 0.001), but 56 of its 73 gained items were calls Jais-3-7B failed to make, answered by the rules (Table 5). Safety. 36 of S1's 94 natural executions were wrong: 19 harmful (wrong tool or time, or a request that should not run), against 3 of 50 on the test, and 17 only in reminder wording.
 
 
 ## 4.3 Analysis and errors
@@ -120,16 +120,16 @@ Table 4. Registered v3 test (236 items, 17 further writers). Human data: natural
 | S6 MARBERTv2 | drafted + author | 0.549 [0.488, 0.610] | 0.60 / 0.52 / 0.50 |
 | S6 MARBERTv2 | + human data | 0.637 [0.580, 0.693] | 0.62 / 0.53 / 0.88 |
 
-Finding 2: human training data closes the gap (Table 4). On v3, adding human-written messages raised S3 by +0.089 [0.037, 0.150] (H-a, Holm p = 0.002) and MARBERTv2 by +0.088 [0.049, 0.134] (H-b, Holm p = 0.0002), mostly by declining out-of-scope requests. The human messages alone, a smaller set, gave the same 0.589: origin, not size, mattered. Retrained S3 equals the rules (+0.000 [−0.054, 0.058]).
+Finding 2: in-domain human training data closes the gap (Table 4). On v3, adding human-written messages raised S3 by +0.089 [0.037, 0.150] (H-a, Holm p = 0.002) and MARBERTv2 by +0.088 [0.049, 0.134] (H-b, Holm p = 0.0002), mostly on out-of-scope requests. Not just more data: about 215 human messages alone beat 338 drafted/author items (+0.089, p = 0.004, descriptive). Retrained S3 equals the rules (+0.000 [−0.054, 0.058]); retrained MARBERTv2 exceeds them (+0.048 [0.013, 0.091], estimate only). They share v3's scenario cards: the gain is from in-distribution human data, not authorship alone.
 
 
-Finding 3: the shared extractor is the ceiling. Even with gold intents, STS is only 0.808 (test), 0.786 (natural) and 0.669 (v3): gold intents remove under half of the rules' failures. 14 of the oracle's 23 test failures disappear once two request framings are stripped from the reminder text (post hoc; Table 10); new writers failed on emphasis words («ضروري») and day-scale expressions. Part may be label noise (65% slot agreement, §3.2).
+Finding 3: the shared extractor is the ceiling. Even with gold intents, STS is only 0.808 (test), 0.786 (natural) and 0.669 (v3): gold intents remove under half of the rules' failures. 14 of the oracle's 23 test failures disappear once two request framings are stripped from the reminder text (post hoc; Table 10); new writers failed on emphasis words («ضروري») and day-scale expressions. Part may be label noise (CLARIFY slot agreement 65%; 99% on v3).
 
 
 ## 5. Conclusion
 
 
-We delivered a task contract and metric, a 458-item benchmark, a shared pipeline and locked tests by 34 other writers (O1-O4). Training-data origin decided the comparison: classifiers trained on mostly AI-drafted data lost to rules by 0.206 STS; human data closed the gap. The extractor limits every system (O5: 0.786 with gold intents) and should be improved next.
+We delivered a task contract and metric, a 458-item benchmark, a shared pipeline and locked tests by 34 other writers (O1-O4). Training data decided the comparison: classifiers trained on mostly AI-drafted data lost to rules by 0.206 STS; in-domain human data closed the gap. The extractor limits every system (O5: 0.786 with gold intents) and is the next target.
 
 
 ## References
