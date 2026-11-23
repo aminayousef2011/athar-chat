@@ -720,13 +720,13 @@ def build(commit: str, branch: str) -> Report:
         "compared keyword rules with TF-IDF logistic-regression intent classifiers in one shared "
         "pipeline, scored by Safe Task Success (STS: correct decision and arguments). On "
         f"{n_conf} messages from {n_writers} new writers, the rules won (STS {f3(n1['safe_task_success'])} "
-        f"vs {f3(n2['safe_task_success'])}, Holm p = {tests['N1 S1 vs S2']['p_holm']:.4f}). The cause was "
-        f"the mostly AI-drafted training data: on {v3_n} messages from {len(V3['writers'])} further "
-        "writers, a pre-registered test showed that human-written training messages raise TF-IDF by "
+        f"vs {f3(n2['safe_task_success'])}, Holm p = {tests['N1 S1 vs S2']['p_holm']:.4f}). Training "
+        f"data explain much of it: on {v3_n} messages from {len(V3['writers'])} further "
+        "writers, a pre-registered test showed that adding in-domain human messages raises TF-IDF by "
         f"{signed(v3a['difference'])} and MARBERTv2 by {signed(v3b['difference'])} STS (Holm p ≤ "
         f"{max(v3a['p_holm'], v3b['p_holm']):.3f}); retrained TF-IDF matched the rules ({v3_s111:.3f} "
-        f"each). The shared extractor limits every system (STS {f3(no['safe_task_success'])} even with "
-        "gold intents); none is ready to deploy.")
+        f"each). The extractor limits every system ({f3(no['safe_task_success'])} STS with "
+        "gold intents); none is deployable.")
 
     # 1 ------------------------------------------------------------------------------------------
     R.h1("1. Motivation and objectives")
@@ -740,8 +740,9 @@ def build(commit: str, branch: str) -> Report:
         "we know of no Egyptian Arabic dataset labelling this decision. **Intended users:** teams "
         "building dialect assistants with little compute, and researchers who need such a benchmark.")
     R.para(
-        "**Research question.** When all systems share the same argument extractor and execution policy, "
-        "does lightweight supervised intent classification improve Safe Task Success over keyword rules? "
+        "**Research questions.** (RQ1) When all systems share the same argument extractor and execution "
+        "policy, does lightweight supervised intent classification improve Safe Task Success over keyword "
+        "rules? (RQ2) Does human-written instead of AI-drafted training data change the answer? "
         "**Objectives:** (O1) a task contract and safety-aware metric; (O2) a reviewed Egyptian Arabic "
         "benchmark split by scenario; (O3) rules vs. TF-IDF classifiers in one pipeline; "
         "(O4) a test on writers other than the author; (O5) the errors limiting the pipeline.")
@@ -749,7 +750,8 @@ def build(commit: str, branch: str) -> Report:
     # 2 ------------------------------------------------------------------------------------------
     R.h1("2. Deliverables")
     R.link_para("**Repository:** ", (REPO_URL, REPO_URL), f" (branch `{branch}`), commit ",
-                (f"{REPO_URL}/tree/{commit}", commit), ".")
+                (f"{REPO_URL}/tree/{commit}", commit),
+                "; PDF added by the next commit.")
     blob = f"{REPO_URL}/blob/{commit}/"
     R.link_para("**Data:** ", (blob + "data/athar.jsonl", "data/athar.jsonl"),
                 f" ({n_all} items; splits ", (blob + "data/splits/manifest.json", "data/splits/manifest.json"),
@@ -818,9 +820,10 @@ def build(commit: str, branch: str) -> Report:
         "**Shared pipeline:** message → normalizer → *intent recognizer* (the only part that differs) "
         "→ extractor → policy → route. The normalizer unifies alef, ya and taa marbuta variants, strips "
         "diacritics and elongation and maps Arabic-Indic digits; a pattern-based extractor parses the "
-        "supported time expressions, and the reminder text is what remains after request framing, "
+        "supported time expressions; the reminder text is what remains once request framing, "
         "times and fillers are removed. The policy sends an unsupported intent to ABSTAIN, a supported "
-        "one with all slots to ACT, otherwise to CLARIFY, so STS differences come from intent alone.")
+        "one with all slots to ACT, otherwise to CLARIFY, so STS differences come from intent. "
+        "Intent is isolated because out-of-scope detection is hard [6]; lexical models fit laptop CPUs.")
     R.para(
         "**Systems compared.** **S1:** hand-written trigger and out-of-scope lexicons, no training "
         "data. **S2:** word TF-IDF "
@@ -837,8 +840,7 @@ def build(commit: str, branch: str) -> Report:
         "**Training data:** the proposal planned manually written items only. Recruiting writers "
         "through Google Forms failed before the freeze: many invited speakers declined, and 19 of the "
         "first form's 21 responses shared one writing pattern (several were identical), pointing to "
-        "AI-generated or copied answers despite the instructions; they were discarded (protocol log, "
-        "10 October). With no time to recruit again, the author's own requests were kept for an "
+        "AI-generated or copied answers; they were discarded (10 October). With no time to recruit again, the author's own requests were kept for an "
         f"all-human test and {drafted('train')} of {len(ITEMS['train'])} training items were "
         f"AI-drafted ({n_all} items, {t1['pairs']} test pairs; planned: 300, 20). **Evaluation:** "
         "screened contributor messages collected after the freeze became two more test sets. "
@@ -870,22 +872,23 @@ def build(commit: str, branch: str) -> Report:
         f"on {len(ITEMS['dev'])} mostly drafted dev items (grouped-CV retuning on train+dev: S2 "
         f"{f3(NAT['summary']['S2-gcv']['sts'])}, S3 {f3(NAT['summary']['S3-gcv']['sts'])} on natural).")
     R.para(
-        "**Metrics.** Besides STS: intent and route macro-F1; unsafe execution (a wrong or unwarranted "
-        "tool call) over all items and over executions; unnecessary clarification (Unn. clar.: "
-        "gold ACT answered with CLARIFY); and pairs with both versions correct. Intervals are "
-        "family-level bootstraps (10,000 resamples) [8]; paired tests swap whole families [7], "
+        "**Metrics.** Besides STS: intent and route macro-F1; unsafe execution (a wrong or unneeded "
+        "call) over all items and over calls; unnecessary clarification (Unn. clar.: "
+        "CLARIFY on gold ACT); and pairs fully correct. Intervals are "
+        "family-level bootstraps (10,000 resamples) [8]; paired tests permute families [7], "
         "Holm-corrected [9]. **Pre-registered hypotheses:** on the natural set, rules beat TF-IDF (N1), "
-        "the extractor fix helps (N2) and the policy improves LLM tool calling (N3); on v3, human "
-        "training data improves TF-IDF (H-a) and MARBERTv2 (H-b).")
+        "the extractor fix helps (N2) and the policy helps LLM tool calling (N3); on v3, human "
+        "training data helps TF-IDF (H-a) and MARBERTv2 (H-b).")
 
     R.h2("4.2 Results")
     h1_, h2_ = cmp_["S2 vs S1"], cmp_["S3 vs S1"]
     R.para(
-        "**Finding 1: rules beat classifiers trained on drafted data.** On the locked test (Table 2) "
-        f"both classifiers scored below the rules (S2 − S1 = {signed(h1_['difference'])} {ci(h1_['ci'])}, "
-        f"Holm p = {h1_['p_holm']:.3f}; S3 − S1 = {signed(h2_['difference'])}, Holm p = "
-        f"{h2_['p_holm']:.3f}), but this author-written test alone is not conclusive: clustering by "
-        "shared sentence frame raises Holm p to 0.055-0.526 (Table 7).")
+        "**Finding 1: rules beat drafted-data classifiers.** On new writers (Table 3) "
+        f"rules lead TF-IDF by {signed(N1['difference'])} {ci(N1['ci'])} STS (N1, Holm p = "
+        f"{N1['p_holm']:.4f}; 13/17 writers; also with each annotator's labels, Table 8). The "
+        f"author's test agrees (Table 2; S2 − S1 = {signed(h1_['difference'])}, S3 − S1 = "
+        f"{signed(h2_['difference'])}; Holm p ≤ {max(h1_['p_holm'], h2_['p_holm']):.3f}) but alone is "
+        "inconclusive (frame-clustered Holm p 0.055-0.526, Table 7).")
     rows = []
     for name, m, c in (("oracle (gold intent)", o, TEST["systems"]["oracle"]),
                        ("S1 keyword rules", t1, TEST["systems"]["S1"]),
@@ -920,9 +923,7 @@ def build(commit: str, branch: str) -> Report:
     require(abs(wrong_n / exec_n - (1 - n1["execution_precision"])) < 1e-9
             and wrong_n - harm_n == lenient_items, "S1 natural executions: wrong = harmful + wording only")
     R.para(
-        f"The new writers confirm the gap (Table 3): the rules lead by {signed(N1['difference'])} "
-        f"{ci(N1['ci'])} STS (N1, Holm p = {N1['p_holm']:.4f}), for 13 of 17 writers and under every "
-        "alternative labelling (Table 8). N2 was not confirmed (the fix changed one natural item). N3 "
+        "N2 was not confirmed (the fix changed one natural item). N3 "
         f"was ({signed(N3['difference'])}, Holm p = {N3['p_holm']:.3f}), but {s9_fallback} of its "
         f"{s9_gain} gained items were calls Jais-3-7B failed to make, answered by the rules (Table 5). "
         f"**Safety.** {wrong_n} of S1's {exec_n} natural executions were wrong: {harm_n} harmful (wrong "
@@ -950,12 +951,16 @@ def build(commit: str, branch: str) -> Report:
              v3row("S6 MARBERTv2", "+ human data", "S6-human (seed mean)")],
             widths=[3.6, 3.4, 4.2, 4.8], bold_rows={3, 5})
     R.para(
-        "**Finding 2: human training data closes the gap** (Table 4). On v3, adding human-written "
+        "**Finding 2: in-domain human training data closes the gap** (Table 4). On v3, adding human-written "
         f"messages raised S3 by {signed(v3a['difference'])} {ci(v3a['ci'])} (H-a, Holm p = "
         f"{v3a['p_holm']:.3f}) and MARBERTv2 by {signed(v3b['difference'])} {ci(v3b['ci'])} (H-b, Holm "
-        f"p = {v3b['p_holm']:.4f}), mostly by declining out-of-scope requests. The human messages "
-        f"alone, a smaller set, gave the same {v3s['S3-contrib-only']['sts']:.3f}: origin, not size, "
-        f"mattered. Retrained S3 equals the rules ({signed(v3_s3r['difference'])} {ci(v3_s3r['ci'])}).")
+        f"p = {v3b['p_holm']:.4f}), mostly on out-of-scope requests. Not just more data: about "
+        f"{n_human} human messages alone beat {n_fit} drafted/author items "
+        f"({signed(v3_ctrl['difference'])}, p = {v3_ctrl['p_value']:.3f}, descriptive). Retrained "
+        f"S3 equals the rules ({signed(v3_s3r['difference'])} {ci(v3_s3r['ci'])}); retrained MARBERTv2 "
+        f"exceeds them ({signed(v3_s6r['difference'])} {ci(v3_s6r['ci'])}, estimate only). "
+        "They share v3's scenario cards: the gain is from in-distribution human data, not "
+        "authorship alone.")
     agree_slots = AGREE_NAT["targets_exact_set"]["agreement"]
     require(all((1 - orc) / (1 - s1) > 0.5 for orc, s1 in (
         (o["safe_task_success"], t1["safe_task_success"]),
@@ -967,16 +972,17 @@ def build(commit: str, branch: str) -> Report:
         f"{v3_or11:.3f} (v3): gold intents remove under half of the rules' failures. 14 of the oracle's 23 "
         "test failures disappear once two request framings are stripped from the reminder text (post "
         "hoc; Table 10); new writers failed on emphasis words («ضروري») and day-scale expressions. "
-        f"Part may be label noise ({agree_slots:.0%} slot agreement, §3.2).")
+        f"Part may be label noise (CLARIFY slot agreement {agree_slots:.0%}; "
+        f"{AGREE_V3['targets_exact_set']['agreement']:.0%} on v3).")
 
     # 5 ------------------------------------------------------------------------------------------
     R.h1("5. Conclusion")
     R.para(
         f"We delivered a task contract and metric, a {n_all}-item benchmark, a shared pipeline and "
-        f"locked tests by {n_writers + len(V3['writers'])} other writers (O1-O4). Training-data origin "
+        f"locked tests by {n_writers + len(V3['writers'])} other writers (O1-O4). Training data "
         "decided the comparison: classifiers trained on mostly AI-drafted data lost to rules by "
-        f"{N1['difference']:.3f} STS; human data closed the gap. The extractor limits every system (O5: "
-        f"{f3(no['safe_task_success'])} with gold intents) and should be improved next.")
+        f"{N1['difference']:.3f} STS; in-domain human data closed the gap. The extractor limits "
+        f"every system (O5: {f3(no['safe_task_success'])} with gold intents) and is the next target.")
 
     # References ----------------------------------------------------------------------------------
     R.h1("References")
