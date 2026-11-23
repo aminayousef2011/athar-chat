@@ -22,7 +22,7 @@ Research questions. (RQ1) When all systems share the same argument extractor and
 ## 2. Deliverables
 
 
-• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit 439581759317aa57e7e41a552138e1f34c454231; PDF added by the next commit.
+• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit 8fc5831dd58e0ab361f954ee65ff9e27df28af00; PDF added by the next commit.
 
 
 • Data: data/athar.jsonl (458 items; splits data/splits/manifest.json), data/natural/natural.jsonl (247), data/v3/manifest.json (texts private), data card and guides (docs/); consent covers this project, no public licence yet.
@@ -291,15 +291,15 @@ Table 12. Locked test: intent precision / recall per class, and STS on code-swit
 
 Table 13. Post hoc core v1.2 (src/athar/v2/core12.py, scripts/posthoc_core_v12.py): STS of each system with its frozen intents through core v1.1 and v1.2. The fixes were written from the natural-set oracle failures (in-sample there); v3 was not inspected meanwhile. Paired family-level permutation test and bootstrap, unadjusted p. One natural item breaks because its gold keeps «ضروري» inside the text, unlike the others; the two broken v3 items were not examined, to keep v3 unread. Locked test: no change (0.967 with core v1.1, whose fixes came from its errors).
 
-| Set | System | Core v1.1 | Core v1.2 [95% CI] | Δ [95% CI] | p | Fixed / broken |
-| natural (dev.) | oracle | 0.790 | 0.903 [0.860, 0.943] | +0.113 [0.061, 0.172] | < 0.001 | 28 / 1 |
-| natural (dev.) | S1 rules | 0.723 | 0.836 [0.783, 0.885] | +0.113 [0.061, 0.172] | < 0.001 | 28 / 1 |
-| v3 (held-out) | oracle | 0.669 | 0.720 [0.665, 0.775] | +0.051 [0.019, 0.086] | 0.010 | 14 / 2 |
-| v3 (held-out) | S1 rules | 0.589 | 0.640 [0.576, 0.700] | +0.051 [0.019, 0.086] | 0.010 | 14 / 2 |
-| v3 (held-out) | S3 + human data | 0.589 | 0.640 [0.581, 0.700] | +0.051 [0.019, 0.086] | 0.010 | 14 / 2 |
-| v3 (held-out) | S6 MARBERTv2 + human data (5 seeds) | 0.637 | 0.688 [0.632, 0.742] | +0.051 [0.019, 0.086] | 0.010 | 14 / 2 |
-| v3 (held-out) | S3 drafted | 0.500 | 0.547 [0.472, 0.616] | +0.047 [0.015, 0.082] | 0.018 | 13 / 2 |
-| v3 (held-out) | S6 MARBERTv2 drafted (5 seeds) | 0.549 | 0.599 [0.538, 0.658] | +0.050 [0.019, 0.085] | 0.010 | 14 / 2 |
+| Set | System | Core v1.1 | Core v1.2 | Δ [95% CI] | p | Fixed / broken |
+| natural (dev.) | oracle | 0.790 | 0.903 | +0.113 [0.061, 0.172] | < 0.001 | 28 / 1 |
+| natural (dev.) | S1 rules | 0.723 | 0.836 | +0.113 [0.061, 0.172] | < 0.001 | 28 / 1 |
+| v3 (held-out) | oracle | 0.669 | 0.720 | +0.051 [0.019, 0.086] | 0.010 | 14 / 2 |
+| v3 (held-out) | S1 rules | 0.589 | 0.640 | +0.051 [0.019, 0.086] | 0.010 | 14 / 2 |
+| v3 (held-out) | S3 + human | 0.589 | 0.640 | +0.051 [0.019, 0.086] | 0.010 | 14 / 2 |
+| v3 (held-out) | S6 + human (5 seeds) | 0.637 | 0.688 | +0.051 [0.019, 0.086] | 0.010 | 14 / 2 |
+| v3 (held-out) | S3 drafted | 0.500 | 0.547 | +0.047 [0.015, 0.082] | 0.018 | 13 / 2 |
+| v3 (held-out) | S6 drafted (5 seeds) | 0.549 | 0.599 | +0.050 [0.019, 0.085] | 0.010 | 14 / 2 |
 
 ## Appendix C. Reproducing the results
 
