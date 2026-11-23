@@ -723,6 +723,7 @@ def build(commit: str, branch: str) -> Report:
     require(all(r["difference"] > 0 and r["ci"]["low"] > 0 and r["p_value"] < 0.05 for r in c12v.values()),
             "core v1.2 raises every v3 system, interval above zero")
     c12o = c12v["oracle"]
+    c12_lo, c12_hi = min(r["difference"] for r in c12v.values()), max(r["difference"] for r in c12v.values())
 
     R.title("ATHAR Chat: Safe Tool Routing for Egyptian Arabic", "Amina Yousef")
 
@@ -733,13 +734,14 @@ def build(commit: str, branch: str) -> Report:
         "compared keyword rules with TF-IDF logistic-regression intent classifiers in one shared "
         "pipeline, scored by Safe Task Success (STS: correct decision and arguments). On "
         f"{n_conf} messages from {n_writers} new writers, the rules won (STS {f3(n1['safe_task_success'])} "
-        f"vs {f3(n2['safe_task_success'])}, Holm p = {tests['N1 S1 vs S2']['p_holm']:.4f}). Training "
-        f"data explain much of it: on {v3_n} messages from {len(V3['writers'])} further "
+        f"vs {f3(n2['safe_task_success'])}, Holm p = {tests['N1 S1 vs S2']['p_holm']:.4f}). The mostly "
+        f"AI-drafted training data explain much of this gap: on {v3_n} messages from {len(V3['writers'])} further "
         "writers, a pre-registered test showed that adding in-domain human messages raises TF-IDF by "
         f"{signed(v3a['difference'])} and MARBERTv2 by {signed(v3b['difference'])} STS (Holm p ≤ "
         f"{max(v3a['p_holm'], v3b['p_holm']):.3f}); retrained TF-IDF matched the rules ({v3_s111:.3f} "
         f"each). The extractor limits every system ({f3(no['safe_task_success'])} STS with "
-        "gold intents); none is deployable.")
+        f"gold intents); four post hoc extractor fixes added {c12_lo:.3f}-{c12_hi:.3f} STS on the "
+        "held-out writers, but none is deployable.")
 
     # 1 ------------------------------------------------------------------------------------------
     R.h1("1. Motivation and objectives")
@@ -898,7 +900,7 @@ def build(commit: str, branch: str) -> Report:
     R.para(
         "**Finding 1: rules beat drafted-data classifiers.** On new writers (Table 3) "
         f"rules lead TF-IDF by {signed(N1['difference'])} {ci(N1['ci'])} STS (N1, Holm p = "
-        f"{N1['p_holm']:.4f}; 13/17 writers; also with each annotator's labels, Table 8). The "
+        f"{N1['p_holm']:.4f}; 13 of 17 writers; also per annotator, Table 8). The "
         f"author's test agrees (Table 2; S2 − S1 = {signed(h1_['difference'])}, S3 − S1 = "
         f"{signed(h2_['difference'])}; Holm p ≤ {max(h1_['p_holm'], h2_['p_holm']):.3f}) but alone is "
         "inconclusive (frame-clustered Holm p 0.055-0.526, Table 7).")
@@ -938,11 +940,11 @@ def build(commit: str, branch: str) -> Report:
     R.para(
         "N2 was not confirmed (one item changed). N3 "
         f"was ({signed(N3['difference'])}, Holm p = {N3['p_holm']:.3f}), but {s9_fallback} of its "
-        f"{s9_gain} gains were Jais-3-7B's missing calls filled by rules (Table 5). "
+        f"{s9_gain} gains were Jais-3-7B's missing calls filled by S1 (Table 5). "
         f"**Safety.** {harm_n} of S1's {exec_n} natural calls were harmful (wrong tool/time or "
-        f"should not run; {harm_t} of {exec_t} on the test), {lenient_items} more only in wording.")
+        f"should not run; test: {harm_t} of {exec_t}), {lenient_items} more only in wording.")
 
-    R.h2("4.3 Analysis and errors")
+    R.h2("4.3 Training data and extractor errors")
     s3h = HUM["tests"]["S3 +contributors vs S1-v1.1"]
     s3h = {**s3h, "difference": -s3h["difference"],   # report as rules minus S3, the gap to close
            "ci": {"low": -s3h["ci"]["high"], "high": -s3h["ci"]["low"]}}
@@ -979,15 +981,17 @@ def build(commit: str, branch: str) -> Report:
         (no["safe_task_success"], n1["safe_task_success"]),
         (v3_or11, v3_s111))), "most of S1's failures remain with gold intents on all three sets")
     R.para(
-        "**Finding 3: the extractor is the ceiling; fixes help all systems.** With gold intents, "
-        f"STS is only {f3(no['safe_task_success'])} (natural) and "
-        f"{v3_or11:.3f} (v3): intents explain under half the rules' failures. Four post hoc "
-        "fixes (core v1.2: emphasis words, want-verb framing, vague content, «X بعد الجاي») from "
-        f"the oracle's {round((1 - c12n['oracle']['sts_v1.1']) * n_conf)} natural-set failures raised "
-        f"the oracle on unseen v3 from {v3_or11:.3f} to {c12o['sts_v1.2']:.3f} "
+        "**Finding 3: the extractor is the ceiling; fixes help all systems.** With gold intents "
+        f"STS is {f3(no['safe_task_success'])} (natural) and "
+        f"{v3_or11:.3f} (v3): intents explain under half the rules' failures. Four fixes "
+        f"solve {len(c12n['oracle']['items_fixed'])} of the oracle's "
+        f"{round((1 - c12n['oracle']['sts_v1.1']) * n_conf)} natural failures: emphasis "
+        "words («ابعت الريليز نوت ضروري»), want-verb framing («عايز تفكرني»), "
+        "vague content («حاجه مهمه») and «الخميس بعد الجاي» (Thursday after next). These post hoc "
+        f"fixes (core v1.2) lifted the oracle on unseen v3 to {c12o['sts_v1.2']:.3f} "
         f"({signed(c12o['difference'])} {ci(c12o['ci'])}, p = {c12o['p_value']:.3f}; "
-        f"{len(c12o['items_fixed'])} fixed, {len(c12o['items_broken'])} broken), as did every v3 "
-        "system (Table 13).")
+        f"{len(c12o['items_fixed'])} fixed, {len(c12o['items_broken'])} broken); all v3 systems "
+        f"gained {c12_lo:.3f}-{c12_hi:.3f} (Table 13).")
 
     # 5 ------------------------------------------------------------------------------------------
     R.h1("5. Conclusion")
