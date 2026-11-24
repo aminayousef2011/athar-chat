@@ -775,12 +775,19 @@ def build(commit: str, branch: str) -> Report:
                 f" ({n_nat}), `data/v3/manifest.json` (texts private), data card and guides (`docs/`); consent covers this project, no public "
                 "licence yet.",
                 align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-    R.bullets([
-        f"**Code, models, outputs:** package `athar` with {n_tests} tests and locked dependencies (`uv.lock`); "
-        "frozen classifiers (`models/`, `models_v2/`), stored predictions (`results/`), pinned Hugging "
-        "Face models (Table 13), a Streamlit demo (`app/`) and the full technical report "
-        "(`docs/report.md`); S6/S7 weights are not stored.",
-    ])
+    # S7 adapters published as a GitHub release; the downloaded files were checked against these
+    # hashes (recorded at the freeze in docs/jais3.md and in the stored S7 results)
+    s7_hashes = ("64e87a48a6c24f6ff73cd4cfc62946ba28104f218aa9a63a74d196224bb6c62c",
+                 "30abde5994ea9b010f017b8c802a4c1fa19e1275456021d16de63c2d2a86735d",
+                 "8ada29076edce065ac0c6ac38c8d8d0ad9075ac447d740a6e9724b443d16c9ab")
+    require(all(h in jais3_doc for h in s7_hashes), "S7 release hashes equal those recorded at the freeze")
+    R.link_para(f"**Code, models, outputs:** package `athar` with {n_tests} tests and locked dependencies "
+                "(`uv.lock`); frozen classifiers (`models/`, `models_v2/`), stored predictions (`results/`), "
+                "pinned Hugging Face models (Table 13), a Streamlit demo (`app/`) and the technical report "
+                "(`docs/report.md`); S7 adapters: release ",
+                (f"{REPO_URL}/releases/tag/s7-adapters", "s7-adapters"),
+                " (hash-checked); S6 weights not stored.",
+                align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     # 3 ------------------------------------------------------------------------------------------
     R.h1("3. Methods and implementation")

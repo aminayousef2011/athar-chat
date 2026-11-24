@@ -103,7 +103,11 @@ results/         locked test outputs (core, S4/S7/S8) and the error analysis
 
 `models/` holds the frozen systems (`models_v2/` and `models_v3/` those of the natural-phrasing
 evaluation and protocol v3), `results/` the locked outputs and analyses, `notebooks/` the Kaggle GPU
-notebooks, and `app/` the local demo.
+notebooks, and `app/` the local demo. The three frozen S7 QLoRA adapters (Jais 2 8B base, seeds
+0-2, about 177 MB each) are attached to the release
+[s7-adapters](https://github.com/aminayousef2011/athar-chat/releases/tag/s7-adapters); their SHA-256
+equal those recorded at the freeze ([docs/jais3.md](docs/jais3.md)), and `athar.intent.llm.load_lora`
+refuses a file whose hash differs. The fine-tuned S6 weights are not stored.
 
 ## Demo (CPU)
 
