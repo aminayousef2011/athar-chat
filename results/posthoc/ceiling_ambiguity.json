@@ -1,0 +1,93 @@
+{
+ "n": 238,
+ "rule": "adjudicate_natural.differences on the two independent sheets; STS-relevant fields only",
+ "validation": {
+  "differing ids equal results/natural/adjudication.json": true,
+  "66 differing items": true,
+  "field counts equal the protocol log": true
+ },
+ "both_act_datetime": {
+  "n": 85,
+  "differ_as_written": 24,
+  "differ_wall_clock": 8,
+  "offset_only": 16,
+  "agreement_as_written": 0.7176470588235294,
+  "agreement_wall_clock": 0.9058823529411765
+ },
+ "items": {
+  "agreed": 182,
+  "disagreed": 56
+ },
+ "systems": {
+  "oracle": {
+   "sts": 0.7857142857142857,
+   "failures": 51,
+   "agreed": {
+    "n": 182,
+    "sts": 0.8076923076923077,
+    "failures": 35
+   },
+   "disagreed": {
+    "n": 56,
+    "sts": 0.7142857142857143,
+    "failures": 16
+   }
+  },
+  "S1": {
+   "sts": 0.7184873949579832,
+   "failures": 67,
+   "agreed": {
+    "n": 182,
+    "sts": 0.7252747252747253,
+    "failures": 50
+   },
+   "disagreed": {
+    "n": 56,
+    "sts": 0.6964285714285714,
+    "failures": 17
+   }
+  },
+  "S1-v1.1": {
+   "sts": 0.7226890756302521,
+   "failures": 66,
+   "agreed": {
+    "n": 182,
+    "sts": 0.7307692307692307,
+    "failures": 49
+   },
+   "disagreed": {
+    "n": 56,
+    "sts": 0.6964285714285714,
+    "failures": 17
+   }
+  },
+  "S2": {
+   "sts": 0.5126050420168067,
+   "failures": 116,
+   "agreed": {
+    "n": 182,
+    "sts": 0.532967032967033,
+    "failures": 85
+   },
+   "disagreed": {
+    "n": 56,
+    "sts": 0.44642857142857145,
+    "failures": 31
+   }
+  },
+  "S3": {
+   "sts": 0.5126050420168067,
+   "failures": 116,
+   "agreed": {
+    "n": 182,
+    "sts": 0.521978021978022,
+    "failures": 87
+   },
+   "disagreed": {
+    "n": 56,
+    "sts": 0.48214285714285715,
+    "failures": 29
+   }
+  }
+ }
+}

@@ -38,14 +38,21 @@ Post hoc ([scripts/posthoc_llm_vs_rules.py](scripts/posthoc_llm_vs_rules.py)), n
 recognizer beats the rules significantly on either set: on new writers Jais-3-3.7B is +0.025
 [−0.016, 0.070] and QLoRA Jais 2 +0.011, and only Jais 2 8B (few-shot) differs, worse.
 
+On 236 messages from 17 further writers (protocol v3, registered before any v3 system existed),
+adding the natural-set human messages to training raised S3 by +0.089 (Holm p = 0.002) and
+MARBERTv2 by +0.088 (Holm p = 0.0002); retrained S3 equals the rules (0.589 each). The human data
+share v3's scenario cards, so this shows that in-distribution data help, not that human authorship
+does. Four post hoc extractor fixes (core v1.2) then added 0.047-0.051 STS to every v3 system.
+
 **Research question:** does lightweight text classification (S2: word TF-IDF + logistic
 regression; S3: S2 + character n-grams) improve *Safe Task Success* over keyword rules (S1) when
 all systems share the same normalizer, argument extractor, execution policy and templates?
 
-## From the proposal (Jais 2) to Jais 3
+## From Jais 2 to Jais 3
 
-The proposal named **Jais 2 8B** as the Arabic LLM baseline, and it remains the pre-registered
-S4 model. On **2026-10-15**, after the models were frozen but before the test split was opened,
+The evaluation protocol ([docs/evaluation_protocol.md](docs/evaluation_protocol.md)) pre-registered
+**Jais 2 8B** as the Arabic LLM baseline, an extension beyond the course proposal's CPU-only core
+comparison, and it remains the pre-registered S4 model. On **2026-10-15**, after the models were frozen but before the test split was opened,
 MBZUAI's Institute of Foundation Models, Inception42 and Cerebras released **Jais 3**, with native
 tool calling and selectable reasoning. The LLM track was extended to use it. The core comparison
 (H1-H3), the data and the metrics did not change:
@@ -132,7 +139,7 @@ CI (`.github/workflows/ci.yml`) runs them on Linux and Windows from the frozen l
 
 | System | Models | Code |
 |---|---|---|
-| S4: LLM intent recognizer, shared pipeline | Jais-3-7B, Jais-3-3.7B, Jais 2 8B (proposal), Nile-Chat 4B, Qwen3 8B | `athar.intent.llm` |
+| S4: LLM intent recognizer, shared pipeline | Jais-3-7B, Jais-3-3.7B, Jais 2 8B (pre-registered), Nile-Chat 4B, Qwen3 8B | `athar.intent.llm` |
 | S7: QLoRA fine-tuned | Jais 2 8B | `athar.intent.llm` |
 | S8: end-to-end tool calling | Jais-3-7B | `athar.agent` |
 
