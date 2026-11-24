@@ -7,7 +7,7 @@ Amina Yousef
 ## Abstract
 
 
-A reminder assistant must decide whether to execute a request (ACT), ask for missing details (CLARIFY) or decline it (ABSTAIN). On a new 458-request Egyptian Arabic benchmark, we compared keyword rules with TF-IDF logistic-regression intent classifiers in one shared pipeline, scored by Safe Task Success (STS: correct decision and arguments). On 238 messages from 17 new writers, the rules won (STS 0.718 vs 0.513, Holm p = 0.0003). Mostly AI-drafted training data explain much of this gap: on 236 messages from 17 further writers, a pre-registered test showed that adding in-domain human messages raises TF-IDF by +0.089 and MARBERTv2 by +0.088 STS (Holm p ≤ 0.002); retrained TF-IDF matched the rules (0.589 each). The extractor limits every system (0.786 STS with gold intents); four post hoc extractor fixes added 0.047-0.051 STS on the held-out writers, yet no system is deployable.
+A reminder assistant must decide whether to execute a request (ACT), ask for missing details (CLARIFY) or decline it (ABSTAIN). On a new 458-request Egyptian Arabic benchmark, we compared keyword rules with TF-IDF logistic-regression intent classifiers in one shared pipeline, scored by Safe Task Success (STS: correct decision and arguments). On 238 messages from 17 new writers, the rules won (STS 0.718 vs 0.513, Holm p = 0.0003). Mostly AI-drafted training data explain much of this gap: in a pre-registered test on 236 messages from 17 further writers, adding human messages from the same scenarios raised TF-IDF by +0.089 and MARBERTv2 by +0.088 STS (Holm p ≤ 0.002), and retrained TF-IDF matched the rules (0.589 each). The shared extractor limits every system (STS 0.786 with gold intents); four post hoc fixes added 0.047-0.051 STS on held-out writers; none is deployable.
 
 
 ## 1. Motivation and objectives
@@ -22,13 +22,13 @@ Research questions. (RQ1) When all systems share the same argument extractor and
 ## 2. Deliverables
 
 
-• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit 0dd93116a6de8500ab3502dcb2b026e8f5fb46fe; PDF added by the next commit.
+• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit 8f9656992849caa3001e6858c54c035de21f3360; PDF added by the next commit.
 
 
 • Data: data/athar.jsonl (458 items; splits data/splits/manifest.json), data/natural/natural.jsonl (247), data/v3/manifest.json (texts private), data card and guides (docs/); consent covers this project, no public licence yet.
 
 
-• Code, models, outputs: package athar with 402 tests and locked dependencies (uv.lock); frozen classifiers (models/, models_v2/), stored predictions (results/), pinned Hugging Face models (Table 14), a Streamlit demo (app/) and the full technical report (docs/report.md); S6/S7 weights are not stored.
+• Code, models, outputs: package athar with 402 tests and locked dependencies (uv.lock); frozen classifiers (models/, models_v2/), stored predictions (results/), pinned Hugging Face models (Table 13), a Streamlit demo (app/) and the full technical report (docs/report.md); S6/S7 weights are not stored.
 
 
 ## 3. Methods and implementation
@@ -52,7 +52,7 @@ Table 1. Datasets. Train, dev and test share no scenario family; natural and v3 
 | natural (locked) | 238 | 70 | 91 / 88 / 59 | 17 other native speakers | evaluation 2 |
 | v3 (locked) | 236 | 67 | 88 / 98 / 50 | 17 further native speakers | evaluation 3 |
 
-The author wrote the test from scenario cards; a second native speaker labelled 60 items independently (intent κ = 0.916, route κ = 1.000). For the natural set, collected after the freeze, contributors wrote without AI tools a complete and an incomplete message per test scenario; a seeded draw of two writers per scenario group (474 screened messages, 34 writers) gave 247, 238 in families unseen in train/dev. Two annotators labelled all (intent κ = 0.938, route κ = 0.913) but chose the same slots on only 65% of 91 CLARIFY items and the same instant on 72% of 85 ACT items, so part of the STS gap is contract ambiguity; the author adjudicated the 66 disagreements alone. v3 is the other 17 writers' 236 messages, labelled after its systems were frozen; 20 were adjudicated jointly (route κ = 0.959, same slots 99%).
+The author wrote the test from scenario cards; a second native speaker labelled 60 items independently (intent κ = 0.916, route κ = 1.000). For the natural set, collected after the freeze, contributors wrote without AI tools a complete and an incomplete message per test scenario; a seeded draw of two writers per scenario group (474 screened messages, 34 writers) gave 247, 238 in families unseen in train/dev. Two annotators labelled all (intent κ = 0.938, route κ = 0.913) but chose the same slots on only 65% of 91 CLARIFY items and the same instant on 72% of 85 ACT items as written (91% after 16 differing only in UTC offset); the author adjudicated the 66 disagreements alone. v3 is the other 17 writers' 236 messages, labelled after its systems were frozen; 20 were adjudicated jointly (route κ = 0.959, same slots 99%).
 
 
 ## 3.3 Pipeline and systems
@@ -61,13 +61,13 @@ The author wrote the test from scenario cards; a second native speaker labelled 
 Shared pipeline: message → normalizer → intent recognizer (the only part that differs) → extractor → policy → route. The normalizer unifies alef, ya and taa marbuta variants, strips diacritics and elongation and maps Arabic-Indic digits; a pattern-based extractor parses the supported time expressions; the reminder text is what remains once request framing, times and fillers are removed. The policy sends an unsupported intent to ABSTAIN, a supported one with all slots to ACT, otherwise to CLARIFY, so STS differences come from intent. Intent is isolated because out-of-scope detection is hard [6]; lexical models fit laptop CPUs.
 
 
-Systems compared. S1: hand-written trigger and out-of-scope lexicons, untrained. S2: word TF-IDF with class-balanced logistic regression [4]; S3: S2 plus character 2-4-grams for spelling variation; both fitted on train, with C and n-grams chosen by dev intent macro-F1 (S2: C = 0.3; S3: C = 0.1). Oracle: gold intents, the ceiling. S1 v1.1 adds an extractor fix from the test errors (core v1.1; test oracle 0.808 → 0.967), so the test became development data; v1.1 is scored only on new writers. Extensions (Appendix A): recognizers S4-S7, e.g. MARBERTv2 [2] (S6); S8: Jais-3-7B [12] tool calling; S9: S8 checked by the policy.
+Systems compared. S1: hand-written trigger and out-of-scope lexicons, untrained. S2: word TF-IDF with class-balanced logistic regression [4]; S3: S2 plus character 2-4-grams for spelling variation; both fitted on train, with C and n-grams chosen by dev intent macro-F1 (S2: C = 0.3; S3: C = 0.1). Oracle: gold intents, the ceiling. Core v1.1: the shared normalizer, extractor and policy (the core, frozen as v1.0) plus one extractor fix drawn from the test errors (test oracle 0.808 → 0.967); the test then counts as development data, so v1.1 is scored only on new writers. Extensions (Appendix A): recognizers S4-S7, e.g. MARBERTv2 [2] (S6); S8: Jais-3-7B [12] does the whole task by tool calling; S9: the policy checks S8's call (S1's intent if none is valid).
 
 
 ## 3.4 Changes from the proposal
 
 
-Training data: the proposal planned only hand-written items, but recruiting through Google Forms failed before the freeze: many speakers declined and 19 of the first form's 21 responses shared one writing pattern (several identical), suggesting AI-generated or copied answers, so they were discarded (10 October). The author's requests were kept for an all-human test and 261 of 298 training items were AI-drafted (458 items, 34 test pairs; planned 300, 20). Evaluation: contributor messages collected after the freeze became two more test sets. Systems: S1-S3 ran on a laptop CPU as proposed; extensions S4-S9 on Kaggle T4 GPUs.
+Training data: the proposal planned only hand-written items, but native writers could not be recruited in time for the freeze (12 October): 19 of the first Google Form's 21 responses shared one writing pattern (several identical), suggesting AI-generated or copied answers, so they were discarded. The author's 158 requests, the only human texts, supplied the all-human test (120) so that no system is scored on its own training data; 261 of 298 training items were therefore AI-drafted (source: assistant_draft, never evaluated on; 458 items, 34 test pairs; planned 300, 20). Contributor messages arrived two weeks later and became two more test sets (RQ2). Systems: S1-S3 on a laptop CPU as proposed; S4-S9 on Kaggle T4 GPUs.
 
 
 ## 4. Evaluation and results
@@ -76,38 +76,36 @@ Training data: the proposal planned only hand-written items, but recruiting thro
 ## 4.1 Evaluation data and metrics
 
 
-Evaluation data. All three sets are native-written and cover all routes, incomplete variants and in-domain out-of-scope requests; 79% of natural messages concern project management (by design), so results speak mainly to work reminders. Test intervals span about ±0.09 STS, so the new-writer sets carry the conclusions. Training data is relevant (same tools, routes and contract) but inadequate in quality and coverage: 261 of 298 items are AI-drafted; 64% are code-switched against 20% of the test and 35% of the natural set; 88% of training reminders use «فكرني» and 5% «تذكير», against 50% and 42% in the test. Separation. Splits follow scenario families under a hash-locked manifest; vocabularies and hyper-parameters come from train/dev only; each set was scored once; natural and v3 systems were frozen before labelling. Limitations. The test is one writer's templated phrasing (52 sentence frames; 59 items share a frame with train) by the author of S1's lexicon; natural and v3 test new writers, not new scenarios. C was tuned on 40 mostly drafted dev items (grouped CV: Table 6).
+Evaluation data. All three sets are native-written and cover all routes, incomplete variants and in-domain out-of-scope requests; 79% of natural messages concern project management (by design), so results speak mainly to work reminders. Test intervals span about ±0.09 STS, so the new-writer sets carry the conclusions. Training data is relevant (same tools, routes and contract) but inadequate in quality and coverage: 64% are code-switched against 20% of the test and 35% of the natural set; 88% of training reminders use «فكرني» and 5% «تذكير», against 50% and 42% in the test. Separation. Splits follow scenario families under a hash-locked manifest; vocabularies and hyper-parameters come from train/dev only; each set was scored once, after its systems were frozen. Limitations. The test is one writer's templated phrasing (52 sentence frames; 59 items share a frame with train) by the author of S1's lexicon; natural and v3 test new writers, not new scenarios. C was tuned on 40 mostly drafted dev items; grouped CV on train picks a larger C, still below S1 on the test.
 
 
-Metrics. Besides STS: intent and route macro-F1; unsafe execution (a wrong or unneeded call) over all items and over calls; unnecessary clarification (Unn. clar.: CLARIFY on gold ACT); and pairs fully correct. Intervals are family-level bootstraps (10,000 resamples) [8]; paired tests permute families [7], Holm-corrected [9]. Pre-registered hypotheses: on the natural set, rules beat TF-IDF, the extractor fix helps and the policy helps LLM tool calling; on v3, human training data helps TF-IDF and MARBERTv2.
+Metrics. Besides STS: intent and route macro-F1 and the safety measures defined under Table 2. Intervals are family-level bootstraps (10,000 resamples) [8]; paired tests permute families [7], Holm-corrected [9]. Pre-registered hypotheses. Natural set: rules beat TF-IDF; core v1.1 helps; S9 beats S8. v3: human training data help TF-IDF and MARBERTv2.
 
 
 ## 4.2 Results
 
 
-Finding 1: rules beat drafted-data classifiers. On new writers (Table 3) rules lead TF-IDF by +0.206 [0.129, 0.287] STS (Holm p = 0.0003; 13 of 17 writers; also per annotator, Table 8). The author's test agrees (Table 2; S2 − S1 = −0.167, S3 − S1 = −0.142; Holm p ≤ 0.005) but alone is inconclusive (frame-clustered Holm p 0.055-0.526, Table 7).
+Finding 1: rules beat drafted-data classifiers. On new writers (Table 2) rules lead TF-IDF by +0.206 [0.129, 0.287] STS (Holm p = 0.0003; 13 of 17 writers; also under each annotator's labels, Table 7). The author's test agrees (Table 2; Holm p ≤ 0.005) but alone is inconclusive (Holm p 0.055-0.526 if items sharing a sentence frame count as dependent, Table 6).
 
 
-Table 2. Locked test (120 items, 34 pairs; core v1.0, before the §3.3 fix). Metrics as in §4.1.
+Other pre-registered tests. Core v1.1 changed one natural item (oracle 0.786 → 0.790). S9 beat S8 by +0.102 (Holm p = 0.001), mostly as a fallback: in 56 of the 73 item gains S1 answered where S8 made no valid call. Safety. 19 of S1's 94 natural calls were harmful (wrong tool or time, or should not run), 17 more had wrong wording (test: 3 of 50 harmful).
 
-| System | STS [95% CI] | Intent F1 | Route F1 | Unsafe (all) | Unsafe (ACT) | Unn. clar. | Pairs |
-| oracle (gold intent) | 0.808 [0.725, 0.885] | 1.000 | 0.960 | 0.133 | 0.320 | 0.060 | 0.588 |
-| S1 keyword rules | 0.767 [0.678, 0.847] | 0.936 | 0.897 | 0.133 | 0.320 | 0.060 | 0.588 |
-| S2 TF-IDF + LR | 0.600 [0.513, 0.686] | 0.738 | 0.797 | 0.200 | 0.511 | 0.060 | 0.382 |
-| S3 + char n-grams | 0.625 [0.538, 0.711] | 0.751 | 0.804 | 0.167 | 0.455 | 0.060 | 0.382 |
 
-Table 3. Natural set (238 items, 17 new writers, 64 pairs). Last column: success by gold route.
+Table 2. Main results. Unsafe: wrong or unneeded calls over all items (all) or calls made (ACT); Unn. clar.: gold ACT answered with CLARIFY; Pairs: both pair members correct; last: success by gold route.
 
 | System | STS [95% CI] | Intent F1 | Route F1 | Unsafe (all) | Unsafe (ACT) | Unn. clar. | Pairs | ACT/CLAR/ ABST |
+| Locked test: the author, 120 items, 34 pairs (core v1.0) |
+| oracle | 0.808 [0.725, 0.885] | 1.000 | 0.960 | 0.133 | 0.320 | 0.060 | 0.588 | 0.68/0.86/1.00 |
+| S1 rules | 0.767 [0.678, 0.847] | 0.936 | 0.897 | 0.133 | 0.320 | 0.060 | 0.588 | 0.68/0.86/0.75 |
+| S2 TF-IDF | 0.600 [0.513, 0.686] | 0.738 | 0.797 | 0.200 | 0.511 | 0.060 | 0.382 | 0.46/0.72/0.65 |
+| S3 + char | 0.625 [0.538, 0.711] | 0.751 | 0.804 | 0.167 | 0.455 | 0.060 | 0.382 | 0.48/0.72/0.75 |
+| Natural set: 17 new writers, 238 items, 64 pairs |
 | oracle | 0.786 [0.715, 0.851] | 1.000 | 0.955 | 0.134 | 0.337 | 0.044 | 0.578 | 0.69/0.74/1.00 |
 | S1 rules | 0.718 [0.648, 0.785] | 0.922 | 0.880 | 0.151 | 0.383 | 0.044 | 0.547 | 0.64/0.72/0.85 |
 | S2 TF-IDF | 0.513 [0.444, 0.580] | 0.667 | 0.714 | 0.218 | 0.536 | 0.044 | 0.328 | 0.49/0.50/0.56 |
 | S3 + char | 0.513 [0.447, 0.577] | 0.670 | 0.721 | 0.239 | 0.576 | 0.033 | 0.328 | 0.46/0.55/0.54 |
 
-The extractor fix changed one item; the policy helped LLM tool use (+0.102, Holm p = 0.001), but 56 of 73 gains were S1 filling S8's missed calls. Safety. 19 of S1's 94 natural calls were harmful (wrong tool/time or should not run; test: 3 of 50), 17 more in wording.
-
-
-Table 4. Registered v3 test (236 items, 17 further writers). Human data: natural-set messages added to training.
+Table 3. Registered v3 test (236 items, 17 further writers). Human data: natural-set messages added to training.
 
 | System | Training data | STS [95% CI] | Success ACT / CLAR / ABST |
 | oracle (gold intent) | – | 0.669 [0.612, 0.727] | 0.62 / 0.54 / 1.00 |
@@ -117,16 +115,16 @@ Table 4. Registered v3 test (236 items, 17 further writers). Human data: natural
 | S6 MARBERTv2 | drafted + author | 0.549 [0.488, 0.610] | 0.60 / 0.52 / 0.50 |
 | S6 MARBERTv2 | + human data | 0.637 [0.580, 0.693] | 0.62 / 0.53 / 0.88 |
 
-Finding 2: in-domain human data close the gap. On v3, adding human messages raised S3 by +0.089 [0.037, 0.150] (Holm p = 0.002) and MARBERTv2 by +0.088 [0.049, 0.134] (Holm p = 0.0002), mostly on out-of-scope requests. Not just more data: ~215 human messages alone beat 338 drafted/author items (+0.089, p = 0.004, descriptive). Retrained S3 equals the rules (+0.000 [−0.054, 0.058]); retrained MARBERTv2 exceeds them (+0.048 [0.013, 0.091], estimate only). Limitation: the human data share v3's scenario cards and no drafted set does, so this shows that in-distribution data help, not that human authorship does.
+Finding 2: in-domain human data close the gap. On v3, adding human messages raised S3 by +0.089 [0.037, 0.150] (Holm p = 0.002) and MARBERTv2 by +0.088 [0.049, 0.134] (Holm p = 0.0002), mostly on out-of-scope requests. Not just more data: about 215 human messages alone beat the 338 drafted and author items (+0.089, p = 0.004, descriptive). Retrained S3 equals the rules (+0.000 [−0.054, 0.058]); retrained MARBERTv2 exceeds them (+0.048 [0.013, 0.091], estimate only). Limitation: the human data share v3's scenario cards and no drafted set does, so it shows that in-distribution data help, not that authorship does.
 
 
-Finding 3: the extractor sets the ceiling. With gold intents STS is 0.786 (natural; 0.790 with v1.1) and 0.669 (v3), so intents explain under half of S1's failures. Of 91 complete natural requests the extractor gets 63 right; 17 fail on wording alone, 7 on the instant, 4 re-asked (lenient wording: 0.857). Four more fixes solve 28 of the 50 failures left under v1.1: emphasis («ضروري»), want-verb framing («عايز تفكرني»), vague content («حاجه مهمه») and «الخميس بعد الجاي» (Thursday after next); as core v1.2 they raised the oracle on unseen v3 to 0.720 (+0.051 [0.019, 0.086], p = 0.010; 14 fixed, 2 broken) and every v3 system by 0.047-0.051 (Table 13).
+Finding 3: the extractor sets the ceiling. With gold intents STS is 0.786 (natural) and 0.669 (v3). Of 91 complete natural requests the extractor gets 63 fully right; 17 fail on wording alone, 7 on the instant, 4 are re-asked. Label ambiguity explains little: 35 of the oracle's 51 natural failures fall on the 182 items both annotators labelled identically (oracle STS 0.808 there). Four more fixes solve 28 of the 50 failures left under v1.1: emphasis («ضروري»), want-verb framing («عايز تفكرني»), vague content («حاجه مهمه») and «الخميس بعد الجاي» (Thursday after next); as core v1.2 they raised the oracle on unseen v3 to 0.720 (+0.051 [0.019, 0.086], p = 0.010; 14 fixed, 2 broken) and every v3 system by 0.047-0.051 (Table 12).
 
 
 ## 5. Conclusion
 
 
-We built a task contract and metric, a 458-item benchmark, a shared pipeline and tests by 34 other writers (O1-O4). Training data decided the comparison: classifiers trained on mostly AI-drafted data lost to rules by 0.206 STS; in-domain human data closed the gap. The extractor limits every system (O5: 0.786 with gold intents); post hoc fixes added 0.05 on v3. Low-compute teams should invest in in-domain human data and the extractor before the classifier.
+We met O1-O4: contract, metric, 458-item benchmark, shared pipeline, tests by 34 other writers. RQ1: no; classifiers trained on mostly AI-drafted data lost to rules by 0.206 STS. RQ2: in-domain human data closed the gap (in-distribution data matter, not authorship). O5: the extractor, not label ambiguity, limits every system (0.786 with gold intents). Low-compute teams should invest in in-domain human data and the extractor first.
 
 
 ## References
@@ -177,7 +175,7 @@ We built a task contract and metric, a 458-item benchmark, a shared pipeline and
 ## Appendix A. Additional results
 
 
-Table 5. Safe Task Success of the extension systems on the three locked sets, with the numeric format each GPU model ran in, or CPU (S4: primary setting, 6 examples with prior calibration; S5/S6 fitted after both evaluations, exploratory). ¹S9 uses core v1.1, whose fix was drawn from the test errors. v3: core v1.1; the GPU rows were frozen before labelling (amendments A5, A7), descriptive.
+Table 4. Safe Task Success of the extension systems on the three locked sets, with the numeric format each GPU model ran in, or CPU (S4: primary setting, 6 examples with prior calibration; S5/S6 fitted after both evaluations, exploratory). ¹S9 uses core v1.1, whose fix was drawn from the test errors. v3: core v1.1; the GPU rows were frozen before labelling (amendments A5, A7), descriptive.
 
 | System | Format | Locked test (120) | Natural (238) | v3 (236) |
 | S1 keyword rules (reference) | CPU | 0.767 | 0.718 | 0.589 |
@@ -195,13 +193,13 @@ Table 5. Safe Task Success of the extension systems on the three locked sets, wi
 | S8 Jais-3-7B greedy, with exemplars (1 run) | fp16 | – | – | 0.619 |
 | S9 from that S8 | fp16 | – | – | 0.657 |
 
-Systems S4-S7. They replace only the intent recognizer; the extractor and policy are shared. S4 prompts an LLM for the intent with 6 examples (Jais 2 8B [5, 11], Jais-3-7B, Jais-3-3.7B [12], Nile-Chat 4B [13], Qwen3 8B [14]). S5 is logistic regression on frozen multilingual-e5-small embeddings. S6 is fine-tuned MARBERTv2 [2] (five seeds, recipe after [10]). S7 is Jais 2 with QLoRA [3] (three seeds). No LLM recognizer beat the rules significantly on any set (Tables 5, 9).
+Systems S4-S7. They replace only the intent recognizer; the extractor and policy are shared. S4 prompts an LLM for the intent with 6 examples (Jais 2 8B [5, 11], Jais-3-7B, Jais-3-3.7B [12], Nile-Chat 4B [13], Qwen3 8B [14]). S5 is logistic regression on frozen multilingual-e5-small embeddings. S6 is fine-tuned MARBERTv2 [2] (five seeds, recipe after [10]). S7 is Jais 2 with QLoRA [3] (three seeds). No LLM recognizer beat the rules significantly on any set (Tables 4, 8).
 
 
 Precision. Kaggle's T4 GPUs have no bf16, so the models ran in different formats: Jais 2 overflowed in fp16 and ran 4-bit, Jais-3-7B and Qwen3 ran in fp16, the smaller models in fp32. Differences between these models may therefore partly reflect precision. Jais-3-7B was released after the freeze but before the test was opened; Jais 2 stayed the pre-registered LLM. In its primary setting it declined 34 in-scope test requests; with the exemplars listed in the user message (a secondary analysis declared before the test was opened) it scored 0.733. As S8 it made no valid call on 11, 12 and 16 of the 120 test items.
 
 
-Protocol v3 (docs/protocol_v3.md, amendments A1-A9). Registered on 6 November before any v3 system existed; systems and GPU outputs frozen before labelling; gold locked (manifest 750e7847) and scored once (results/v3/evaluation.json, evaluation_gpu.json). Both registered human-data gains also hold with writers as clusters and in all 17 leave-one-writer-out analyses; the exploratory natural-set analysis agreed (Table 6). GPU systems (descriptive): raw instead of normalized text did not change S4 (+0.017, p = 0.50; same intent on 230 of 236); the policy added +0.038 to greedy Jais 3 with exemplars (p = 0.09). Greedy S8 made no valid call on 8 of 236 items (sampled S8 on the natural set: 23-25 of 238 a seed).
+Protocol v3 (docs/protocol_v3.md, amendments A1-A9). Registered on 6 November before any v3 system existed; systems and GPU outputs frozen before labelling; gold locked (manifest 750e7847) and scored once (results/v3/evaluation.json, evaluation_gpu.json). Both registered human-data gains also hold with writers as clusters and in all 17 leave-one-writer-out analyses; the exploratory natural-set analysis agreed (Table 5). GPU systems (descriptive): raw instead of normalized text did not change S4 (+0.017, p = 0.50; same intent on 230 of 236); the policy added +0.038 to greedy Jais 3 with exemplars (p = 0.09). Greedy S8 made no valid call on 8 of 236 items (sampled S8 on the natural set: 23-25 of 238 a seed).
 
 
 Cost. On a laptop CPU, each final S2/S3 fit takes under 0.3 s, inference under 0.3 ms per item, and peak memory is 141 MB (models/freeze.json).
@@ -210,7 +208,7 @@ Cost. On a laptop CPU, each final S2/S3 fit takes under 0.3 s, inference under 0
 Out-of-scope requests separate the learned systems on new writers: S6, Jais 2 and Nile-Chat declined only about half of them (0.48, 0.48 and 0.53), against 0.85 for the rules. These requests sit inside the reminder domain (recurring, deleting or changing a reminder), where the rules' explicit out-of-scope verbs decide better.
 
 
-Table 6. Training on human-written messages: STS (intent accuracy). Natural set: exploratory leave-one-writer-out (each held-out writer's scenarios removed; about 215 contributor messages per fold). v3: registered test on 236 unseen messages, trained per scenario block on the natural set minus that block's cards (registered for S3 and S6). S2/S3 use grouped-CV settings; S1 is core v1.1.
+Table 5. Training on human-written messages: STS (intent accuracy). Natural set: exploratory leave-one-writer-out (each held-out writer's scenarios removed; about 215 contributor messages per fold). v3: registered test on 236 unseen messages, trained per scenario block on the natural set minus that block's cards (registered for S3 and S6). S2/S3 use grouped-CV settings; S1 is core v1.1.
 
 | Classifier, set | Drafted + author (338) | Contributors only (~215) | Both |
 | S2, natural | 0.546 (0.731) | 0.660 (0.870) | 0.672 (0.878) |
@@ -221,7 +219,7 @@ Table 6. Training on human-written messages: STS (intent accuracy). Natural set:
 | S6 MARBERTv2, v3 (5 seeds) | 0.549 (0.869) |  | 0.637 (0.951) |
 | S1 rules, v3 |  |  | 0.589 (0.898) |
 
-Table 7. Locked test: sensitivity of the rules-vs-classifier differences to the clustering unit (frames: items sharing a sentence frame).
+Table 6. Locked test: sensitivity of the rules-vs-classifier differences to the clustering unit (frames: items sharing a sentence frame).
 
 | Clustering, comparison | Clusters | Difference | 95% CI | Holm p |
 | family (pre-registered), S2 vs S1 | 71 | −0.167 | [−0.250, −0.084] | 0.002 |
@@ -233,7 +231,7 @@ Table 7. Locked test: sensitivity of the rules-vs-classifier differences to the 
 | family + frame A (connected), S2 vs S1 | 19 | −0.167 | [−0.289, 0.031] | 0.526 |
 | family + frame A (connected), S3 vs S1 | 19 | −0.142 | [−0.244, 0.100] | 0.526 |
 
-Table 8. Natural set: confirmed differences under alternative labels and scoring rules (unadjusted p).
+Table 7. Natural set: confirmed differences under alternative labels and scoring rules (unadjusted p).
 
 | Labels / rule | n | Rules − TF-IDF (S1 − S2) | Policy gain (S9 − S8) |
 | locked gold (pre-registered) | 238 | +0.206 (p 0.0001) | +0.102 (p 0.0005) |
@@ -242,7 +240,7 @@ Table 8. Natural set: confirmed differences under alternative labels and scoring
 | locked gold, lenient reminder text | 238 | +0.206 (p 0.0001) | +0.098 (p 0.0006) |
 | locked gold without uncovered expressions (14 dropped) | 224 | +0.219 (p 0.0001) | +0.112 (p 0.0003) |
 
-Table 9. Post hoc: LLM intent recognizers minus S1 in STS, same pipeline and stored outputs, family-level paired test and bootstrap as pre-registered, Holm over the six comparisons of each set (scripts/posthoc_llm_vs_rules.py). S7: per-item mean over three seeds. Last column: unsafe execution rate on the natural set.
+Table 8. Post hoc: LLM intent recognizers minus S1 in STS, same pipeline and stored outputs, family-level paired test and bootstrap as pre-registered, Holm over the six comparisons of each set (scripts/posthoc_llm_vs_rules.py). S7: per-item mean over three seeds. Last column: unsafe execution rate on the natural set.
 
 | Recognizer | Test: Δ [95% CI] | Holm p | Natural: Δ [95% CI] | Holm p | Unsafe |
 | S4 Jais 2 8B | −0.008 [−0.043, 0.026] | 1.000 | −0.101 [−0.170, −0.032] | 0.040 | 0.206 |
@@ -256,7 +254,7 @@ Table 9. Post hoc: LLM intent recognizers minus S1 in STS, same pipeline and sto
 ## Appendix B. Representative errors and failure types
 
 
-Table 10. Real outputs of the shared pipeline with the gold intent (oracle). Arabic cells read right to left; the second line of a cell is the reminder text.
+Table 9. Real outputs of the shared pipeline with the gold intent (oracle). Arabic cells read right to left; the second line of a cell is the reminder text.
 
 | Message | Gold | Pipeline output | Cause |
 | عايز تذكير بكرة الساعة 5 العصر علشان احدث سجل المخاطر | ACTاحدث سجل المخاطر | ACTعايز علشان احدث سجل المخاطر | want-verb framing kept (test) |
@@ -265,7 +263,7 @@ Table 10. Real outputs of the shared pipeline with the gold intent (oracle). Ara
 | فكرني اعدل الrisk register ضروري بكره الساعه 7 الصبح | ACTاعدل الrisk register | ACTاعدل الrisk register ضروري | emphasis word kept (new writer) |
 | محتاج تفكرني اراجع الjira tickets بكره الساعه 10 الصبح قبل ميعاد ال sprint review | ACTاراجع الjira tickets قبل ميعاد ال sprint review | ACTمحتاج اراجع الjira tickets قبل ميعاد ال sprint review | second-person framing (new writer) |
 
-Table 11. Locked test: failures by type (counts of 120 items; from results/error_analysis). S2's 20 failures beyond S1's are all intent errors.
+Table 10. Locked test: failures by type (counts of 120 items; from results/error_analysis). S2's 20 failures beyond S1's are all intent errors.
 
 | Failure type | Oracle | S1 | S2 | S3 |
 | Wrong reminder text only | 13 | 13 | 12 | 11 |
@@ -278,7 +276,7 @@ Table 11. Locked test: failures by type (counts of 120 items; from results/error
 | Declined an in-scope request | 0 | 0 | 7 | 10 |
 | All failures | 23 | 28 | 48 | 45 |
 
-Table 12. Locked test: intent precision / recall per class, and STS on code-switched items (test n = 24, natural n = 84; exploratory, small subgroups). S2 labelled the 62 gold reminders as 41 reminder, 15 alarm, 6 unsupported.
+Table 11. Locked test: intent precision / recall per class, and STS on code-switched items (test n = 24, natural n = 84; exploratory, small subgroups). S2 labelled the 62 gold reminders as 41 reminder, 15 alarm, 6 unsupported.
 
 | System | Reminder P / R | Alarm P / R | Unsupported P / R | CS test | CS natural |
 | oracle (gold intent) | 1.00 / 1.00 | 1.00 / 1.00 | 1.00 / 1.00 | 0.833 | 0.738 |
@@ -286,7 +284,7 @@ Table 12. Locked test: intent precision / recall per class, and STS on code-swit
 | S2 TF-IDF + LR | 0.87 / 0.66 | 0.70 / 0.97 | 0.65 / 0.65 | 0.708 | 0.488 |
 | S3 + char n-grams | 0.91 / 0.65 | 0.73 / 0.97 | 0.60 / 0.75 | 0.750 | 0.488 |
 
-Table 13. Post hoc core v1.2 (src/athar/v2/core12.py, scripts/posthoc_core_v12.py): STS of each system with its frozen intents through core v1.1 and v1.2. The fixes were written from the natural-set oracle failures (in-sample there); v3 was not inspected meanwhile. Paired family-level permutation test and bootstrap, unadjusted p. One natural item breaks because its gold keeps «ضروري» inside the text, unlike the others; the two broken v3 items were not examined, to keep v3 unread. Locked test: no change (0.967 with core v1.1, whose fixes came from its errors).
+Table 12. Post hoc core v1.2 (src/athar/v2/core12.py, scripts/posthoc_core_v12.py): STS of each system with its frozen intents through core v1.1 and v1.2. The fixes were written from the natural-set oracle failures (in-sample there); v3 was not inspected meanwhile. Paired family-level permutation test and bootstrap, unadjusted p. One natural item breaks because its gold keeps «ضروري» inside the text, unlike the others; the two broken v3 items were not examined, to keep v3 unread. Locked test: no change (0.967 with core v1.1, whose fixes came from its errors).
 
 | Set | System | Core v1.1 | Core v1.2 | Δ [95% CI] | p | Fixed / broken |
 | natural (dev.) | oracle | 0.790 | 0.903 | +0.113 [0.061, 0.172] | < 0.001 | 28 / 1 |
@@ -301,7 +299,7 @@ Table 13. Post hoc core v1.2 (src/athar/v2/core12.py, scripts/posthoc_core_v12.p
 ## Appendix C. Reproducing the results
 
 
-All commands run from the repository root on a CPU; T2 stands for Table 2. The five analysis scripts (T2-T11) rebuild their tables from the stored outputs and reproduce the committed files exactly (Table 4 is read from results/v3/evaluation.json; Table 8 also needs the private labelling sheets in data/raw/private/, which are not shared); the encoder commands retrain S5/S6 (slow on CPU). The GPU systems (S4, S7, S8) were run, and S7 was trained, with notebooks/kaggle_s4_llm.ipynb.
+All commands run from the repository root on a CPU; T2 stands for Table 2. The five analysis scripts (T2-T10) rebuild their tables from the stored outputs and reproduce the committed files exactly (Table 3 is read from results/v3/evaluation.json; Table 7 also needs the private labelling sheets in data/raw/private/, which are not shared); the encoder commands retrain S5/S6 (slow on CPU). The GPU systems (S4, S7, S8) were run, and S7 was trained, with notebooks/kaggle_s4_llm.ipynb.
 
 
 uv sync
@@ -310,34 +308,37 @@ uv sync
 uv run pytest                                               # tests
 
 
-uv run python scripts/error_analysis.py --out results/error_analysis   # T2, T11
+uv run python scripts/error_analysis.py --out results/error_analysis   # T2, T10
 
 
-uv run python scripts/natural_tables.py                     # T3
+uv run python scripts/natural_tables.py                     # T2
 
 
-uv run python scripts/posthoc_analysis.py --out results/posthoc        # T7
+uv run python scripts/posthoc_analysis.py --out results/posthoc        # T6
 
 
-uv run python scripts/posthoc_llm_vs_rules.py               # T9
+uv run python scripts/posthoc_llm_vs_rules.py               # T8
 
 
-uv run --with openpyxl python scripts/natural_sensitivity.py           # T8
+uv run --with openpyxl python scripts/natural_sensitivity.py           # T7
 
 
-uv run --extra neural python scripts/posthoc_encoders_human.py encoders # T5
+uv run --extra neural python scripts/posthoc_encoders_human.py encoders # T4
 
 
-uv run --extra neural python scripts/posthoc_encoders_human.py human   # T6
+uv run --extra neural python scripts/posthoc_encoders_human.py human   # T5
 
 
-uv run python scripts/posthoc_core_v12.py   # T13 (needs the private v3 texts)
+uv run python scripts/posthoc_core_v12.py   # T12 (needs the private v3 texts)
+
+
+uv run --with openpyxl python scripts/posthoc_ceiling_ambiguity.py     # 4.2 (private sheets)
 
 
 uv run --extra ui streamlit run app/streamlit_app.py        # demo
 
 
-Table 14. Pretrained models used (linked), with the pinned Hugging Face revisions.
+Table 13. Pretrained models used (linked), with the pinned Hugging Face revisions.
 
 | System | Hugging Face model | Revision |
 | S4, S7 | inception42/Jais-2-8B-Chat | da0e1639cd92b508b24120f7f77f5270a8465dc4 |
