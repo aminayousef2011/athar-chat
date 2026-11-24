@@ -22,13 +22,13 @@ Research questions. (RQ1) When all systems share the same argument extractor and
 ## 2. Deliverables
 
 
-• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit 8f9656992849caa3001e6858c54c035de21f3360; PDF added by the next commit.
+• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit 0506d75f4d90e90eb89b40f6fd70304df0805ade; PDF added by the next commit.
 
 
 • Data: data/athar.jsonl (458 items; splits data/splits/manifest.json), data/natural/natural.jsonl (247), data/v3/manifest.json (texts private), data card and guides (docs/); consent covers this project, no public licence yet.
 
 
-• Code, models, outputs: package athar with 402 tests and locked dependencies (uv.lock); frozen classifiers (models/, models_v2/), stored predictions (results/), pinned Hugging Face models (Table 13), a Streamlit demo (app/) and the full technical report (docs/report.md); S6/S7 weights are not stored.
+• Code, models, outputs: package athar with 402 tests and locked dependencies (uv.lock); frozen classifiers (models/, models_v2/), stored predictions (results/), pinned Hugging Face models (Table 13), a Streamlit demo (app/) and the technical report (docs/report.md); S7 adapters: release s7-adapters (hash-checked); S6 weights not stored.
 
 
 ## 3. Methods and implementation
