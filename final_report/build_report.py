@@ -730,19 +730,19 @@ def build(commit: str, branch: str) -> Report:
 
     R.h1("Abstract")
     R.para(
-        "A reminder assistant must decide whether to execute a request (ACT), ask for missing details "
-        f"(CLARIFY) or decline it (ABSTAIN). On a new {n_all}-request Egyptian Arabic benchmark, we "
-        "compared keyword rules with TF-IDF logistic-regression intent classifiers in one shared "
-        "pipeline, scored by Safe Task Success (STS: correct decision and arguments). "
-        f"On {n_conf} messages from {n_writers} new writers, the rules won (STS "
+        "When a project manager asks an assistant in Egyptian Arabic for a reminder or alarm, the "
+        "assistant must execute the request (ACT), ask for missing details (CLARIFY) or decline it "
+        f"(ABSTAIN). We built a {n_all}-request Egyptian Arabic benchmark and compared keyword rules with "
+        "TF-IDF logistic-regression intent classifiers inside one shared pipeline, scored by Safe Task "
+        "Success (STS: right decision and right arguments). "
+        f"On {n_conf} messages from {n_writers} new writers, the rules won clearly (STS "
         f"{f3(n1['safe_task_success'])} vs {f3(n2['safe_task_success'])}, Holm p = "
-        f"{tests['N1 S1 vs S2']['p_holm']:.4f}). Mostly AI-drafted training data explain much of this gap: "
+        f"{tests['N1 S1 vs S2']['p_holm']:.4f}). The main cause was the mostly AI-drafted training data: "
         f"in a pre-registered test on {v3_n} messages from {len(V3['writers'])} further writers, adding human "
-        f"messages from the same scenarios raised TF-IDF by {signed(v3a['difference'])} and MARBERTv2 "
+        f"messages raised TF-IDF by {signed(v3a['difference'])} and MARBERTv2 "
         f"by {signed(v3b['difference'])} STS (Holm p ≤ {max(v3a['p_holm'], v3b['p_holm']):.3f}), and "
-        f"retrained TF-IDF matched the rules ({v3_s111:.3f} each). The shared extractor limits every system "
-        f"(STS {f3(no['safe_task_success'])} with gold intents); four post hoc fixes added "
-        f"{c12_lo:.3f}-{c12_hi:.3f} STS on held-out writers; none is deployable.")
+        f"TF-IDF then matched the rules ({v3_s111:.3f} each). With gold intents STS is only "
+        f"{f3(no['safe_task_success'])}: the shared extractor limits every system; none is deployable.")
 
     # 1 ------------------------------------------------------------------------------------------
     R.h1("1. Motivation and objectives")
@@ -753,21 +753,21 @@ def build(commit: str, branch: str) -> Report:
         "\"set me a reminder the day after tomorrow at 9 pm to take my medicine\"), inconsistently "
         "spelled and mixed with English. When2Call [1] showed for English that deciding *when* to call "
         "a tool is its own problem, and out-of-scope requests are hard for classifiers [6]; "
-        "no Egyptian Arabic dataset labels this decision. **Intended users:** dialect-assistant teams "
-        "choosing among rules, data and models on little compute, and researchers needing such a benchmark.")
+        "no Egyptian Arabic dataset labels this decision. **Intended users:** Egyptian project managers "
+        f"asking for work reminders in dialect ({share(NAT_CONF, 'domain', 'project_management'):.0%} of "
+        "contributor messages), low-compute developers and researchers.")
     R.para(
         "**Research questions.** (RQ1) When all systems share the same argument extractor and execution "
         "policy, does lightweight supervised intent classification improve Safe Task Success over keyword "
         "rules? (RQ2) Does human-written instead of AI-drafted training data change the answer? "
-        "**Objectives:** (O1) a task contract and safety-aware metric; (O2) a reviewed Egyptian Arabic "
-        "benchmark split by scenario; (O3) rules vs. TF-IDF classifiers in one pipeline; "
-        "(O4) a test on writers other than the author; (O5) the errors limiting the pipeline.")
+        "**Objectives:** (O1) a task contract and safety-aware metric; (O2) a reviewed benchmark; "
+        "(O3) rules vs. TF-IDF; (O4) new-writer tests; (O5) error analysis.")
 
     # 2 ------------------------------------------------------------------------------------------
     R.h1("2. Deliverables")
     R.link_para("**Repository:** ", (REPO_URL, REPO_URL), f" (branch `{branch}`), commit ",
                 (f"{REPO_URL}/tree/{commit}", commit),
-                "; PDF added by the next commit.")
+                "; this PDF is built from it.")
     blob = f"{REPO_URL}/blob/{commit}/"
     R.link_para("**Data:** ", (blob + "data/athar.jsonl", "data/athar.jsonl"),
                 f" ({n_all} items; splits ", (blob + "data/splits/manifest.json", "data/splits/manifest.json"),
@@ -832,9 +832,7 @@ def build(commit: str, branch: str) -> Report:
         f"{AGREE_NAT['route']['kappa']:.3f}) but chose the same slots on only "
         f"{AGREE_NAT['targets_exact_set']['agreement']:.0%} of {AGREE_NAT['targets_exact_set']['n']} "
         f"CLARIFY items and the same instant on {AGREE_NAT['datetime_same_instant']['agreement']:.0%} "
-        f"of {AGREE_NAT['datetime_same_instant']['n']} ACT items as written "
-        f"({CA['both_act_datetime']['agreement_wall_clock']:.0%} after {CA['both_act_datetime']['offset_only']} "
-        "differing only in UTC offset); the author adjudicated the "
+        f"of {AGREE_NAT['datetime_same_instant']['n']} ACT items; the author adjudicated the "
         f"{load('results/natural/adjudication.json')['adjudicated']} disagreements alone. "
         f"**v3** is the other {len(V3['writers'])} writers' {v3_n} "
         f"messages, labelled after its systems were frozen; {v3_adj} were adjudicated jointly (route κ = "
@@ -854,12 +852,13 @@ def build(commit: str, branch: str) -> Report:
         "with class-balanced logistic regression [4]; **S3:** S2 plus character 2-4-grams for spelling "
         "variation; both fitted on train, with C and n-grams chosen by dev intent macro-F1 "
         f"(S2: C = {FREEZE_C['S2']:g}; S3: C = {FREEZE_C['S3']:g}). **Oracle:** gold intents, the "
-        "ceiling. **Core v1.1:** the shared normalizer, extractor and policy (the *core*, frozen as v1.0) "
-        "plus one extractor fix drawn from the test errors (test oracle "
-        f"{f3(o['safe_task_success'])} → {C12['locked test']['oracle']['sts_v1.1']:.3f}); the test then "
-        "counts as development data, so v1.1 is scored only on new writers. **Extensions** (Appendix A): "
-        "recognizers S4-S7, e.g. MARBERTv2 [2] (**S6**); **S8:** Jais-3-7B [12] does the whole "
-        "task by tool calling; **S9:** the policy checks S8's call (S1's intent if none is valid).")
+        "ceiling. **Core versions:** the shared normalizer, extractor and policy form the *core*, frozen "
+        "as v1.0; v1.1 adds one extractor fix drawn from the test errors (test oracle "
+        f"{f3(o['safe_task_success'])} → {C12['locked test']['oracle']['sts_v1.1']:.3f}), so the test then "
+        "counts as development data and v1.1 is scored only on new writers. **Extensions** (Appendix A): "
+        "S4-S7 replace only the intent recognizer (LLM prompts, embeddings, MARBERTv2 [2] as **S6**, "
+        "QLoRA [3]); **S8:** Jais-3-7B [12] does the whole "
+        "task by tool calling; **S9:** the policy checks S8's call (else S1's intent).")
 
     require("split and frozen 2026-10-12" in (ROOT / "docs/data_card.md").read_text(encoding="utf-8")
             and "Recruiting native contributors was not possible in the time available"
@@ -870,17 +869,21 @@ def build(commit: str, branch: str) -> Report:
             and "158 written by the author" in (ROOT / "docs/data_card.md").read_text(encoding="utf-8")
             and not any(i.get("source") == "assistant_draft" for i in ITEMS["test"]),
             "section 3.4: freeze date, contributors two weeks later, all-human test, author-text count")
+    env_s6 = load("results/v3/environment_s6.json")
+    require(env_s6.get("device") == "cuda" and env_s6.get("gpu") == "Tesla T4"
+            and "per S6 seed on CPU" in (ROOT / "docs/report_supplement.md").read_text(encoding="utf-8"),
+            "section 3.4 hardware: S6 for v3 on a Kaggle T4; S6 on the locked test and natural set on CPU")
     R.h2("3.4 Changes from the proposal")
     R.para(
         "**Training data:** the proposal planned only hand-written items, but native writers could not be "
-        "recruited in time for the freeze (12 October): 19 of the first Google Form's "
-        "21 responses shared one writing pattern (several identical), suggesting AI-generated or copied "
-        f"answers, so they were discarded. The author's {n_all - n_drafted} requests, the only human texts, "
+        "recruited in time for the freeze (12 October); 19 of the first Google Form's 21 responses "
+        f"shared one pattern, suggesting AI-generated answers, and were discarded. The author's {n_all - n_drafted} requests, the only human texts, "
         f"supplied the all-human test ({len(ITEMS['test'])}) so that no system is scored on its own training "
         f"data; {drafted('train')} of {len(ITEMS['train'])} training items were therefore AI-drafted "
         f"(`source: assistant_draft`, never evaluated on; {n_all} items, {t1['pairs']} test pairs; planned "
         "300, 20). Contributor messages arrived two weeks later and became two more test sets (RQ2). "
-        "**Systems:** S1-S3 on a laptop CPU as proposed; S4-S9 on Kaggle T4 GPUs.")
+        "**Hardware:** S1-S3, S5 and S6 (test, natural set) on a laptop CPU; S4, S7-S9 and S6 for v3 "
+        "on Kaggle T4 GPUs.")
 
     # 4 ------------------------------------------------------------------------------------------
     R.h1("4. Evaluation and results")
@@ -888,8 +891,7 @@ def build(commit: str, branch: str) -> Report:
     R.para(
         "**Evaluation data.** All three sets are native-written and cover all routes, incomplete "
         "variants and in-domain out-of-scope requests; "
-        f"{share(NAT_CONF, 'domain', 'project_management'):.0%} of natural messages concern project "
-        "management (by design), so results speak mainly to work reminders. Test intervals span about "
+        "most concern project management (§1), so results speak mainly to work reminders. Test intervals span about "
         "±0.09 STS, so the new-writer sets carry the conclusions. "
         "**Training data** is relevant (same tools, routes and contract) but "
         f"inadequate in quality and coverage: "
@@ -919,7 +921,8 @@ def build(commit: str, branch: str) -> Report:
         f"rules lead TF-IDF by {signed(N1['difference'])} {ci(N1['ci'])} STS (Holm p = "
         f"{N1['p_holm']:.4f}; 13 of 17 writers; also under each annotator's labels, Table 7). The "
         f"author's test agrees (Table 2; Holm p ≤ {max(h1_['p_holm'], h2_['p_holm']):.3f}) but alone is "
-        "inconclusive (Holm p 0.055-0.526 if items sharing a sentence frame count as dependent, Table 6).")
+        "inconclusive (Holm p 0.055-0.526 if items sharing a sentence frame count as dependent, Table 6). "
+        "TF-IDF's extra test failures are all intent errors: wrong tool or scope (Tables 10, 11).")
     # Tables 2 (locked test) and natural set share one table: same columns, one caption and header
     def main_row(name: str, m: dict, c: dict) -> list[str]:
         r = m["success_by_gold_route"]
@@ -1014,26 +1017,19 @@ def build(commit: str, branch: str) -> Report:
         f"natural requests the extractor gets {or_act_ok} fully right; {or_act[2]} fail on wording alone, "
         f"{or_act[1]} on the instant, {or_act[3]} are re-asked. Label ambiguity explains little: "
         f"{ca_or['agreed']['failures']} of the oracle's {ca_or['failures']} natural failures fall on the "
-        f"{ca_or['agreed']['n']} items both annotators labelled identically (oracle STS "
-        f"{ca_or['agreed']['sts']:.3f} there). Four more fixes "
-        f"solve {len(c12n['oracle']['items_fixed'])} of the "
-        f"{round((1 - c12n['oracle']['sts_v1.1']) * n_conf)} failures left under v1.1: emphasis "
-        "(«ضروري»), want-verb framing («عايز تفكرني»), "
-        "vague content («حاجه مهمه») and «الخميس بعد الجاي» (Thursday after next); as core v1.2 "
-        f"they raised the oracle on unseen v3 to {c12o['sts_v1.2']:.3f} "
-        f"({signed(c12o['difference'])} {ci(c12o['ci'])}, p = {c12o['p_value']:.3f}; "
-        f"{len(c12o['items_fixed'])} fixed, {len(c12o['items_broken'])} broken) and every v3 system "
-        f"by {c12_lo:.3f}-{c12_hi:.3f} (Table 12).")
+        f"{ca_or['agreed']['n']} items both annotators labelled identically. Four post hoc extractor fixes "
+        "from natural-set failures (e.g. emphasis «ضروري») raised every system on the unseen v3 set by "
+        f"{c12_lo:.3f}-{c12_hi:.3f} STS (core v1.2, Table 12).")
 
     # 5 ------------------------------------------------------------------------------------------
     R.h1("5. Conclusion")
     R.para(
-        f"We met O1-O4: contract, metric, {n_all}-item benchmark, shared pipeline, tests by "
-        f"{n_writers + len(V3['writers'])} other writers. **RQ1:** no; classifiers trained on mostly AI-drafted "
-        f"data lost to rules by {N1['difference']:.3f} STS. **RQ2:** in-domain human data closed the gap "
-        "(in-distribution data matter, not authorship). **O5:** the extractor, not label ambiguity, limits every "
-        f"system ({f3(no['safe_task_success'])} with gold intents). "
-        "Low-compute teams should invest in in-domain human data and the extractor first.")
+        f"We met O1-O5 with a {n_all}-item benchmark and tests by {n_writers + len(V3['writers'])} other "
+        "writers. **RQ1:** no; trained on mostly AI-drafted data, TF-IDF lost to the rules by "
+        f"{N1['difference']:.3f} STS. **RQ2:** yes; in-domain human data closed the gap (in-distribution "
+        "data matter; authorship was not isolated). The extractor, not label ambiguity, limits every "
+        "system, so teams should fix it and collect in-domain data first. Next: calendar bookings for "
+        "project managers.")
 
     # References ----------------------------------------------------------------------------------
     R.h1("References")
@@ -1105,7 +1101,8 @@ def build(commit: str, branch: str) -> Report:
     require(abs(gs["S1-v1.1"]["sts"] - v3s["S1-v1.1"]["sts"]) < 1e-9, "same S1 v1.1 score in both v3 result files")
     R.table("Safe Task Success of the extension systems on the three locked sets, with the numeric format "
             "each GPU model ran in, or CPU (S4: primary setting, 6 examples with prior calibration; S5/S6 fitted after "
-            "both evaluations, exploratory). ¹S9 uses core v1.1, whose fix was drawn from the test errors. "
+            "both evaluations, exploratory; the registered v3 S6 runs of Table 3 were trained on a Kaggle T4). "
+            "¹S9 uses core v1.1, whose fix was drawn from the test errors. "
             "v3: core v1.1; the GPU rows were frozen before labelling (amendments A5, A7), descriptive.",
             ["System", "Format", "Locked test (120)", "Natural (238)", f"v3 ({v3_n})"], ext,
             widths=[5.0, 1.7, 3.4, 3.4, 2.5])
