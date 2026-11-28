@@ -60,6 +60,7 @@ V3 = load("results/v3/evaluation.json")          # protocol v3, gate G5 (registe
 V3G = load("results/v3/evaluation_gpu.json")     # protocol v3 GPU systems (descriptive, amendment A7)
 C12 = load("results/posthoc/core_v12.json")      # post hoc: core v1.2 extractor fixes (scripts/posthoc_core_v12.py)
 CA = load("results/posthoc/ceiling_ambiguity.json")  # post hoc: ceiling on agreed vs disagreed items (scripts/posthoc_ceiling_ambiguity.py)
+LT = load("results/posthoc/learned_text.json")   # post hoc: learned reminder-text tagger (scripts/posthoc_learned_text.py)
 AGREE_V3 = load("results/v3/agreement.json")
 V3_MAN = load("data/v3/manifest.json")
 # S7's natural-set score is the per-item mean over three seeds; the generated table holds it at full
@@ -473,7 +474,8 @@ class Report:
                 mar = OxmlElement("w:tcMar")
                 for side in ("top", "bottom"):
                     m = OxmlElement(f"w:{side}")
-                    m.set(qn("w:w"), "15")
+                    # the last row gets 6 pt below it, so text after a table does not touch its rule
+                    m.set(qn("w:w"), "120" if side == "bottom" and ri == len(rows) else "15")
                     m.set(qn("w:type"), "dxa")
                     mar.append(m)
                 for side in ("left", "right"):
@@ -724,24 +726,37 @@ def build(commit: str, branch: str) -> Report:
             "core v1.2 raises every v3 system, interval above zero")
     c12_lo, c12_hi = min(r["difference"] for r in c12v.values()), max(r["difference"] for r in c12v.values())
 
+    # post hoc learned reminder-text tagger: its baseline is the registered oracle v1.1, and the
+    # variant with core v1.1's word lists changes no score
+    lt, lt_rules = LT["runs"]["learned"], LT["runs"]["learned + rules"]
+    lt_hv, lt_dv, lt_dn = lt["natural (human) -> v3"], lt["drafted + author -> v3"], lt["drafted + author -> natural"]
+    require(abs(lt_hv["oracle_rules_sts"] - v3_or11) < 5e-4 and abs(lt_dn["oracle_rules_sts"] - nat_or11) < 5e-4
+            and lt_hv["n"] == v3_n and lt_dn["n"] == n_conf
+            and all(lt[k][f] == lt_rules[k][f] for k in lt for f in ("oracle_learned_sts", "text_learned"))
+            and LT["v3_families_shared_with_natural"] == V3["families"]
+            and lt_hv["ci"]["low"] > 0 and lt_dv["p_value"] > 0.05,
+            "learned tagger: v1.1 baselines, rule lists change nothing, v3 shares all cards with the natural set")
+
     R.title("ATHAR Chat: Safe Tool Routing for Egyptian Arabic", "Amina Yousef")
 
     R.h1("Abstract")
     R.para(
-        "When a project manager asks an assistant in Egyptian Arabic for a reminder or alarm, the "
-        "assistant must execute the request (ACT), ask for missing details (CLARIFY) or decline it "
-        f"(ABSTAIN). We built a {n_all}-request Egyptian Arabic benchmark and compared keyword rules with "
-        "TF-IDF logistic-regression intent classifiers inside one shared pipeline, scored by Safe Task "
-        "Success (STS: right decision and right arguments). "
-        f"On {n_conf} messages from {n_writers} new writers, the rules won clearly (STS "
+        "Asked in Egyptian Arabic for a reminder or alarm, an assistant "
+        "must execute (ACT), ask for missing details (CLARIFY) or decline "
+        f"(ABSTAIN). We built a {n_all}-request benchmark and compared keyword rules with "
+        "TF-IDF intent classifiers in one shared pipeline, scored by Safe Task "
+        "Success (STS: right decision and arguments). "
+        f"On {n_conf} messages from {n_writers} new writers, the rules won (STS "
         f"{f3(n1['safe_task_success'])} vs {f3(n2['safe_task_success'])}, Holm p = "
         f"{tests['N1 S1 vs S2']['p_holm']:.4f}). In a pre-registered test on {v3_n} messages from "
         f"{len(V3['writers'])} further writers, adding in-domain human messages raised TF-IDF by "
-        f"{signed(v3a['difference'])} and MARBERTv2 by {signed(v3b['difference'])} STS (Holm p ≤ "
-        f"{max(v3a['p_holm'], v3b['p_holm']):.3f}) and TF-IDF then matched the rules ({v3_s111:.3f} each); "
-        "as these messages share the test's scenarios, this shows the value of in-distribution data, not "
-        "of human authorship. With gold intents STS is only "
-        f"{f3(no['safe_task_success'])}: the shared extractor limits every system; none is deployable.")
+        f"{signed(v3a['difference'])} and MARBERTv2 by {signed(v3b['difference'])} (Holm p ≤ "
+        f"{max(v3a['p_holm'], v3b['p_holm']):.3f}); TF-IDF then matched the rules ({v3_s111:.3f}). "
+        "As these share the test's scenarios, this shows the value of in-distribution data, not "
+        "of authorship. With gold intents STS is only "
+        f"{f3(no['safe_task_success'])}: the hand-written extractor limits every system; a reminder-text "
+        f"tagger learned from {lt_hv['training']['messages']} human messages raised this ceiling on v3 by "
+        f"{lt_hv['difference']:.3f} (exploratory).")
 
     # 1 ------------------------------------------------------------------------------------------
     R.h1("1. Motivation and objectives")
@@ -768,11 +783,11 @@ def build(commit: str, branch: str) -> Report:
                 (f"{REPO_URL}/tree/{commit}", commit),
                 "; this PDF is built from it.")
     blob = f"{REPO_URL}/blob/{commit}/"
-    R.link_para("**Data:** ", (blob + "data/athar.jsonl", "data/athar.jsonl"),
-                f" ({n_all} items; splits ", (blob + "data/splits/manifest.json", "data/splits/manifest.json"),
-                "), ", (blob + "data/natural/natural.jsonl", "data/natural/natural.jsonl"),
-                f" ({n_nat}), `data/v3/manifest.json` (texts private), data card and guides (`docs/`); consent covers this project, no public "
-                "licence yet.",
+    R.link_para(f"**Data:** the {n_all}-item benchmark is in ", (blob + "data/athar.jsonl", "data/athar.jsonl"),
+                " with its splits in ", (blob + "data/splits/manifest.json", "data/splits/manifest.json"),
+                f"; the natural set ({n_nat}) is in ", (blob + "data/natural/natural.jsonl", "data/natural/natural.jsonl"),
+                " and v3 in `data/v3/manifest.json` (texts private); data card and guides are in `docs/`; "
+                "consent covers this project, no public licence yet.",
                 align=WD_ALIGN_PARAGRAPH.JUSTIFY)
     # S7 adapters published as a GitHub release; the downloaded files were checked against these
     # hashes (recorded at the freeze in docs/jais3.md and in the stored S7 results)
@@ -782,7 +797,7 @@ def build(commit: str, branch: str) -> Report:
     require(all(h in jais3_doc for h in s7_hashes), "S7 release hashes equal those recorded at the freeze")
     R.link_para(f"**Code, models, outputs:** package `athar` with {n_tests} tests and locked dependencies "
                 "(`uv.lock`); frozen classifiers (`models/`, `models_v2/`), stored predictions (`results/`), "
-                "pinned Hugging Face models (Table 13), a Streamlit demo (`app/`) and the technical report "
+                "pinned Hugging Face models (Table 14), a Streamlit demo (`app/`) and the technical report "
                 "(`docs/report.md`); S7 adapters: release ",
                 (f"{REPO_URL}/releases/tag/s7-adapters", "s7-adapters"),
                 " (hash-checked); S6 weights not stored.",
@@ -792,8 +807,8 @@ def build(commit: str, branch: str) -> Report:
     R.h1("3. Methods and implementation")
     R.h2("3.1 Task contract and metric")
     R.para(
-        "The simulated tools are `create_reminder(datetime, reminder_text)` and `create_alarm(datetime)`; "
-        "each request has a sending time. The contract resolves explicit dates, today/tomorrow, "
+        "Each request has a sending time and may call one of two simulated tools, "
+        "`create_reminder(datetime, reminder_text)` or `create_alarm(datetime)`. The contract resolves explicit dates, today/tomorrow, "
         "weekdays with «الجاي» (next), clock times and period words such as «الصبح». **ACT** needs every "
         "argument resolved to one future instant; **CLARIFY** names the missing slots (date, time, "
         "AM/PM, past time, reminder text); **ABSTAIN** covers deletion, modification, recurrence, other "
@@ -831,8 +846,9 @@ def build(commit: str, branch: str) -> Report:
         f"{AGREE_NAT['route']['kappa']:.3f}) but chose the same slots on only "
         f"{AGREE_NAT['targets_exact_set']['agreement']:.0%} of {AGREE_NAT['targets_exact_set']['n']} "
         f"CLARIFY items and the same instant on {AGREE_NAT['datetime_same_instant']['agreement']:.0%} "
-        f"of {AGREE_NAT['datetime_same_instant']['n']} ACT items; the author adjudicated the "
-        f"{load('results/natural/adjudication.json')['adjudicated']} disagreements alone. "
+        f"of {AGREE_NAT['datetime_same_instant']['n']} ACT items; the author, who also wrote S1's lexicon, "
+        f"adjudicated the {load('results/natural/adjudication.json')['adjudicated']} disagreements alone "
+        "(see Table 7). "
         f"**v3** is the other {len(V3['writers'])} writers' {v3_n} "
         f"messages, labelled after its systems were frozen; {v3_adj} were adjudicated jointly (route κ = "
         f"{AGREE_V3['route']['kappa']:.3f}, same slots {AGREE_V3['targets_exact_set']['agreement']:.0%}).")
@@ -845,19 +861,21 @@ def build(commit: str, branch: str) -> Report:
         "supported time expressions; the reminder text is what remains once request framing, "
         "times and fillers are removed. The policy sends an unsupported intent to ABSTAIN, a supported "
         "one with all slots to ACT, otherwise to CLARIFY, so STS differences come from intent. "
-        "Intent is isolated because out-of-scope detection is hard [6]; lexical models fit laptop CPUs.")
+        "Intent is isolated because out-of-scope detection is hard [6]; lexical models fit laptop CPUs. "
+        "Extraction is rule-based because resolving a time is date arithmetic and no span-labelled data "
+        "existed at the freeze (a learned tagger is tested in Finding 3).")
     R.para(
         "**Systems compared.** **S1:** hand-written trigger and out-of-scope lexicons, untrained. **S2:** word TF-IDF "
         "with class-balanced logistic regression [4]; **S3:** S2 plus character 2-4-grams for spelling "
         "variation; both fitted on train, with C and n-grams chosen by dev intent macro-F1 "
-        f"(S2: C = {FREEZE_C['S2']:g}; S3: C = {FREEZE_C['S3']:g}). **Oracle:** gold intents, the "
-        "ceiling. **Core versions:** the shared normalizer, extractor and policy form the *core*, frozen "
+        f"(S2: C = {FREEZE_C['S2']:g}; S3: C = {FREEZE_C['S3']:g}). **Oracle:** gold intents."
+        " **Core versions:** the shared normalizer, extractor and policy form the *core*, frozen "
         "as v1.0; v1.1 adds one extractor fix drawn from the test errors (test oracle "
         f"{f3(o['safe_task_success'])} → {C12['locked test']['oracle']['sts_v1.1']:.3f}), so the test then "
-        "counts as development data and v1.1 is scored only on new writers. **Extensions** (Appendix A): "
-        "S4-S7 replace only the intent recognizer (LLM prompts, embeddings, QLoRA [3]; **S6:** MARBERTv2 "
-        "[2] fine-tuned on the three intents, 5 seeds); **S8:** Jais-3-7B [12] does the whole "
-        "task by tool calling; **S9:** the policy checks S8's call (else S1's intent).")
+        "becomes development data and v1.1 is scored only on new writers. **Extensions** (Appendix A): "
+        "S4-S7 replace only the intent recognizer (LLM prompts, embeddings, QLoRA [3]; **S6:** fine-tuned "
+        "MARBERTv2 [2]); **S8:** Jais-3-7B [12] does the whole "
+        "task by tool calling; **S9:** the policy checks S8's call (else S1).")
 
     require("split and frozen 2026-10-12" in (ROOT / "docs/data_card.md").read_text(encoding="utf-8")
             and "Recruiting native contributors was not possible in the time available"
@@ -876,13 +894,13 @@ def build(commit: str, branch: str) -> Report:
     R.para(
         "**Training data:** the proposal planned only hand-written items, but native writers could not be "
         "recruited in time for the freeze (12 October); 19 of the first Google Form's 21 responses "
-        f"shared one pattern, suggesting AI-generated answers, and were discarded. The author's {n_all - n_drafted} requests, the only human texts, "
+        f"shared one pattern, likely AI-generated, and were discarded. The author's {n_all - n_drafted} requests, the only human texts, "
         f"supplied the all-human test ({len(ITEMS['test'])}) so that no system is scored on its own training "
         f"data; {drafted('train')} of {len(ITEMS['train'])} training items were therefore AI-drafted "
-        f"(`source: assistant_draft`, never evaluated on; {n_all} items, {t1['pairs']} test pairs; planned "
+        f"(`source: assistant_draft`; {n_all} items, {t1['pairs']} test pairs; planned "
         "300, 20). Contributor messages arrived two weeks later and became two more test sets (RQ2). "
-        "**Hardware:** S1-S3, S5 and S6 (test, natural set) on a laptop CPU; S4, S7-S9 and S6 for v3 "
-        "on Kaggle T4 GPUs.")
+        "**Hardware:** S1-S3, S5 and S6 (test, natural set) on a laptop CPU; S4, S7-S9 and S6 (v3) "
+        "on Kaggle T4s.")
 
     # 4 ------------------------------------------------------------------------------------------
     R.h1("4. Evaluation and results")
@@ -890,7 +908,7 @@ def build(commit: str, branch: str) -> Report:
     R.para(
         "**Evaluation data.** All three sets are native-written and cover all routes, incomplete "
         "variants and in-domain out-of-scope requests; "
-        "most concern project management (§1), so results speak mainly to work reminders. Test intervals span about "
+        "most concern project management (§1). Test intervals span about "
         "±0.09 STS, so the new-writer sets carry the conclusions. "
         "**Training data** is relevant (same tools, routes and contract) but "
         f"inadequate in quality and coverage: "
@@ -918,10 +936,10 @@ def build(commit: str, branch: str) -> Report:
     R.para(
         "**Finding 1: rules beat drafted-data classifiers.** On new writers (Table 2) "
         f"rules lead TF-IDF by {signed(N1['difference'])} {ci(N1['ci'])} STS (Holm p = "
-        f"{N1['p_holm']:.4f}; 13 of 17 writers; also under each annotator's labels, Table 7). The "
-        f"author's test agrees (Table 2; Holm p ≤ {max(h1_['p_holm'], h2_['p_holm']):.3f}) but alone is "
-        "inconclusive (Holm p 0.055-0.526 if items sharing a sentence frame count as dependent, Table 6). "
-        "TF-IDF's extra test failures are all intent errors: wrong tool or scope (Tables 10, 11).")
+        f"{N1['p_holm']:.4f}; 13 of 17 writers; Table 7). The "
+        f"author's test agrees (Holm p ≤ {max(h1_['p_holm'], h2_['p_holm']):.3f}) but alone is "
+        "inconclusive (Holm p 0.055-0.526 clustering by sentence frame, Table 6). "
+        "TF-IDF's extra test failures are all intent errors (Tables 10, 11).")
     # Tables 2 (locked test) and natural set share one table: same columns, one caption and header
     def main_row(name: str, m: dict, c: dict) -> list[str]:
         r = m["success_by_gold_route"]
@@ -984,8 +1002,8 @@ def build(commit: str, branch: str) -> Report:
         f"({signed(v3_ctrl['difference'])}, p = {v3_ctrl['p_value']:.3f}, descriptive). Retrained "
         f"S3 equals the rules ({signed(v3_s3r['difference'])} {ci(v3_s3r['ci'])}); retrained MARBERTv2 "
         f"exceeds them ({signed(v3_s6r['difference'])} {ci(v3_s6r['ci'])}, estimate only). "
-        "**Limitation:** the human data share v3's scenario cards and no drafted set does, so it "
-        "shows that in-distribution data help, not that authorship does.")
+        "**Limitation:** only the human data share v3's scenario cards, so this shows that "
+        "in-distribution data help, not that authorship does.")
     require(all((1 - orc) / (1 - s1) > 0.5 for orc, s1 in (
         (o["safe_task_success"], t1["safe_task_success"]),
         (no["safe_task_success"], n1["safe_task_success"]),
@@ -1014,9 +1032,15 @@ def build(commit: str, branch: str) -> Report:
         f"natural requests the extractor gets {or_act_ok} fully right; {or_act[2]} fail on wording alone, "
         f"{or_act[1]} on the instant, {or_act[3]} are re-asked. Label ambiguity explains little: "
         f"{ca_or['agreed']['failures']} of the oracle's {ca_or['failures']} natural failures fall on the "
-        f"{ca_or['agreed']['n']} items both annotators labelled identically. Four post hoc extractor fixes "
-        "from natural-set failures (e.g. emphasis «ضروري») raised every system on the unseen v3 set by "
-        f"{c12_lo:.3f}-{c12_hi:.3f} STS (core v1.2, Table 12).")
+        f"{ca_or['agreed']['n']} items both annotators labelled identically. Four post hoc rule fixes "
+        "raised every system on unseen v3 by "
+        f"{c12_lo:.3f}-{c12_hi:.3f} (core v1.2, Table 12). A learned "
+        "word tagger (logistic regression, no word lists, Table 13) trained on "
+        f"{lt_hv['training']['messages']} natural-set reminders got "
+        f"{lt_hv['text_learned']['correct']} of v3's {lt_hv['text_learned']['n']} complete reminders' text right "
+        f"(rules: {lt_hv['text_rules']['correct']}), raising the v3 oracle by "
+        f"{signed(lt_hv['difference'])} {ci(lt_hv['ci'])} (p = {lt_hv['p_value']:.3f}, exploratory); "
+        f"trained on drafted data, {signed(lt_dv['difference'])}.")
 
     # 5 ------------------------------------------------------------------------------------------
     R.h1("5. Conclusion")
@@ -1024,9 +1048,8 @@ def build(commit: str, branch: str) -> Report:
         f"We met O1-O5 with a {n_all}-item benchmark and tests by {n_writers + len(V3['writers'])} other "
         "writers. **RQ1:** no; trained on mostly AI-drafted data, TF-IDF lost to the rules by "
         f"{N1['difference']:.3f} STS. **RQ2:** yes; in-domain human data closed the gap (in-distribution "
-        "data matter; authorship was not isolated). The extractor, not label ambiguity, limits every "
-        "system, so teams should fix it and collect in-domain data first. Next: calendar bookings for "
-        "project managers.")
+        "data; authorship not isolated). The extractor, not label ambiguity, limits every "
+        "system; learning it from in-domain data is the next step.")
 
     # References ----------------------------------------------------------------------------------
     R.h1("References")
@@ -1273,6 +1296,27 @@ def build(commit: str, branch: str) -> Report:
             ["Set", "System", "Core v1.1", "Core v1.2", "Δ [95% CI]", "p", "Fixed / broken"],
             c12rows, widths=[2.4, 3.9, 1.5, 1.5, 3.7, 1.4, 1.6])
 
+    ltrows = []
+    for key, label in (("drafted + author -> natural", "drafted + author → natural"),
+                       ("drafted + author -> v3", "drafted + author → v3"),
+                       ("natural (human) -> v3", "natural (human) → v3")):
+        r = lt[key]
+        ltrows.append([label, str(r["training"]["messages"]),
+                       f"{r['text_rules']['correct']} / {r['text_learned']['correct']} of {r['text_rules']['n']}",
+                       f"{r['oracle_rules_sts']:.3f} → {r['oracle_learned_sts']:.3f}",
+                       f"{signed(r['difference'])} {ci(r['ci'])}",
+                       f"{r['p_value']:.3f}", f"{r['items_gained']} / {r['items_lost']}"])
+    R.table("Post hoc: learned reminder-text tagger (`scripts/posthoc_learned_text.py`) in place of the "
+            "hand-written framing and filler lists, with gold intents; times are still resolved by core "
+            "v1.1. Per-word logistic regression (C = 1, threshold 0.5, not tuned) on the word, its "
+            "neighbours, affixes, position and the time parser's spans; trained on the reminder messages "
+            "of each training set. Text: gold-ACT reminders with the right reminder text, rules / learned. "
+            "Paired family-level test against the rule extractor, unadjusted p. All v3 scenario cards also "
+            "appear in the natural set (as in Finding 2). Adding core v1.1's word lists as a feature and "
+            "output filter changed no score.",
+            ["Training → set", "Train msgs", "Text right", "Oracle STS", "Δ [95% CI]", "p", "Gained / lost"],
+            ltrows, widths=[4.4, 1.3, 2.0, 2.4, 3.4, 1.1, 1.4])
+
     R.h1("Appendix C. Reproducing the results")
     R.para("All commands run from the repository root on a CPU; T2 stands for Table 2. The five "
            "analysis scripts (T2-T10) rebuild their tables from the stored outputs and reproduce the "
@@ -1291,6 +1335,7 @@ def build(commit: str, branch: str) -> Report:
         "uv run --extra neural python scripts/posthoc_encoders_human.py encoders # T4",
         "uv run --extra neural python scripts/posthoc_encoders_human.py human   # T5",
         "uv run python scripts/posthoc_core_v12.py   # T12 (needs the private v3 texts)",
+        "uv run python scripts/posthoc_learned_text.py  # T13 (needs the private v3 texts)",
         "uv run --with openpyxl python scripts/posthoc_ceiling_ambiguity.py     # 4.2 (private sheets)",
         "uv run --extra ui streamlit run app/streamlit_app.py        # demo",
     ])
@@ -1314,7 +1359,9 @@ def build(commit: str, branch: str) -> Report:
         "of the natural set, the assistant checked the author's final labels against the written "
         "guide and flagged 24 that broke a rule; the author approved each correction. The core v1.2 "
         "fixes were written with the assistant from the natural-set oracle failures, without reading "
-        "the v3 texts; the v3 scores were computed once and only in aggregate. No message was "
+        "the v3 texts; the v3 scores were computed once and only in aggregate. The learned "
+        "reminder-text tagger (Table 13) was written with the assistant with its settings fixed in "
+        "advance and nothing tuned on an evaluation set; only aggregates were read on v3. No message was "
         "labelled from scratch by an AI system. The author designed the study, wrote the test requests "
         "and their labels, recruited the contributors, ran the experiments and is responsible for every "
         "claim in this report.")

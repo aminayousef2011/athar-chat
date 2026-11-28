@@ -1,0 +1,201 @@
+{
+ "analysis": "post hoc, exploratory; learned reminder-text tagger vs the rule extractor (core v1.1), gold intents; fixed settings, nothing tuned on an evaluation set",
+ "settings": {
+  "classifier": "logistic regression over window features",
+  "C": 1.0,
+  "threshold": 0.5
+ },
+ "v3_families_shared_with_natural": 67,
+ "runs": {
+  "learned": {
+   "drafted + author -> natural": {
+    "training": {
+     "messages": 215,
+     "words": 1966,
+     "content_words": 959
+    },
+    "n": 238,
+    "oracle_rules_sts": 0.79,
+    "oracle_learned_sts": 0.824,
+    "difference": 0.034,
+    "ci": {
+     "estimate": 0.03361344537815126,
+     "low": 0.01195219123505976,
+     "high": 0.06140350877192982,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "p_value": 0.014698530146985302,
+    "items_gained": 8,
+    "items_lost": 0,
+    "text_rules": {
+     "n": 49,
+     "correct": 25,
+     "accuracy": 0.51
+    },
+    "text_learned": {
+     "n": 49,
+     "correct": 32,
+     "accuracy": 0.653
+    }
+   },
+   "drafted + author -> v3": {
+    "training": {
+     "messages": 215,
+     "words": 1966,
+     "content_words": 959
+    },
+    "n": 236,
+    "oracle_rules_sts": 0.669,
+    "oracle_learned_sts": 0.674,
+    "difference": 0.004,
+    "ci": {
+     "estimate": 0.00423728813559322,
+     "low": 0.0,
+     "high": 0.013953488372093023,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "p_value": 1.0,
+    "items_gained": 2,
+    "items_lost": 1,
+    "text_rules": {
+     "n": 52,
+     "correct": 29,
+     "accuracy": 0.558
+    },
+    "text_learned": {
+     "n": 52,
+     "correct": 32,
+     "accuracy": 0.615
+    }
+   },
+   "natural (human) -> v3": {
+    "training": {
+     "messages": 61,
+     "words": 660,
+     "content_words": 264
+    },
+    "n": 236,
+    "oracle_rules_sts": 0.669,
+    "oracle_learned_sts": 0.708,
+    "difference": 0.038,
+    "ci": {
+     "estimate": 0.038135593220338986,
+     "low": 0.0125,
+     "high": 0.06696428571428571,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "p_value": 0.0230976902309769,
+    "items_gained": 11,
+    "items_lost": 2,
+    "text_rules": {
+     "n": 52,
+     "correct": 29,
+     "accuracy": 0.558
+    },
+    "text_learned": {
+     "n": 52,
+     "correct": 40,
+     "accuracy": 0.769
+    }
+   }
+  },
+  "learned + rules": {
+   "drafted + author -> natural": {
+    "training": {
+     "messages": 215,
+     "words": 1966,
+     "content_words": 959
+    },
+    "n": 238,
+    "oracle_rules_sts": 0.79,
+    "oracle_learned_sts": 0.824,
+    "difference": 0.034,
+    "ci": {
+     "estimate": 0.03361344537815126,
+     "low": 0.01195219123505976,
+     "high": 0.06140350877192982,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "p_value": 0.014698530146985302,
+    "items_gained": 8,
+    "items_lost": 0,
+    "text_rules": {
+     "n": 49,
+     "correct": 25,
+     "accuracy": 0.51
+    },
+    "text_learned": {
+     "n": 49,
+     "correct": 32,
+     "accuracy": 0.653
+    }
+   },
+   "drafted + author -> v3": {
+    "training": {
+     "messages": 215,
+     "words": 1966,
+     "content_words": 959
+    },
+    "n": 236,
+    "oracle_rules_sts": 0.669,
+    "oracle_learned_sts": 0.674,
+    "difference": 0.004,
+    "ci": {
+     "estimate": 0.00423728813559322,
+     "low": 0.0,
+     "high": 0.013953488372093023,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "p_value": 1.0,
+    "items_gained": 2,
+    "items_lost": 1,
+    "text_rules": {
+     "n": 52,
+     "correct": 29,
+     "accuracy": 0.558
+    },
+    "text_learned": {
+     "n": 52,
+     "correct": 32,
+     "accuracy": 0.615
+    }
+   },
+   "natural (human) -> v3": {
+    "training": {
+     "messages": 61,
+     "words": 660,
+     "content_words": 264
+    },
+    "n": 236,
+    "oracle_rules_sts": 0.669,
+    "oracle_learned_sts": 0.708,
+    "difference": 0.038,
+    "ci": {
+     "estimate": 0.038135593220338986,
+     "low": 0.0125,
+     "high": 0.06696428571428571,
+     "level": 0.95,
+     "resamples": 10000
+    },
+    "p_value": 0.0230976902309769,
+    "items_gained": 11,
+    "items_lost": 2,
+    "text_rules": {
+     "n": 52,
+     "correct": 29,
+     "accuracy": 0.558
+    },
+    "text_learned": {
+     "n": 52,
+     "correct": 40,
+     "accuracy": 0.769
+    }
+   }
+  }
+ }
+}

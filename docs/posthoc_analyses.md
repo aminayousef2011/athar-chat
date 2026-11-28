@@ -91,3 +91,28 @@ significantly on either set.
 **Consequence for the report.** The conclusion no longer calls the rules the *safer* choice; it
 calls them the practical one at low compute (level with the best LLMs, no GPU, no training data).
 This analysis is post hoc and was chosen after the results were known; the report labels it so.
+
+## 2026-11-28: a learned reminder-text extractor (final-report review)
+
+**Question.** Finding 3 shows that the hand-written extractor limits every system, but no learned
+alternative was tried. Can a reminder-text extractor learned from labelled messages replace the
+hand-written framing and filler lists?
+
+**Method.** `scripts/posthoc_learned_text.py` → `results/posthoc/learned_text.json` (tests:
+`tests/test_learned_text.py`). Each word of the normalized message is labelled *content* when it
+belongs to the gold reminder text; a per-word logistic regression (C = 1, threshold 0.5, fixed in
+advance, not tuned) over the word, its neighbours, affixes, position and core v1.1's time spans
+predicts the label. Times are still resolved by core v1.1, and the policy and scoring are unchanged
+(gold and predicted texts are both canonicalized, as for every system). Trained on the reminder
+messages of train + dev (215, mostly AI-drafted) or of the natural set (61 human messages);
+evaluated with gold intents against oracle v1.1, family-level paired test (unadjusted p).
+
+**Result.** Drafted + author → natural: text right on 32 vs 25 of 49 complete reminders, oracle
+0.790 → 0.824 (+0.034 [0.012, 0.061], p 0.015). Drafted + author → v3: 32 vs 29 of 52, +0.004
+(n.s.). Natural (human) → v3: 40 vs 29 of 52, oracle 0.669 → 0.708 (+0.038 [0.013, 0.067], p 0.023).
+Adding core v1.1's word lists as a feature and output filter changed no score. All v3 scenario cards
+also occur in the natural set, so the human-trained gain is in-distribution, as in Finding 2.
+
+**Consequence for the report.** Finding 3, the abstract and the conclusion report the result as
+exploratory (Table 13); §3.3 states why time resolution stays rule-based. Only aggregates of v3
+were read.
