@@ -691,7 +691,6 @@ def build(commit: str, branch: str) -> Report:
         require(row is not None and f"{rec['unsafe_execution_rate']:.3f}" == row.group(1),
                 f"post hoc unsafe rate of {label} equals results/natural/tables.md")
     len_s1 = SENS["locked gold, lenient reminder text"]["systems"]["S1"]
-    len_or = SENS["locked gold, lenient reminder text"]["systems"]["oracle"]
     lenient_items = round(act_fail[2])  # S1's text-only ACT failures on the locked gold
     require(lenient_items > 0 and abs(n1["safe_task_success"] + lenient_items / n_conf - len_s1) < 5e-4,
             "S1 natural items rescued by the lenient reminder-text rule")
@@ -723,7 +722,6 @@ def build(commit: str, branch: str) -> Report:
             "core v1.2 analysis starts from the registered core v1.1 scores")
     require(all(r["difference"] > 0 and r["ci"]["low"] > 0 and r["p_value"] < 0.05 for r in c12v.values()),
             "core v1.2 raises every v3 system, interval above zero")
-    c12o = c12v["oracle"]
     c12_lo, c12_hi = min(r["difference"] for r in c12v.values()), max(r["difference"] for r in c12v.values())
 
     R.title("ATHAR Chat: Safe Tool Routing for Egyptian Arabic", "Amina Yousef")
@@ -737,11 +735,12 @@ def build(commit: str, branch: str) -> Report:
         "Success (STS: right decision and right arguments). "
         f"On {n_conf} messages from {n_writers} new writers, the rules won clearly (STS "
         f"{f3(n1['safe_task_success'])} vs {f3(n2['safe_task_success'])}, Holm p = "
-        f"{tests['N1 S1 vs S2']['p_holm']:.4f}). The main cause was the mostly AI-drafted training data: "
-        f"in a pre-registered test on {v3_n} messages from {len(V3['writers'])} further writers, adding human "
-        f"messages raised TF-IDF by {signed(v3a['difference'])} and MARBERTv2 "
-        f"by {signed(v3b['difference'])} STS (Holm p ≤ {max(v3a['p_holm'], v3b['p_holm']):.3f}), and "
-        f"TF-IDF then matched the rules ({v3_s111:.3f} each). With gold intents STS is only "
+        f"{tests['N1 S1 vs S2']['p_holm']:.4f}). In a pre-registered test on {v3_n} messages from "
+        f"{len(V3['writers'])} further writers, adding in-domain human messages raised TF-IDF by "
+        f"{signed(v3a['difference'])} and MARBERTv2 by {signed(v3b['difference'])} STS (Holm p ≤ "
+        f"{max(v3a['p_holm'], v3b['p_holm']):.3f}) and TF-IDF then matched the rules ({v3_s111:.3f} each); "
+        "as these messages share the test's scenarios, this shows the value of in-distribution data, not "
+        "of human authorship. With gold intents STS is only "
         f"{f3(no['safe_task_success'])}: the shared extractor limits every system; none is deployable.")
 
     # 1 ------------------------------------------------------------------------------------------
@@ -856,8 +855,8 @@ def build(commit: str, branch: str) -> Report:
         "as v1.0; v1.1 adds one extractor fix drawn from the test errors (test oracle "
         f"{f3(o['safe_task_success'])} → {C12['locked test']['oracle']['sts_v1.1']:.3f}), so the test then "
         "counts as development data and v1.1 is scored only on new writers. **Extensions** (Appendix A): "
-        "S4-S7 replace only the intent recognizer (LLM prompts, embeddings, MARBERTv2 [2] as **S6**, "
-        "QLoRA [3]); **S8:** Jais-3-7B [12] does the whole "
+        "S4-S7 replace only the intent recognizer (LLM prompts, embeddings, QLoRA [3]; **S6:** MARBERTv2 "
+        "[2] fine-tuned on the three intents, 5 seeds); **S8:** Jais-3-7B [12] does the whole "
         "task by tool calling; **S9:** the policy checks S8's call (else S1's intent).")
 
     require("split and frozen 2026-10-12" in (ROOT / "docs/data_card.md").read_text(encoding="utf-8")
@@ -987,7 +986,6 @@ def build(commit: str, branch: str) -> Report:
         f"exceeds them ({signed(v3_s6r['difference'])} {ci(v3_s6r['ci'])}, estimate only). "
         "**Limitation:** the human data share v3's scenario cards and no drafted set does, so it "
         "shows that in-distribution data help, not that authorship does.")
-    agree_slots = AGREE_NAT["targets_exact_set"]["agreement"]
     require(all((1 - orc) / (1 - s1) > 0.5 for orc, s1 in (
         (o["safe_task_success"], t1["safe_task_success"]),
         (no["safe_task_success"], n1["safe_task_success"]),
@@ -997,7 +995,6 @@ def build(commit: str, branch: str) -> Report:
                                                  sens_md, re.M).groups()]  # wrong tool, instant, text only, not executed
     n_act = sum(i["route"] == "ACT" for i in NAT_CONF)
     or_act_ok = round(no["success_by_gold_route"]["ACT"] * n_act)
-    or_lenient = SENS["locked gold, lenient reminder text"]["systems"]["oracle"]
     require(or_act[0] == 0 and or_act_ok + sum(or_act) == n_act,
             "oracle on gold-ACT natural items: full successes + wording + instant + asked = all")
     ca_or = CA["systems"]["oracle"]
