@@ -7,7 +7,7 @@ Amina Yousef
 ## Abstract
 
 
-When a project manager asks an assistant in Egyptian Arabic for a reminder or alarm, the assistant must execute the request (ACT), ask for missing details (CLARIFY) or decline it (ABSTAIN). We built a 458-request Egyptian Arabic benchmark and compared keyword rules with TF-IDF logistic-regression intent classifiers inside one shared pipeline, scored by Safe Task Success (STS: right decision and right arguments). On 238 messages from 17 new writers, the rules won clearly (STS 0.718 vs 0.513, Holm p = 0.0003). The main cause was the mostly AI-drafted training data: in a pre-registered test on 236 messages from 17 further writers, adding human messages raised TF-IDF by +0.089 and MARBERTv2 by +0.088 STS (Holm p ≤ 0.002), and TF-IDF then matched the rules (0.589 each). With gold intents STS is only 0.786: the shared extractor limits every system; none is deployable.
+When a project manager asks an assistant in Egyptian Arabic for a reminder or alarm, the assistant must execute the request (ACT), ask for missing details (CLARIFY) or decline it (ABSTAIN). We built a 458-request Egyptian Arabic benchmark and compared keyword rules with TF-IDF logistic-regression intent classifiers inside one shared pipeline, scored by Safe Task Success (STS: right decision and right arguments). On 238 messages from 17 new writers, the rules won clearly (STS 0.718 vs 0.513, Holm p = 0.0003). In a pre-registered test on 236 messages from 17 further writers, adding in-domain human messages raised TF-IDF by +0.089 and MARBERTv2 by +0.088 STS (Holm p ≤ 0.002) and TF-IDF then matched the rules (0.589 each); as these messages share the test's scenarios, this shows the value of in-distribution data, not of human authorship. With gold intents STS is only 0.786: the shared extractor limits every system; none is deployable.
 
 
 ## 1. Motivation and objectives
@@ -22,7 +22,7 @@ Research questions. (RQ1) When all systems share the same argument extractor and
 ## 2. Deliverables
 
 
-• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit bbb87c2c9bcc64a44249a31c4d8d561436a671fc; this PDF is built from it.
+• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit f339e3192e40eef4631919d0644247bd48ea6931; this PDF is built from it.
 
 
 • Data: data/athar.jsonl (458 items; splits data/splits/manifest.json), data/natural/natural.jsonl (247), data/v3/manifest.json (texts private), data card and guides (docs/); consent covers this project, no public licence yet.
@@ -61,7 +61,7 @@ The author wrote the test from scenario cards; a second native speaker labelled 
 Shared pipeline: message → normalizer → intent recognizer (the only part that differs) → extractor → policy → route. The normalizer unifies alef, ya and taa marbuta variants, strips diacritics and elongation and maps Arabic-Indic digits; a pattern-based extractor parses the supported time expressions; the reminder text is what remains once request framing, times and fillers are removed. The policy sends an unsupported intent to ABSTAIN, a supported one with all slots to ACT, otherwise to CLARIFY, so STS differences come from intent. Intent is isolated because out-of-scope detection is hard [6]; lexical models fit laptop CPUs.
 
 
-Systems compared. S1: hand-written trigger and out-of-scope lexicons, untrained. S2: word TF-IDF with class-balanced logistic regression [4]; S3: S2 plus character 2-4-grams for spelling variation; both fitted on train, with C and n-grams chosen by dev intent macro-F1 (S2: C = 0.3; S3: C = 0.1). Oracle: gold intents, the ceiling. Core versions: the shared normalizer, extractor and policy form the core, frozen as v1.0; v1.1 adds one extractor fix drawn from the test errors (test oracle 0.808 → 0.967), so the test then counts as development data and v1.1 is scored only on new writers. Extensions (Appendix A): S4-S7 replace only the intent recognizer (LLM prompts, embeddings, MARBERTv2 [2] as S6, QLoRA [3]); S8: Jais-3-7B [12] does the whole task by tool calling; S9: the policy checks S8's call (else S1's intent).
+Systems compared. S1: hand-written trigger and out-of-scope lexicons, untrained. S2: word TF-IDF with class-balanced logistic regression [4]; S3: S2 plus character 2-4-grams for spelling variation; both fitted on train, with C and n-grams chosen by dev intent macro-F1 (S2: C = 0.3; S3: C = 0.1). Oracle: gold intents, the ceiling. Core versions: the shared normalizer, extractor and policy form the core, frozen as v1.0; v1.1 adds one extractor fix drawn from the test errors (test oracle 0.808 → 0.967), so the test then counts as development data and v1.1 is scored only on new writers. Extensions (Appendix A): S4-S7 replace only the intent recognizer (LLM prompts, embeddings, QLoRA [3]; S6: MARBERTv2 [2] fine-tuned on the three intents, 5 seeds); S8: Jais-3-7B [12] does the whole task by tool calling; S9: the policy checks S8's call (else S1's intent).
 
 
 ## 3.4 Changes from the proposal
