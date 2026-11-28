@@ -7,7 +7,7 @@ Amina Yousef
 ## Abstract
 
 
-When a project manager asks an assistant in Egyptian Arabic for a reminder or alarm, the assistant must execute the request (ACT), ask for missing details (CLARIFY) or decline it (ABSTAIN). We built a 458-request Egyptian Arabic benchmark and compared keyword rules with TF-IDF logistic-regression intent classifiers inside one shared pipeline, scored by Safe Task Success (STS: right decision and right arguments). On 238 messages from 17 new writers, the rules won clearly (STS 0.718 vs 0.513, Holm p = 0.0003). In a pre-registered test on 236 messages from 17 further writers, adding in-domain human messages raised TF-IDF by +0.089 and MARBERTv2 by +0.088 STS (Holm p ≤ 0.002) and TF-IDF then matched the rules (0.589 each); as these messages share the test's scenarios, this shows the value of in-distribution data, not of human authorship. With gold intents STS is only 0.786: the shared extractor limits every system; none is deployable.
+Asked in Egyptian Arabic for a reminder or alarm, an assistant must execute (ACT), ask for missing details (CLARIFY) or decline (ABSTAIN). We built a 458-request benchmark and compared keyword rules with TF-IDF intent classifiers in one shared pipeline, scored by Safe Task Success (STS: right decision and arguments). On 238 messages from 17 new writers, the rules won (STS 0.718 vs 0.513, Holm p = 0.0003). In a pre-registered test on 236 messages from 17 further writers, adding in-domain human messages raised TF-IDF by +0.089 and MARBERTv2 by +0.088 (Holm p ≤ 0.002); TF-IDF then matched the rules (0.589). As these share the test's scenarios, this shows the value of in-distribution data, not of authorship. With gold intents STS is only 0.786: the hand-written extractor limits every system; a reminder-text tagger learned from 61 human messages raised this ceiling on v3 by 0.038 (exploratory).
 
 
 ## 1. Motivation and objectives
@@ -22,13 +22,13 @@ Research questions. (RQ1) When all systems share the same argument extractor and
 ## 2. Deliverables
 
 
-• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit f339e3192e40eef4631919d0644247bd48ea6931; this PDF is built from it.
+• Repository: https://github.com/aminayousef2011/athar-chat (branch report-tier1), commit a1d4fcdcf9009a144646ec0a1c8a574af9e2d74d; this PDF is built from it.
 
 
-• Data: data/athar.jsonl (458 items; splits data/splits/manifest.json), data/natural/natural.jsonl (247), data/v3/manifest.json (texts private), data card and guides (docs/); consent covers this project, no public licence yet.
+• Data: the 458-item benchmark is in data/athar.jsonl with its splits in data/splits/manifest.json; the natural set (247) is in data/natural/natural.jsonl and v3 in data/v3/manifest.json (texts private); data card and guides are in docs/; consent covers this project, no public licence yet.
 
 
-• Code, models, outputs: package athar with 402 tests and locked dependencies (uv.lock); frozen classifiers (models/, models_v2/), stored predictions (results/), pinned Hugging Face models (Table 13), a Streamlit demo (app/) and the technical report (docs/report.md); S7 adapters: release s7-adapters (hash-checked); S6 weights not stored.
+• Code, models, outputs: package athar with 407 tests and locked dependencies (uv.lock); frozen classifiers (models/, models_v2/), stored predictions (results/), pinned Hugging Face models (Table 14), a Streamlit demo (app/) and the technical report (docs/report.md); S7 adapters: release s7-adapters (hash-checked); S6 weights not stored.
 
 
 ## 3. Methods and implementation
@@ -37,7 +37,7 @@ Research questions. (RQ1) When all systems share the same argument extractor and
 ## 3.1 Task contract and metric
 
 
-The simulated tools are create_reminder(datetime, reminder_text) and create_alarm(datetime); each request has a sending time. The contract resolves explicit dates, today/tomorrow, weekdays with «الجاي» (next), clock times and period words such as «الصبح». ACT needs every argument resolved to one future instant; CLARIFY names the missing slots (date, time, AM/PM, past time, reminder text); ABSTAIN covers deletion, modification, recurrence, other people's items, several actions and other tools. Safe Task Success counts an item only if ABSTAIN is declined, CLARIFY asks for exactly the gold slots, or ACT calls the gold tool at the gold instant with the gold reminder text (exact after normalization, request words and fillers removed); invalid outputs fail.
+Each request has a sending time and may call one of two simulated tools, create_reminder(datetime, reminder_text) or create_alarm(datetime). The contract resolves explicit dates, today/tomorrow, weekdays with «الجاي» (next), clock times and period words such as «الصبح». ACT needs every argument resolved to one future instant; CLARIFY names the missing slots (date, time, AM/PM, past time, reminder text); ABSTAIN covers deletion, modification, recurrence, other people's items, several actions and other tools. Safe Task Success counts an item only if ABSTAIN is declined, CLARIFY asks for exactly the gold slots, or ACT calls the gold tool at the gold instant with the gold reminder text (exact after normalization, request words and fillers removed); invalid outputs fail.
 
 
 ## 3.2 Data
@@ -52,22 +52,22 @@ Table 1. Datasets. Train, dev and test share no scenario family; natural and v3 
 | natural (locked) | 238 | 70 | 91 / 88 / 59 | 17 other native speakers | evaluation 2 |
 | v3 (locked) | 236 | 67 | 88 / 98 / 50 | 17 further native speakers | evaluation 3 |
 
-The author wrote the test from scenario cards; a second native speaker labelled 60 items independently (intent κ = 0.916, route κ = 1.000). For the natural set, collected after the freeze, contributors wrote without AI tools a complete and an incomplete message per test scenario; a seeded draw of two writers per scenario group (474 screened messages, 34 writers) gave 247, 238 in families unseen in train/dev. Two annotators labelled all (intent κ = 0.938, route κ = 0.913) but chose the same slots on only 65% of 91 CLARIFY items and the same instant on 72% of 85 ACT items; the author adjudicated the 66 disagreements alone. v3 is the other 17 writers' 236 messages, labelled after its systems were frozen; 20 were adjudicated jointly (route κ = 0.959, same slots 99%).
+The author wrote the test from scenario cards; a second native speaker labelled 60 items independently (intent κ = 0.916, route κ = 1.000). For the natural set, collected after the freeze, contributors wrote without AI tools a complete and an incomplete message per test scenario; a seeded draw of two writers per scenario group (474 screened messages, 34 writers) gave 247, 238 in families unseen in train/dev. Two annotators labelled all (intent κ = 0.938, route κ = 0.913) but chose the same slots on only 65% of 91 CLARIFY items and the same instant on 72% of 85 ACT items; the author, who also wrote S1's lexicon, adjudicated the 66 disagreements alone (see Table 7). v3 is the other 17 writers' 236 messages, labelled after its systems were frozen; 20 were adjudicated jointly (route κ = 0.959, same slots 99%).
 
 
 ## 3.3 Pipeline and systems
 
 
-Shared pipeline: message → normalizer → intent recognizer (the only part that differs) → extractor → policy → route. The normalizer unifies alef, ya and taa marbuta variants, strips diacritics and elongation and maps Arabic-Indic digits; a pattern-based extractor parses the supported time expressions; the reminder text is what remains once request framing, times and fillers are removed. The policy sends an unsupported intent to ABSTAIN, a supported one with all slots to ACT, otherwise to CLARIFY, so STS differences come from intent. Intent is isolated because out-of-scope detection is hard [6]; lexical models fit laptop CPUs.
+Shared pipeline: message → normalizer → intent recognizer (the only part that differs) → extractor → policy → route. The normalizer unifies alef, ya and taa marbuta variants, strips diacritics and elongation and maps Arabic-Indic digits; a pattern-based extractor parses the supported time expressions; the reminder text is what remains once request framing, times and fillers are removed. The policy sends an unsupported intent to ABSTAIN, a supported one with all slots to ACT, otherwise to CLARIFY, so STS differences come from intent. Intent is isolated because out-of-scope detection is hard [6]; lexical models fit laptop CPUs. Extraction is rule-based because resolving a time is date arithmetic and no span-labelled data existed at the freeze (a learned tagger is tested in Finding 3).
 
 
-Systems compared. S1: hand-written trigger and out-of-scope lexicons, untrained. S2: word TF-IDF with class-balanced logistic regression [4]; S3: S2 plus character 2-4-grams for spelling variation; both fitted on train, with C and n-grams chosen by dev intent macro-F1 (S2: C = 0.3; S3: C = 0.1). Oracle: gold intents, the ceiling. Core versions: the shared normalizer, extractor and policy form the core, frozen as v1.0; v1.1 adds one extractor fix drawn from the test errors (test oracle 0.808 → 0.967), so the test then counts as development data and v1.1 is scored only on new writers. Extensions (Appendix A): S4-S7 replace only the intent recognizer (LLM prompts, embeddings, QLoRA [3]; S6: MARBERTv2 [2] fine-tuned on the three intents, 5 seeds); S8: Jais-3-7B [12] does the whole task by tool calling; S9: the policy checks S8's call (else S1's intent).
+Systems compared. S1: hand-written trigger and out-of-scope lexicons, untrained. S2: word TF-IDF with class-balanced logistic regression [4]; S3: S2 plus character 2-4-grams for spelling variation; both fitted on train, with C and n-grams chosen by dev intent macro-F1 (S2: C = 0.3; S3: C = 0.1). Oracle: gold intents. Core versions: the shared normalizer, extractor and policy form the core, frozen as v1.0; v1.1 adds one extractor fix drawn from the test errors (test oracle 0.808 → 0.967), so the test then becomes development data and v1.1 is scored only on new writers. Extensions (Appendix A): S4-S7 replace only the intent recognizer (LLM prompts, embeddings, QLoRA [3]; S6: fine-tuned MARBERTv2 [2]); S8: Jais-3-7B [12] does the whole task by tool calling; S9: the policy checks S8's call (else S1).
 
 
 ## 3.4 Changes from the proposal
 
 
-Training data: the proposal planned only hand-written items, but native writers could not be recruited in time for the freeze (12 October); 19 of the first Google Form's 21 responses shared one pattern, suggesting AI-generated answers, and were discarded. The author's 158 requests, the only human texts, supplied the all-human test (120) so that no system is scored on its own training data; 261 of 298 training items were therefore AI-drafted (source: assistant_draft, never evaluated on; 458 items, 34 test pairs; planned 300, 20). Contributor messages arrived two weeks later and became two more test sets (RQ2). Hardware: S1-S3, S5 and S6 (test, natural set) on a laptop CPU; S4, S7-S9 and S6 for v3 on Kaggle T4 GPUs.
+Training data: the proposal planned only hand-written items, but native writers could not be recruited in time for the freeze (12 October); 19 of the first Google Form's 21 responses shared one pattern, likely AI-generated, and were discarded. The author's 158 requests, the only human texts, supplied the all-human test (120) so that no system is scored on its own training data; 261 of 298 training items were therefore AI-drafted (source: assistant_draft; 458 items, 34 test pairs; planned 300, 20). Contributor messages arrived two weeks later and became two more test sets (RQ2). Hardware: S1-S3, S5 and S6 (test, natural set) on a laptop CPU; S4, S7-S9 and S6 (v3) on Kaggle T4s.
 
 
 ## 4. Evaluation and results
@@ -76,7 +76,7 @@ Training data: the proposal planned only hand-written items, but native writers 
 ## 4.1 Evaluation data and metrics
 
 
-Evaluation data. All three sets are native-written and cover all routes, incomplete variants and in-domain out-of-scope requests; most concern project management (§1), so results speak mainly to work reminders. Test intervals span about ±0.09 STS, so the new-writer sets carry the conclusions. Training data is relevant (same tools, routes and contract) but inadequate in quality and coverage: 64% are code-switched against 20% of the test and 35% of the natural set; 88% of training reminders use «فكرني» and 5% «تذكير», against 50% and 42% in the test. Separation. Splits follow scenario families under a hash-locked manifest; vocabularies and hyper-parameters come from train/dev only; each set was scored once, after its systems were frozen. Limitations. The test is one writer's templated phrasing (52 sentence frames; 59 items share a frame with train) by the author of S1's lexicon; natural and v3 test new writers, not new scenarios. C was tuned on 40 mostly drafted dev items; grouped CV on train picks a larger C, still below S1 on the test.
+Evaluation data. All three sets are native-written and cover all routes, incomplete variants and in-domain out-of-scope requests; most concern project management (§1). Test intervals span about ±0.09 STS, so the new-writer sets carry the conclusions. Training data is relevant (same tools, routes and contract) but inadequate in quality and coverage: 64% are code-switched against 20% of the test and 35% of the natural set; 88% of training reminders use «فكرني» and 5% «تذكير», against 50% and 42% in the test. Separation. Splits follow scenario families under a hash-locked manifest; vocabularies and hyper-parameters come from train/dev only; each set was scored once, after its systems were frozen. Limitations. The test is one writer's templated phrasing (52 sentence frames; 59 items share a frame with train) by the author of S1's lexicon; natural and v3 test new writers, not new scenarios. C was tuned on 40 mostly drafted dev items; grouped CV on train picks a larger C, still below S1 on the test.
 
 
 Metrics. Besides STS: intent and route macro-F1 and the safety measures defined under Table 2. Intervals are family-level bootstraps (10,000 resamples) [8]; paired tests permute families [7], Holm-corrected [9]. Pre-registered hypotheses. Natural set: rules beat TF-IDF; core v1.1 helps; S9 beats S8. v3: human training data help TF-IDF and MARBERTv2.
@@ -85,7 +85,7 @@ Metrics. Besides STS: intent and route macro-F1 and the safety measures defined 
 ## 4.2 Results
 
 
-Finding 1: rules beat drafted-data classifiers. On new writers (Table 2) rules lead TF-IDF by +0.206 [0.129, 0.287] STS (Holm p = 0.0003; 13 of 17 writers; also under each annotator's labels, Table 7). The author's test agrees (Table 2; Holm p ≤ 0.005) but alone is inconclusive (Holm p 0.055-0.526 if items sharing a sentence frame count as dependent, Table 6). TF-IDF's extra test failures are all intent errors: wrong tool or scope (Tables 10, 11).
+Finding 1: rules beat drafted-data classifiers. On new writers (Table 2) rules lead TF-IDF by +0.206 [0.129, 0.287] STS (Holm p = 0.0003; 13 of 17 writers; Table 7). The author's test agrees (Holm p ≤ 0.005) but alone is inconclusive (Holm p 0.055-0.526 clustering by sentence frame, Table 6). TF-IDF's extra test failures are all intent errors (Tables 10, 11).
 
 
 Other pre-registered tests. Core v1.1 changed one natural item (oracle 0.786 → 0.790). S9 beat S8 by +0.102 (Holm p = 0.001), mostly as a fallback: in 56 of the 73 item gains S1 answered where S8 made no valid call. Safety. 19 of S1's 94 natural calls were harmful (wrong tool or time, or should not run), 17 more had wrong wording (test: 3 of 50 harmful).
@@ -115,16 +115,16 @@ Table 3. Registered v3 test (236 items, 17 further writers). Human data: natural
 | S6 MARBERTv2 | drafted + author | 0.549 [0.488, 0.610] | 0.60 / 0.52 / 0.50 |
 | S6 MARBERTv2 | + human data | 0.637 [0.580, 0.693] | 0.62 / 0.53 / 0.88 |
 
-Finding 2: in-domain human data close the gap. On v3, adding human messages raised S3 by +0.089 [0.037, 0.150] (Holm p = 0.002) and MARBERTv2 by +0.088 [0.049, 0.134] (Holm p = 0.0002), mostly on out-of-scope requests. Not just more data: about 215 human messages alone beat the 338 drafted and author items (+0.089, p = 0.004, descriptive). Retrained S3 equals the rules (+0.000 [−0.054, 0.058]); retrained MARBERTv2 exceeds them (+0.048 [0.013, 0.091], estimate only). Limitation: the human data share v3's scenario cards and no drafted set does, so it shows that in-distribution data help, not that authorship does.
+Finding 2: in-domain human data close the gap. On v3, adding human messages raised S3 by +0.089 [0.037, 0.150] (Holm p = 0.002) and MARBERTv2 by +0.088 [0.049, 0.134] (Holm p = 0.0002), mostly on out-of-scope requests. Not just more data: about 215 human messages alone beat the 338 drafted and author items (+0.089, p = 0.004, descriptive). Retrained S3 equals the rules (+0.000 [−0.054, 0.058]); retrained MARBERTv2 exceeds them (+0.048 [0.013, 0.091], estimate only). Limitation: only the human data share v3's scenario cards, so this shows that in-distribution data help, not that authorship does.
 
 
-Finding 3: the extractor sets the ceiling. With gold intents STS is 0.786 (natural) and 0.669 (v3). Of 91 complete natural requests the extractor gets 63 fully right; 17 fail on wording alone, 7 on the instant, 4 are re-asked. Label ambiguity explains little: 35 of the oracle's 51 natural failures fall on the 182 items both annotators labelled identically. Four post hoc extractor fixes from natural-set failures (e.g. emphasis «ضروري») raised every system on the unseen v3 set by 0.047-0.051 STS (core v1.2, Table 12).
+Finding 3: the extractor sets the ceiling. With gold intents STS is 0.786 (natural) and 0.669 (v3). Of 91 complete natural requests the extractor gets 63 fully right; 17 fail on wording alone, 7 on the instant, 4 are re-asked. Label ambiguity explains little: 35 of the oracle's 51 natural failures fall on the 182 items both annotators labelled identically. Four post hoc rule fixes raised every system on unseen v3 by 0.047-0.051 (core v1.2, Table 12). A learned word tagger (logistic regression, no word lists, Table 13) trained on 61 natural-set reminders got 40 of v3's 52 complete reminders' text right (rules: 29), raising the v3 oracle by +0.038 [0.013, 0.067] (p = 0.023, exploratory); trained on drafted data, +0.004.
 
 
 ## 5. Conclusion
 
 
-We met O1-O5 with a 458-item benchmark and tests by 34 other writers. RQ1: no; trained on mostly AI-drafted data, TF-IDF lost to the rules by 0.206 STS. RQ2: yes; in-domain human data closed the gap (in-distribution data matter; authorship was not isolated). The extractor, not label ambiguity, limits every system, so teams should fix it and collect in-domain data first. Next: calendar bookings for project managers.
+We met O1-O5 with a 458-item benchmark and tests by 34 other writers. RQ1: no; trained on mostly AI-drafted data, TF-IDF lost to the rules by 0.206 STS. RQ2: yes; in-domain human data closed the gap (in-distribution data; authorship not isolated). The extractor, not label ambiguity, limits every system; learning it from in-domain data is the next step.
 
 
 ## References
@@ -296,6 +296,13 @@ Table 12. Post hoc core v1.2 (src/athar/v2/core12.py, scripts/posthoc_core_v12.p
 | v3 (held-out) | S3 drafted | 0.500 | 0.547 | +0.047 [0.015, 0.082] | 0.018 | 13 / 2 |
 | v3 (held-out) | S6 drafted (5 seeds) | 0.549 | 0.599 | +0.050 [0.019, 0.085] | 0.010 | 14 / 2 |
 
+Table 13. Post hoc: learned reminder-text tagger (scripts/posthoc_learned_text.py) in place of the hand-written framing and filler lists, with gold intents; times are still resolved by core v1.1. Per-word logistic regression (C = 1, threshold 0.5, not tuned) on the word, its neighbours, affixes, position and the time parser's spans; trained on the reminder messages of each training set. Text: gold-ACT reminders with the right reminder text, rules / learned. Paired family-level test against the rule extractor, unadjusted p. All v3 scenario cards also appear in the natural set (as in Finding 2). Adding core v1.1's word lists as a feature and output filter changed no score.
+
+| Training → set | Train msgs | Text right | Oracle STS | Δ [95% CI] | p | Gained / lost |
+| drafted + author → natural | 215 | 25 / 32 of 49 | 0.790 → 0.824 | +0.034 [0.012, 0.061] | 0.015 | 8 / 0 |
+| drafted + author → v3 | 215 | 29 / 32 of 52 | 0.669 → 0.674 | +0.004 [0.000, 0.014] | 1.000 | 2 / 1 |
+| natural (human) → v3 | 61 | 29 / 40 of 52 | 0.669 → 0.708 | +0.038 [0.013, 0.067] | 0.023 | 11 / 2 |
+
 ## Appendix C. Reproducing the results
 
 
@@ -332,13 +339,16 @@ uv run --extra neural python scripts/posthoc_encoders_human.py human   # T5
 uv run python scripts/posthoc_core_v12.py   # T12 (needs the private v3 texts)
 
 
+uv run python scripts/posthoc_learned_text.py  # T13 (needs the private v3 texts)
+
+
 uv run --with openpyxl python scripts/posthoc_ceiling_ambiguity.py     # 4.2 (private sheets)
 
 
 uv run --extra ui streamlit run app/streamlit_app.py        # demo
 
 
-Table 13. Pretrained models used (linked), with the pinned Hugging Face revisions.
+Table 14. Pretrained models used (linked), with the pinned Hugging Face revisions.
 
 | System | Hugging Face model | Revision |
 | S4, S7 | inception42/Jais-2-8B-Chat | da0e1639cd92b508b24120f7f77f5270a8465dc4 |
@@ -352,4 +362,4 @@ Table 13. Pretrained models used (linked), with the pinned Hugging Face revision
 ## Appendix D. Use of generative AI
 
 
-The 300 AI-drafted training and development requests were generated with an AI assistant and are marked source: assistant_draft; none is in either evaluation set. The code, tests and documentation were developed with Claude Code as a programming assistant. During adjudication of the natural set, the assistant checked the author's final labels against the written guide and flagged 24 that broke a rule; the author approved each correction. The core v1.2 fixes were written with the assistant from the natural-set oracle failures, without reading the v3 texts; the v3 scores were computed once and only in aggregate. No message was labelled from scratch by an AI system. The author designed the study, wrote the test requests and their labels, recruited the contributors, ran the experiments and is responsible for every claim in this report.
+The 300 AI-drafted training and development requests were generated with an AI assistant and are marked source: assistant_draft; none is in either evaluation set. The code, tests and documentation were developed with Claude Code as a programming assistant. During adjudication of the natural set, the assistant checked the author's final labels against the written guide and flagged 24 that broke a rule; the author approved each correction. The core v1.2 fixes were written with the assistant from the natural-set oracle failures, without reading the v3 texts; the v3 scores were computed once and only in aggregate. The learned reminder-text tagger (Table 13) was written with the assistant with its settings fixed in advance and nothing tuned on an evaluation set; only aggregates were read on v3. No message was labelled from scratch by an AI system. The author designed the study, wrote the test requests and their labels, recruited the contributors, ran the experiments and is responsible for every claim in this report.
